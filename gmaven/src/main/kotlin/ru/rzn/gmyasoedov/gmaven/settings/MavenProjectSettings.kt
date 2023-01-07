@@ -1,0 +1,25 @@
+package ru.rzn.gmyasoedov.gmaven.settings
+
+import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
+import com.intellij.openapi.externalSystem.settings.ExternalProjectSettings
+
+class MavenProjectSettings : ExternalProjectSettings() {
+    var projectDirectory: String? = null
+    var mavenHome: String? = null
+    var jdkPath: String? = ExternalSystemJdkUtil.USE_PROJECT_JDK
+    var vmOptions: String? = null
+    var resolveModulePerSourceSet = true
+    var offline  = false
+    //private var distributionType: DistributionType? = null
+
+    override fun clone(): MavenProjectSettings {
+        val result = MavenProjectSettings()
+        copyTo(result)
+        result.mavenHome = mavenHome
+        result.jdkPath = jdkPath
+        result.resolveModulePerSourceSet = resolveModulePerSourceSet
+        result.vmOptions = vmOptions
+        result.offline = offline
+        return result
+    }
+}

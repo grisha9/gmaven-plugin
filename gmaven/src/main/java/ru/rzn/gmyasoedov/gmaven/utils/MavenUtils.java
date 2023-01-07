@@ -1,0 +1,344 @@
+package ru.rzn.gmyasoedov.gmaven.utils;
+
+import com.intellij.codeInsight.actions.ReformatCodeProcessor;
+import com.intellij.codeInsight.template.TemplateManager;
+import com.intellij.codeInsight.template.impl.TemplateImpl;
+import com.intellij.ide.fileTemplates.FileTemplate;
+import com.intellij.ide.fileTemplates.FileTemplateManager;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.application.PathManager;
+import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.fileEditor.OpenFileDescriptor;
+import com.intellij.openapi.progress.impl.CoreProgressManager;
+import com.intellij.openapi.project.DumbService;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.projectRoots.*;
+import com.intellij.openapi.projectRoots.ex.JavaSdkUtil;
+import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.startup.StartupManager;
+import com.intellij.openapi.util.ClearableLazyValue;
+import com.intellij.openapi.util.Comparing;
+import com.intellij.openapi.util.NlsContexts;
+import com.intellij.openapi.util.Ref;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.io.FileUtilRt;
+import com.intellij.openapi.util.registry.Registry;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
+import com.intellij.util.ArrayUtil;
+import com.intellij.util.ContentsUtil;
+import com.intellij.util.DisposeAwareRunnable;
+import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.xml.NanoXmlBuilder;
+import com.intellij.util.xml.NanoXmlUtil;
+import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.intellij.build.dependencies.BuildDependenciesCommunityRoot;
+import org.jetbrains.intellij.build.impl.BundledMavenDownloader;
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
+import ru.rzn.gmyasoedov.gmaven.project.MavenProjectsManager;
+import ru.rzn.gmyasoedov.serverapi.model.MavenId;
+import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
+import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.MissingResourceException;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static com.intellij.openapi.util.text.StringUtil.toUpperCase;
+import static com.intellij.util.xml.NanoXmlBuilder.stop;
+
+public class MavenUtils {
+    private MavenUtils() {
+    }
+
+    @NotNull
+    public static VirtualFile getVFile(File file) {
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByIoFile(file);
+        if (virtualFile == null) throw new RuntimeException("Virtual file not found " + file);
+        return virtualFile;
+    }
+
+    public static void runWhenInitialized(@NotNull Project project, @NotNull Runnable runnable) {
+        if (project.isDisposed()) {
+            return;
+        }
+
+        if (isNoBackgroundMode()) {
+            runnable.run();
+        } else if (project.isInitialized()) {
+            runDumbAware(project, runnable);
+        } else {
+            StartupManager.getInstance(project).runAfterOpened(runnable);
+        }
+    }
+
+    public static void invokeLater(final Project p, final ModalityState state, final Runnable r) {
+        if (isNoBackgroundMode()) {
+            r.run();
+        } else {
+            ApplicationManager.getApplication().invokeLater(r, state, p.getDisposed());
+        }
+    }
+
+    private static boolean isNoBackgroundMode() {
+        return (ApplicationManager.getApplication().isUnitTestMode()
+                || ApplicationManager.getApplication().isHeadlessEnvironment() &&
+                !CoreProgressManager.shouldKeepTasksAsynchronousInHeadlessMode());
+    }
+
+    private static void runDumbAware(@NotNull Project project, @NotNull Runnable r) {
+        if (DumbService.isDumbAware(r)) {
+            r.run();
+        } else {
+            DumbService.getInstance(project).runWhenSmart(DisposeAwareRunnable.create(r, project));
+        }
+    }
+
+    public static void runOrApplyMavenProjectFileTemplate(Project project,
+                                                          VirtualFile file,
+                                                          @NotNull MavenId projectId,
+                                                          boolean interactive) throws IOException {
+        runOrApplyMavenProjectFileTemplate(project, file, projectId, null, null, interactive);
+    }
+
+    public static void runOrApplyMavenProjectFileTemplate(Project project,
+                                                          VirtualFile file,
+                                                          @NotNull MavenId projectId,
+                                                          MavenId parentId,
+                                                          @Nullable VirtualFile parentFile,
+                                                          boolean interactive) throws IOException {
+        runOrApplyMavenProjectFileTemplate(project, file, projectId, parentId, parentFile, new Properties(),
+                new Properties(),
+                MavenFileTemplateGroupFactory.MAVEN_PROJECT_XML_TEMPLATE, interactive);
+    }
+
+    public static void runOrApplyMavenProjectFileTemplate(Project project,
+                                                          VirtualFile file,
+                                                          @NotNull MavenId projectId,
+                                                          MavenId parentId,
+                                                          @Nullable VirtualFile parentFile,
+                                                          @NotNull Properties properties,
+                                                          @NotNull Properties conditions,
+                                                          @NonNls @NotNull String template,
+                                                          boolean interactive) throws IOException {
+        properties.setProperty("GROUP_ID", projectId.getGroupId());
+        properties.setProperty("ARTIFACT_ID", projectId.getArtifactId());
+        properties.setProperty("VERSION", projectId.getVersion());
+
+        if (parentId != null) {
+            conditions.setProperty("HAS_PARENT", "true");
+            properties.setProperty("PARENT_GROUP_ID", parentId.getGroupId());
+            properties.setProperty("PARENT_ARTIFACT_ID", parentId.getArtifactId());
+            properties.setProperty("PARENT_VERSION", parentId.getVersion());
+
+            if (parentFile != null) {
+                VirtualFile modulePath = file.getParent();
+                VirtualFile parentModulePath = parentFile.getParent();
+
+                if (!Comparing.equal(modulePath.getParent(), parentModulePath) ||
+                        !FileUtil.namesEqual(GMavenConstants.POM_XML, parentFile.getName())) {
+                    String relativePath = VfsUtilCore.findRelativePath(file, parentModulePath, '/');
+                    if (relativePath != null) {
+                        conditions.setProperty("HAS_RELATIVE_PATH", "true");
+                        properties.setProperty("PARENT_RELATIVE_PATH", relativePath);
+                    }
+                }
+            }
+        } else {
+            //set language level only for root pom
+            Sdk sdk = ProjectRootManager.getInstance(project).getProjectSdk();
+            if (sdk != null && sdk.getSdkType() instanceof JavaSdk) {
+                JavaSdk javaSdk = (JavaSdk) sdk.getSdkType();
+                JavaSdkVersion version = javaSdk.getVersion(sdk);
+                String description = version == null ? null : version.getDescription();
+                boolean shouldSetLangLevel = version != null && version.isAtLeast(JavaSdkVersion.JDK_1_6);
+                conditions.setProperty("SHOULD_SET_LANG_LEVEL", String.valueOf(shouldSetLangLevel));
+                properties.setProperty("COMPILER_LEVEL_SOURCE", description);
+                properties.setProperty("COMPILER_LEVEL_TARGET", description);
+            }
+        }
+        runOrApplyFileTemplate(project, file, template, properties, conditions, interactive);
+    }
+
+    public static void runFileTemplate(Project project,
+                                       VirtualFile file,
+                                       String templateName) throws IOException {
+        runOrApplyFileTemplate(project, file, templateName, new Properties(), new Properties(), true);
+    }
+
+    public static void runOrApplyFileTemplate(Project project,
+                                              VirtualFile file,
+                                              String templateName,
+                                              Properties properties,
+                                              Properties conditions,
+                                              boolean interactive) throws IOException {
+        FileTemplateManager manager = FileTemplateManager.getInstance(project);
+        FileTemplate fileTemplate = manager.getJ2eeTemplate(templateName);
+        Properties allProperties = manager.getDefaultProperties();
+        if (!interactive) {
+            allProperties.putAll(properties);
+        }
+        allProperties.putAll(conditions);
+        String text = fileTemplate.getText(allProperties);
+        Pattern pattern = Pattern.compile("\\$\\{(.*)\\}");
+        Matcher matcher = pattern.matcher(text);
+        StringBuilder builder = new StringBuilder();
+        while (matcher.find()) {
+            matcher.appendReplacement(builder, "\\$" + toUpperCase(matcher.group(1)) + "\\$");
+        }
+        matcher.appendTail(builder);
+        text = builder.toString();
+
+        TemplateImpl template = (TemplateImpl) TemplateManager.getInstance(project).createTemplate("", "", text);
+        for (int i = 0; i < template.getSegmentsCount(); i++) {
+            if (i == template.getEndSegmentNumber()) continue;
+            String name = template.getSegmentName(i);
+            String value = "\"" + properties.getProperty(name, "") + "\"";
+            template.addVariable(name, value, value, true);
+        }
+
+        if (interactive) {
+            OpenFileDescriptor descriptor = new OpenFileDescriptor(project, file);
+            Editor editor = FileEditorManager.getInstance(project).openTextEditor(descriptor, true);
+            editor.getDocument().setText("");
+            TemplateManager.getInstance(project).startTemplate(editor, template);
+        } else {
+            VfsUtil.saveText(file, template.getTemplateText());
+
+            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+            if (psiFile != null) {
+                new ReformatCodeProcessor(project, psiFile, null, false).run();
+            }
+        }
+    }
+
+    public static boolean isPomFileName(String fileName) {
+        return fileName.equals(GMavenConstants.POM_XML) ||
+                fileName.endsWith(".pom") || fileName.startsWith("pom.") ||
+                fileName.equals(GMavenConstants.SUPER_POM_XML);
+    }
+
+    public static boolean isPotentialPomFile(String nameOrPath) {
+        String[] split;
+        try {
+            String extensions = Registry.stringValue("gmaven.support.extensions");
+            split = extensions.split(",");
+        } catch (Exception e) {
+            split = new String[]{"pom"};
+        }
+        return ArrayUtil.contains(FileUtilRt.getExtension(nameOrPath), split);
+    }
+
+    public static boolean isPomFile(@Nullable Project project, @Nullable VirtualFile file) {
+        if (file == null) return false;
+
+        String name = file.getName();
+        if (isPomFileName(name)) return true;
+        if (!isPotentialPomFile(name)) return false;
+
+        return isPomFileIgnoringName(project, file);
+    }
+
+    public static boolean isSimplePomFile(@Nullable VirtualFile file) {
+        if (file == null) return false;
+
+        String name = file.getName();
+        if (isPomFileName(name)) return true;
+        if (!isPotentialPomFile(name)) return false;
+        return false;
+    }
+
+    public static boolean isPomFileIgnoringName(@Nullable Project project, @NotNull VirtualFile file) {
+        if (project == null || !project.isInitialized()) {
+            if (!FileUtil.extensionEquals(file.getName(), "xml")) return false;
+            try {
+                try (InputStream in = file.getInputStream()) {
+                    Ref<Boolean> isPomFile = Ref.create(false);
+                    Reader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+                    NanoXmlUtil.parse(reader, new NanoXmlBuilder() {
+                        @Override
+                        public void startElement(String name, String nsPrefix, String nsURI, String systemID, int lineNr) throws Exception {
+                            if ("project".equals(name)) {
+                                isPomFile.set(nsURI.startsWith("http://maven.apache.org/POM/"));
+                            }
+                            stop();
+                        }
+                    });
+                    return isPomFile.get();
+                }
+            } catch (IOException ignore) {
+                return false;
+            }
+        }
+
+        MavenProjectsManager mavenProjectsManager = MavenProjectsManager.getInstance(project);
+        if (mavenProjectsManager.findProject(file) != null) return true;
+
+        return ReadAction.compute(() -> {
+            if (project.isDisposed()) return false;
+            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+            if (psiFile == null) return false;
+            return MavenDomUtil.isProjectFile(psiFile);
+        });
+    }
+
+    public static void showError(Project project, @NlsContexts.NotificationTitle String title, Throwable e) {
+        MavenLog.LOG.warn(title, e);
+        Notifications.Bus.notify(new Notification(
+                GMavenConstants.GMAVEN, title, e.getMessage(), NotificationType.ERROR), project
+        );
+    }
+
+    public static void setupProjectSdk(@NotNull Project project) {
+        if (ProjectRootManager.getInstance(project).getProjectSdk() == null) {
+            ApplicationManager.getApplication().runWriteAction(() -> {
+                Sdk projectSdk = suggestProjectSdk();
+                if (projectSdk == null) return;
+                JavaSdkUtil.applyJdkToProject(project, projectSdk);
+            });
+        }
+    }
+
+    @Nullable
+    public static Sdk suggestProjectSdk() {
+        Project defaultProject = ProjectManager.getInstance().getDefaultProject();
+        ProjectRootManager defaultProjectManager = ProjectRootManager.getInstance(defaultProject);
+        Sdk defaultProjectSdk = defaultProjectManager.getProjectSdk();
+        if (defaultProjectSdk != null) return null;
+        ProjectJdkTable projectJdkTable = ProjectJdkTable.getInstance();
+        SdkType sdkType = ExternalSystemJdkUtil.getJavaSdkType();
+        return projectJdkTable.getSdksOfType(sdkType).stream()
+                .filter(it -> it.getHomePath() != null && JdkUtil.checkForJre(it.getHomePath()))
+                .max(sdkType.versionComparator())
+                .orElse(null);
+    }
+
+    @Nullable
+    public static MavenPlugin findPlugin(@NotNull MavenProject project,
+                                         @NotNull String groupId,
+                                         @NotNull String artifactId) {
+        return project.getPlugins().stream()
+                .filter(p -> groupId.equals(p.getGroupId()) && artifactId.equals(p.getArtifactId()))
+                .findFirst().orElse(null);
+    }
+}

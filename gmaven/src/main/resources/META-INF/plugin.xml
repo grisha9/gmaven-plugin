@@ -1,0 +1,59 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>ru.rzn.gmyasoedov.gmaven</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>Gmaven</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="gr909@mail.ru">gmyasoedov</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <description><![CDATA[f API]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.java</depends>
+    <depends>com.intellij.properties</depends>
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <newProjectWizard.java.buildSystem implementation="ru.rzn.gmyasoedov.gmaven.wizard.GMavenJavaProjectWizard"/>
+        <moduleBuilder builderClass="ru.rzn.gmyasoedov.gmaven.wizard.GMavenModuleBuilder"/>
+        <projectOpenProcessor implementation="ru.rzn.gmyasoedov.gmaven.wizard.GProjectOpenProcessor"/>
+        <projectImportProvider implementation="ru.rzn.gmyasoedov.gmaven.wizard.GMavenProjectImportProvider"/>
+        <projectImportBuilder implementation="ru.rzn.gmyasoedov.gmaven.wizard.GMavenProjectBuilder"/>
+        <fileTemplateGroup implementation="ru.rzn.gmyasoedov.gmaven.utils.MavenFileTemplateGroupFactory"/>
+
+        <projectConfigurable groupId="build.tools" groupWeight="200" id="reference.settingsdialog.project.gmaven"
+                             instance="ru.rzn.gmyasoedov.gmaven.settings.GMavenConfigurable"
+                             key="gmaven.name" bundle="messages.GBundle"/>
+
+        <externalSystemManager implementation="ru.rzn.gmyasoedov.gmaven.MavenManager"/>
+        <projectService serviceImplementation="ru.rzn.gmyasoedov.gmaven.settings.MavenSettings"/>
+        <projectService serviceImplementation="ru.rzn.gmyasoedov.gmaven.settings.MavenLocalSettings"/>
+
+        <toolWindow id="GMaven" anchor="right" icon="GMavenIcons.ToolWindowMaven"
+                    factoryClass="ru.rzn.gmyasoedov.gmaven.ui.MavenToolWindowFactory"/>
+        <externalSystemViewContributor id="GMaven" implementation="ru.rzn.gmyasoedov.gmaven.ui.MavenViewContributor"/>
+
+        <registryKey key="gmaven.server.debug" defaultValue="false"
+                     description="Debug maven server"/>
+        <registryKey key="gmaven.boot.jar.prefix" defaultValue="plexus-classworlds"
+                     description="Debug maven server"/>
+        <registryKey key="gmaven.support.extensions" defaultValue="pom,xml,scala,groovy,atom,rb,yml,clj"
+                     description="Debug maven server"/>
+        <registryKey key="GMAVEN.system.in.process" defaultValue="true"
+                     description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
+
+        <!--        <annotator language="XML" implementationClass="ru.rzn.gmyasoedov.gmaven.dom.annotator.MavenDomGutterAnnotator"/>
+        <backspaceHandlerDelegate implementation="ru.rzn.gmyasoedov.gmaven.dom.code.MavenBackspaceHandlerDelegate"/>
+        <typedHandler implementation="ru.rzn.gmyasoedov.gmaven.dom.code.MavenTypedHandlerDelegate"/>-->
+
+    </extensions>
+</idea-plugin>

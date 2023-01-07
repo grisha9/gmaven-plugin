@@ -1,0 +1,21 @@
+package ru.rzn.gmyasoedov.gmaven.dom.model.presentation;
+
+import com.intellij.ide.presentation.PresentationProvider;
+import com.intellij.openapi.util.text.StringUtil;
+import org.jetbrains.annotations.Nullable;
+import ru.rzn.gmyasoedov.gmaven.dom.model.MavenDomArtifactCoordinates;
+
+public class MavenArtifactCoordinatesPresentationProvider extends PresentationProvider<MavenDomArtifactCoordinates> {
+
+  private static final String UNKNOWN = "<unknown>";
+
+  @Nullable
+  @Override
+  public String getName(MavenDomArtifactCoordinates coordinates) {
+    return StringUtil.notNullize(coordinates.getGroupId().getStringValue(), UNKNOWN)
+      + ':'
+      + StringUtil.notNullize(coordinates.getArtifactId().getStringValue(), UNKNOWN)
+      + ':'
+      + StringUtil.notNullize(coordinates.getVersion().getStringValue(), UNKNOWN);
+  }
+}
