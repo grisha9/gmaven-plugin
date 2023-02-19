@@ -19,9 +19,9 @@ import com.intellij.openapi.projectRoots.impl.JavaAwareProjectJdkTableImpl;
 import com.intellij.openapi.roots.DependencyScope;
 import com.intellij.openapi.roots.ui.configuration.SdkLookupDecision;
 import com.intellij.openapi.roots.ui.configuration.SdkLookupUtil;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.pom.java.LanguageLevel;
-import com.intellij.serialization.PropertyMapping;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,6 +32,8 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 import ru.rzn.gmyasoedov.serverapi.model.*;
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -54,16 +56,13 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
             throws ExternalSystemException, IllegalArgumentException, IllegalStateException {
         GServerRemoteProcessSupport processSupport = new GServerRemoteProcessSupport(
                 JavaAwareProjectJdkTableImpl.getInstanceEx().getInternalJdk(), null, Path.of(settings.getMavenHome()));
-        MavenProjectContainer container = null;
+        MavenProjectContainer container;
         try {
             var server = processSupport.acquire(this, "", new EmptyProgressIndicator());
             GetModelRequest request = new GetModelRequest(settings.getServiceDirectory());
             container = server.getModelWithDependency(request);
-            System.out.println(container);
         } catch (Exception e) {
             MavenLog.LOG.error(e);
-            e.printStackTrace();
-            System.out.println(e);
             throw new RuntimeException(e);
         }
         processSupport.stopAll();
@@ -83,16 +82,15 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
                             languageLevel.toJavaVersion().toFeatureString());
             projectDataNode.createChild(JavaProjectData.KEY, javaProjectData);
 
-            final String ideProjectPath = settings == null ? null : settings.getIdeProjectPath();
-            final String mainModuleFileDirectoryPath = ideProjectPath == null ? projectPath : ideProjectPath;
+            String ideProjectPath = settings == null ? null : settings.getIdeProjectPath();
+            ideProjectPath = ideProjectPath == null ? projectPath : ideProjectPath;
+            ProjectResolverContext context = new ProjectResolverContext(absolutePath, ideProjectPath);
 
             Map<String, DataNode<ModuleData>> moduleDataByArtifactId = new HashMap<>();
-            var moduleNode = createModuleData(null, container, projectDataNode,
-                    mainModuleFileDirectoryPath, moduleDataByArtifactId);
+            var moduleNode = createModuleData(container, projectDataNode, context, moduleDataByArtifactId);
 
             for (MavenProjectContainer childContainer : container.getModules()) {
-                createModuleData(project.getArtifactId(), childContainer, moduleNode,
-                        mainModuleFileDirectoryPath, moduleDataByArtifactId);
+                createModuleData(childContainer, moduleNode, context, moduleDataByArtifactId);
             }
             addDependencies(container, moduleDataByArtifactId);
             return projectDataNode;
@@ -121,18 +119,26 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
         }
     }
 
-    private DataNode<ModuleData> createModuleData(@Nullable String parentModuleId,
-                                                  @NotNull MavenProjectContainer container,
+    private DataNode<ModuleData> createModuleData(@NotNull MavenProjectContainer container,
                                                   @NotNull DataNode<?> parentDataNode,
-                                                  @NotNull String mainModuleFileDirectoryPath,
+                                                  @NotNull ProjectResolverContext context,
                                                   @NotNull Map<String, DataNode<ModuleData>> moduleDataByArtifactId) {
         MavenProject project = container.getProject();
-        String externalName = getModuleName(parentModuleId, project.getArtifactId(), ':');
-        String internalName = getModuleName(parentModuleId, project.getArtifactId(), '.');
+        String parentExternalName = getModuleName(parentDataNode.getData(), true);
+        String parentInternalName = getModuleName(parentDataNode.getData(), false);
+        String id = parentExternalName == null ? project.getArtifactId() : ":" + project.getArtifactId();
         String projectPath = project.getBasedir();
-        ModuleData moduleData = new MavenModuleData(externalName,
-                externalName, internalName, mainModuleFileDirectoryPath,
-                projectPath);// ???projectPath todo check projectPath
+
+        final String mainModuleFileDirectoryPath = getIdeaModulePath(context, projectPath);
+
+        ModuleData moduleData = new ModuleData(id, SYSTEM_ID, getDefaultModuleTypeId(), project.getArtifactId(),
+                mainModuleFileDirectoryPath, //todo check rework
+                projectPath);
+
+        moduleData.setInternalName(getModuleName(parentInternalName, project.getArtifactId(), '.'));
+        moduleData.setGroup(project.getGroupId());
+        moduleData.setVersion(project.getVersion());
+        moduleData.setModuleName(project.getArtifactId());
 
         moduleData.useExternalCompilerOutput(true);
         moduleData.setInheritProjectCompileOutputPath(false);
@@ -160,13 +166,32 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
         moduleDataDataNode.createChild(JavaModuleData.KEY, new JavaModuleData(SYSTEM_ID, sourceLanguageLevel,
                 targetBytecodeLevel.toJavaVersion().toFeatureString()));
 
-        if (parentModuleId != null) {
+        if (parentDataNode.getData() instanceof ModuleData) {
             for (MavenProjectContainer childContainer : container.getModules()) {
-                createModuleData(project.getArtifactId(), childContainer, moduleDataDataNode,
-                        mainModuleFileDirectoryPath, moduleDataByArtifactId);
+                createModuleData(childContainer, moduleDataDataNode, context, moduleDataByArtifactId);
             }
         }
         return moduleDataDataNode;
+    }
+
+    @NotNull
+    private static String getIdeaModulePath(@NotNull ProjectResolverContext context, String projectPath) {
+        final String relativePath;
+        boolean isUnderProjectRoot = FileUtil.isAncestor(context.rootProjectPath, projectPath, false);
+        if (isUnderProjectRoot) {
+            relativePath = FileUtil.getRelativePath(context.rootProjectPath, projectPath, File.separatorChar);
+        } else {
+            relativePath = String.valueOf(FileUtil.pathHashCode(projectPath));
+        }
+        String subPath = relativePath == null || relativePath.equals(".") ? "" : relativePath;
+        return context.ideaPrijectPath + File.separatorChar + subPath;
+    }
+
+    private String getModuleName(Object data, boolean external) {
+        if (data instanceof ModuleData) {
+            return external ? ((ModuleData) data).getExternalName() : ((ModuleData) data).getInternalName();
+        }
+        return null;
     }
 
     private static void storePath(List<String> paths, ContentRootData contentRootData, ExternalSystemSourceType type) {
@@ -240,12 +265,17 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
         LibraryDependencyData libraryDependencyData = new LibraryDependencyData(data, library, LibraryLevel.MODULE);
         libraryDependencyData.setScope(DependencyScope.COMPILE);
         //libraryDependencyData.setOrder(mergedDependency.getClasspathOrder() + classpathOrderShift);
+        libraryDependencyData.setOrder(2);
         parentNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData);
     }
 
     private void addModuleDependency(DataNode<ModuleData> parentNode, ModuleData targetModule) {
         ModuleData ownerModule = parentNode.getData();
-        parentNode.createChild(ProjectKeys.MODULE_DEPENDENCY, new ModuleDependencyData(ownerModule, targetModule));
+        ModuleDependencyData data = new ModuleDependencyData(ownerModule, targetModule);
+        data.setOrder(1);
+        DataNode<ModuleDependencyData> dataNode = parentNode
+                .createChild(ProjectKeys.MODULE_DEPENDENCY, data);
+        // dataNode.setIgnored(true);
     }
 
     private static String getModuleName(@Nullable String parentName, @NotNull String moduleName, char delimiter) {
@@ -253,21 +283,13 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
         return parentName + delimiter + moduleName;
     }
 
-    public static class MavenModuleData extends ModuleData {
+    public static class ProjectResolverContext {
+        final String rootProjectPath;
+        final String ideaPrijectPath;
 
-        @PropertyMapping({"id", "externalName", "internalName", "moduleFileDirectoryPath", "externalConfigPath"})
-        public MavenModuleData(@NotNull String id,
-                               @NotNull String externalName,
-                               @NotNull String internalName,
-                               @NotNull String moduleFileDirectoryPath,
-                               @NotNull String externalConfigPath) {
-            super(id, SYSTEM_ID, getDefaultModuleTypeId(),
-                    externalName, internalName,
-                    moduleFileDirectoryPath, externalConfigPath);
-            String moduleName = StringUtil.substringAfterLast(getExternalName(), ":");
-            if (moduleName != null) {
-                setModuleName(moduleName);
-            }
+        public ProjectResolverContext(String rootProjectPath, String ideaPrijectPath) {
+            this.rootProjectPath = rootProjectPath;
+            this.ideaPrijectPath = ideaPrijectPath;
         }
     }
 }

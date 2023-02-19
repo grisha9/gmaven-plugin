@@ -24,7 +24,6 @@ dependencies {
 intellij {
     version.set("2022.2")
     type.set("IC") // Target IDE Platform
-
     plugins.set(listOf("java", "properties"))
 }
 

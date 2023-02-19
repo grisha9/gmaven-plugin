@@ -30,6 +30,7 @@ import com.intellij.psi.search.ExecutionSearchScopes;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.Function;
 import com.intellij.util.containers.JBIterable;
+import icons.GMavenIcons;
 import icons.OpenapiIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -141,7 +142,7 @@ public final class MavenManager //manager
     @Nullable
     @Override
     public Icon getProjectIcon() {
-        return OpenapiIcons.RepositoryLibraryLogo;
+        return GMavenIcons.MavenProject;
     }
 
     @Nullable

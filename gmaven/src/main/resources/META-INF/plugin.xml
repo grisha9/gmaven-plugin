@@ -47,7 +47,7 @@
         <registryKey key="gmaven.boot.jar.prefix" defaultValue="plexus-classworlds"
                      description="Debug maven server"/>
         <registryKey key="gmaven.support.extensions" defaultValue="pom,xml,scala,groovy,atom,rb,yml,clj"
-                     description="Debug maven server"/>
+                     description="maven support extensions"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
 
