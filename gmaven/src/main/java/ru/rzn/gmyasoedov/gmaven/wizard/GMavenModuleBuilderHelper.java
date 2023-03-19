@@ -7,6 +7,15 @@ import com.intellij.openapi.GitSilentFileAdderProvider;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder;
+import com.intellij.openapi.externalSystem.model.DataNode;
+import com.intellij.openapi.externalSystem.model.project.ProjectData;
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
+import com.intellij.openapi.externalSystem.service.project.ExternalProjectRefreshCallback;
+import com.intellij.openapi.externalSystem.service.project.ProjectDataManager;
+import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManagerImpl;
+import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil;
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsContexts;
@@ -18,11 +27,12 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.xml.XmlElement;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle;
 import ru.rzn.gmyasoedov.gmaven.dom.model.MavenDomModule;
 import ru.rzn.gmyasoedov.gmaven.dom.model.MavenDomProjectModel;
-import ru.rzn.gmyasoedov.gmaven.project.MavenProjectsManager;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenDomUtil;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 import ru.rzn.gmyasoedov.serverapi.model.MavenId;
@@ -31,6 +41,8 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID;
 
 public class GMavenModuleBuilderHelper {
     private final MavenId myProjectId;
@@ -41,6 +53,8 @@ public class GMavenModuleBuilderHelper {
     private final boolean myInheritGroupId;
     private final boolean myInheritVersion;
 
+    private final MavenProjectSettings settings;
+
     @NlsContexts.Command
     private final String myCommandName;
 
@@ -49,6 +63,7 @@ public class GMavenModuleBuilderHelper {
                                      MavenProject parentProject,
                                      boolean inheritGroupId,
                                      boolean inheritVersion,
+                                     @NotNull MavenProjectSettings settings,
                                      @NlsContexts.Command String commandName) {
         myProjectId = projectId;
         myAggregatorProject = aggregatorProject;
@@ -56,6 +71,7 @@ public class GMavenModuleBuilderHelper {
         myInheritGroupId = inheritGroupId;
         myInheritVersion = inheritVersion;
         myCommandName = commandName;
+        this.settings = settings;
     }
 
     public void configure(final Project project, final VirtualFile root, final boolean isInteractive) {
@@ -99,12 +115,25 @@ public class GMavenModuleBuilderHelper {
         if (pom == null) return;
 
         if (myAggregatorProject == null) {
-            MavenProjectsManager manager = MavenProjectsManager.getInstance(project);
+            //MavenProjectsManager manager = MavenProjectsManager.getInstance(project);
             //manager.addManagedFilesOrUnignore(Collections.singletonList(pom));
         }
 
-        //todo
-        //MavenProjectsManager.getInstance(project).forceUpdateAllProjectsOrFindAllAvailablePomFiles();
+        ExternalSystemApiUtil.getSettings(project, SYSTEM_ID).linkProject(settings);
+        ExternalProjectsManagerImpl.getInstance(project).runWhenInitialized(() -> {
+            String canonicalPath = pom.getParent().getPath();
+            ExternalSystemUtil.refreshProject(canonicalPath, new ImportSpecBuilder(project, SYSTEM_ID)
+                    .callback(new ExternalProjectRefreshCallback() {
+                        @Override
+                        public void onSuccess(@NotNull ExternalSystemTaskId externalTaskId,
+                                              @Nullable DataNode<ProjectData> externalProject) {
+                            if (externalProject != null) {
+                                ProjectDataManager.getInstance().importData(externalProject, project, false);
+                            }
+                        }
+                    }));
+        });
+
 
         // execute when current dialog is closed (e.g. Project Structure)
         MavenUtils.invokeLater(project, ModalityState.NON_MODAL, () -> {

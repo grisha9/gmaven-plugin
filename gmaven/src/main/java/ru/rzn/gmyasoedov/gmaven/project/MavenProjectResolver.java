@@ -1,3 +1,4 @@
+/*
 // Copyright 2000-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package ru.rzn.gmyasoedov.gmaven.project;
 
@@ -25,6 +26,8 @@ import com.intellij.pom.java.LanguageLevel;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
+import ru.rzn.gmyasoedov.gmaven.server.GServerHelperKt;
 import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport;
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
@@ -33,14 +36,11 @@ import ru.rzn.gmyasoedov.serverapi.model.*;
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.intellij.openapi.util.text.StringUtil.compareVersionNumbers;
+import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.*;
 import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID;
 
 public class MavenProjectResolver implements ExternalSystemProjectResolver<MavenExecutionSettings> {
@@ -56,6 +56,8 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
             throws ExternalSystemException, IllegalArgumentException, IllegalStateException {
         GServerRemoteProcessSupport processSupport = new GServerRemoteProcessSupport(
                 JavaAwareProjectJdkTableImpl.getInstanceEx().getInternalJdk(), null, Path.of(settings.getMavenHome()));
+        ExternalSystemJdkUtil.getJdk(project, ExternalSystemJdkUtil.USE_PROJECT_JDK);
+        GServerHelperKt.getProjectModel()
         MavenProjectContainer container;
         try {
             var server = processSupport.acquire(this, "", new EmptyProgressIndicator());
@@ -66,37 +68,54 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
             throw new RuntimeException(e);
         }
         processSupport.stopAll();
-        if (true || isPreviewMode) {
-            MavenProject project = container.getProject();
-            String projectName = project.getDisplayName();
-            String absolutePath = project.getFile().getParent();
-            ProjectData projectData = new ProjectData(SYSTEM_ID, projectName, absolutePath, absolutePath);
-            DataNode<ProjectData> projectDataNode = new DataNode<>(ProjectKeys.PROJECT, projectData, null);
-
-            String sdkName = resolveJdkName("11");
-            ProjectSdkData projectSdkData = new ProjectSdkData(sdkName);
-            projectDataNode.createChild(ProjectSdkData.KEY, projectSdkData);
-            LanguageLevel languageLevel = LanguageLevel.parse(sdkName);
-            JavaProjectData javaProjectData =
-                    new JavaProjectData(SYSTEM_ID, project.getOutputDirectory(), languageLevel,
-                            languageLevel.toJavaVersion().toFeatureString());
-            projectDataNode.createChild(JavaProjectData.KEY, javaProjectData);
-
-            String ideProjectPath = settings == null ? null : settings.getIdeProjectPath();
-            ideProjectPath = ideProjectPath == null ? projectPath : ideProjectPath;
-            ProjectResolverContext context = new ProjectResolverContext(absolutePath, ideProjectPath);
-
-            Map<String, DataNode<ModuleData>> moduleDataByArtifactId = new HashMap<>();
-            var moduleNode = createModuleData(container, projectDataNode, context, moduleDataByArtifactId);
-
-            for (MavenProjectContainer childContainer : container.getModules()) {
-                createModuleData(childContainer, moduleNode, context, moduleDataByArtifactId);
-            }
-            addDependencies(container, moduleDataByArtifactId);
-            return projectDataNode;
+        if (isPreviewMode) {
+            return getPreviewProjectModel(projectPath, settings);
         }
 
-        return null;
+        MavenProject project = container.getProject();
+        String projectName = project.getDisplayName();
+        String absolutePath = project.getFile().getParent();
+        ProjectData projectData = new ProjectData(SYSTEM_ID, projectName, absolutePath, absolutePath);
+        DataNode<ProjectData> projectDataNode = new DataNode<>(ProjectKeys.PROJECT, projectData, null);
+
+        String sdkName = resolveJdkName("11");
+        ProjectSdkData projectSdkData = new ProjectSdkData(sdkName);
+        projectDataNode.createChild(ProjectSdkData.KEY, projectSdkData);
+        LanguageLevel languageLevel = LanguageLevel.parse(sdkName);
+        JavaProjectData javaProjectData =
+                new JavaProjectData(SYSTEM_ID, project.getOutputDirectory(), languageLevel,
+                        languageLevel.toJavaVersion().toFeatureString());
+        projectDataNode.createChild(JavaProjectData.KEY, javaProjectData);
+
+        String ideProjectPath = settings == null ? null : settings.getIdeProjectPath();
+        ideProjectPath = ideProjectPath == null ? projectPath : ideProjectPath;
+        ProjectResolverContext context = new ProjectResolverContext(absolutePath, ideProjectPath);
+
+        Map<String, DataNode<ModuleData>> moduleDataByArtifactId = new HashMap<>();
+        var moduleNode = createModuleData(container, projectDataNode, context, moduleDataByArtifactId);
+
+        for (MavenProjectContainer childContainer : container.getModules()) {
+            createModuleData(childContainer, moduleNode, context, moduleDataByArtifactId);
+        }
+        addDependencies(container, moduleDataByArtifactId);
+        return projectDataNode;
+    }
+
+    @NotNull
+    private static DataNode<ProjectData> getPreviewProjectModel(@NotNull String projectPath,
+                                                                @NotNull MavenExecutionSettings settings) {
+        String projectName = new File(projectPath).getName();
+        ProjectData projectData = new ProjectData(SYSTEM_ID, projectName, projectPath, projectPath);
+        DataNode<ProjectData> projectDataNode = new DataNode<>(ProjectKeys.PROJECT, projectData, null);
+
+        final String ideProjectPath = settings == null ? null : settings.getIdeProjectPath();
+        final String mainModuleFileDirectoryPath = ideProjectPath == null ? projectPath : ideProjectPath;
+
+        projectDataNode
+                .createChild(ProjectKeys.MODULE, new ModuleData(projectName, SYSTEM_ID, getDefaultModuleTypeId(),
+                        projectName, mainModuleFileDirectoryPath, projectPath))
+                .createChild(ProjectKeys.CONTENT_ROOT, new ContentRootData(SYSTEM_ID, projectPath));
+        return projectDataNode;
     }
 
     private void addDependencies(MavenProjectContainer container,
@@ -154,6 +173,7 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
         storePath(project.getResourceRoots(), contentRootData, ExternalSystemSourceType.RESOURCE);
         storePath(project.getTestSourceRoots(), contentRootData, ExternalSystemSourceType.TEST);
         storePath(project.getTestResourceRoots(), contentRootData, ExternalSystemSourceType.TEST_RESOURCE);
+        contentRootData.storePath(ExternalSystemSourceType.EXCLUDED, project.getBuildDirectory());
 
         String compilerPluginVersion = getCompilerPluginVersion(project);
         LanguageLevel sourceLanguageLevel = getMavenLanguageLevel(
@@ -162,7 +182,9 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
                 project, compilerPluginVersion, "maven.compiler.target");
 
         moduleDataDataNode.createChild(ModuleSdkData.KEY, new ModuleSdkData(null));
-
+        if (targetBytecodeLevel == null) {
+            targetBytecodeLevel = sourceLanguageLevel;
+        }
         moduleDataDataNode.createChild(JavaModuleData.KEY, new JavaModuleData(SYSTEM_ID, sourceLanguageLevel,
                 targetBytecodeLevel.toJavaVersion().toFeatureString()));
 
@@ -220,13 +242,12 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
         return sdk == null ? null : sdk.getName();
     }
 
-    @Nullable
+    @NotNull
     private static LanguageLevel getMavenLanguageLevel(@NotNull MavenProject mavenProject,
                                                        @NotNull String compilerPluginVersion,
                                                        @NotNull String property) {
 
         boolean isReleaseEnabled = compareVersionNumbers(compilerPluginVersion, "3.6") >= 0;
-        ;
         String mavenProjectReleaseLevel = isReleaseEnabled
                 ? (String) mavenProject.getProperties().get("maven.compiler.release")
                 : null;
@@ -239,7 +260,7 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
                 level = LanguageLevel.HIGHEST;
             }
         }
-        return level;
+        return Objects.requireNonNullElse(level, LanguageLevel.HIGHEST);
     }
 
     @NotNull
@@ -254,19 +275,33 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
         library.setGroup(artifact.getGroupId());
         library.setVersion(artifact.getVersion());
 
-        library.addPath(LibraryPathType.BINARY, artifact.getFile().getAbsolutePath());
+        DependencyScope dependencyScope = getScope(artifact);
+        library.addPath(getLibraryPathType(artifact), artifact.getFile().getAbsolutePath());
 
-        /*LibraryLevel level = StringUtil.isNotEmpty(libraryName) ? LibraryLevel.PROJECT : LibraryLevel.MODULE;
-        if (StringUtil.isEmpty(libraryName) || !linkProjectLibrary(resolverCtx, ideProject, library)) {
-            level = LibraryLevel.MODULE;
-        }
-*/
         ModuleData data = parentNode.getData();
         LibraryDependencyData libraryDependencyData = new LibraryDependencyData(data, library, LibraryLevel.MODULE);
-        libraryDependencyData.setScope(DependencyScope.COMPILE);
+        libraryDependencyData.setScope(dependencyScope);
         //libraryDependencyData.setOrder(mergedDependency.getClasspathOrder() + classpathOrderShift);
         libraryDependencyData.setOrder(2);
         parentNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData);
+    }
+
+    @NotNull
+    private static LibraryPathType getLibraryPathType(@NotNull MavenArtifact artifact) {
+        if ("javadoc".equalsIgnoreCase(artifact.getClassifier())) return LibraryPathType.DOC;
+        if ("sources".equalsIgnoreCase(artifact.getClassifier())) return LibraryPathType.SOURCE;
+        return LibraryPathType.BINARY;
+    }
+    @NotNull
+    public static DependencyScope getScope(MavenArtifact artifact) {
+        String mavenScope = artifact.getScope();
+        String classifier = artifact.getClassifier();
+        if (SCOPE_TEST.equals(mavenScope)
+                || "tests".equalsIgnoreCase(classifier)
+                || "test-jar".equalsIgnoreCase(artifact.getType())) return DependencyScope.TEST;
+        if (SCOPE_RUNTIME.equals(mavenScope)) return DependencyScope.RUNTIME;
+        if (SCOPE_PROVIDED.equals(mavenScope)) return DependencyScope.PROVIDED;
+        return DependencyScope.COMPILE;
     }
 
     private void addModuleDependency(DataNode<ModuleData> parentNode, ModuleData targetModule) {
@@ -293,3 +328,4 @@ public class MavenProjectResolver implements ExternalSystemProjectResolver<Maven
         }
     }
 }
+*/

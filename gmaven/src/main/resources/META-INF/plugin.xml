@@ -37,17 +37,18 @@
         <externalSystemManager implementation="ru.rzn.gmyasoedov.gmaven.MavenManager"/>
         <projectService serviceImplementation="ru.rzn.gmyasoedov.gmaven.settings.MavenSettings"/>
         <projectService serviceImplementation="ru.rzn.gmyasoedov.gmaven.settings.MavenLocalSettings"/>
+        <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.AnnotationProcessingDataService"/>
 
         <toolWindow id="GMaven" anchor="right" icon="GMavenIcons.ToolWindowMaven"
                     factoryClass="ru.rzn.gmyasoedov.gmaven.ui.MavenToolWindowFactory"/>
-        <externalSystemViewContributor id="GMaven" implementation="ru.rzn.gmyasoedov.gmaven.ui.MavenViewContributor"/>
+        <!--<externalSystemViewContributor id="GMaven" implementation="ru.rzn.gmyasoedov.gmaven.ui.MavenViewContributor"/>-->
 
         <registryKey key="gmaven.server.debug" defaultValue="false"
                      description="Debug maven server"/>
         <registryKey key="gmaven.boot.jar.prefix" defaultValue="plexus-classworlds"
                      description="Debug maven server"/>
         <registryKey key="gmaven.support.extensions" defaultValue="pom,xml,scala,groovy,atom,rb,yml,clj"
-                     description="maven support extensions"/>
+                     description="Maven support extensions"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
 

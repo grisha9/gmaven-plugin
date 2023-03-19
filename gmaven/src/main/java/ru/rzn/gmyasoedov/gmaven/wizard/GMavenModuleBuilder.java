@@ -4,8 +4,10 @@ package ru.rzn.gmyasoedov.gmaven.wizard;
 import com.intellij.ide.util.projectWizard.*;
 import com.intellij.openapi.externalSystem.ExternalSystemModulePropertyManager;
 import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManagerImpl;
+import com.intellij.openapi.module.JavaModuleType;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.*;
+import com.intellij.openapi.module.ModuleType;
+import com.intellij.openapi.module.StdModuleTypes;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.DumbAwareRunnable;
 import com.intellij.openapi.project.Project;
@@ -21,6 +23,7 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 import ru.rzn.gmyasoedov.serverapi.model.MavenId;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
@@ -62,10 +65,20 @@ public class GMavenModuleBuilder extends ModuleBuilder implements SourcePathsBui
             rootModel.inheritSdk();
         }
 
+        String modulePathString = root.toNioPath().toAbsolutePath().toString();
+        var settings = new MavenProjectSettings();
+        File mavenHome = MavenUtils.resolveMavenHome();
+        if (mavenHome == null) throw new RuntimeException("no maven home");
+        settings.setMavenHome(mavenHome.getAbsolutePath());
+        settings.setExternalProjectPath(modulePathString);
+        settings.setProjectDirectory(modulePathString);
+        settings.setJdkName(myJdk.getName());
+
         MavenUtils.runWhenInitialized(project, (DumbAwareRunnable)
                 () -> new GMavenModuleBuilderHelper(
                         myProjectId, myAggregatorProject, myParentProject,
-                        myInheritGroupId, myInheritVersion, GBundle.message("command.name.create.new.maven.module")
+                        myInheritGroupId, myInheritVersion, settings,
+                        GBundle.message("command.name.create.new.maven.module")
                 ).configure(project, root, false)
         );
     }

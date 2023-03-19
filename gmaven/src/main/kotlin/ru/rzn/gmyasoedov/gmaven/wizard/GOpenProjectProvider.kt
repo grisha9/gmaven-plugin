@@ -11,22 +11,17 @@ import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMo
 import com.intellij.openapi.externalSystem.service.project.ExternalProjectRefreshCallback
 import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManagerImpl
-import com.intellij.openapi.externalSystem.settings.ExternalProjectSettings
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
-import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.projectRoots.impl.JavaAwareProjectJdkTableImpl
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.projectImport.ProjectImportBuilder
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
-import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
-import java.nio.file.Path
 
 class GOpenProjectProvider : AbstractOpenProjectProvider() {
     override val systemId: ProjectSystemId = GMavenConstants.SYSTEM_ID
@@ -40,33 +35,27 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         val mavenSettings = MavenSettings.getInstance(project)
         mavenSettings.storeProjectFilesExternally = true
         val mavenProjectSettings = createMavenProjectSettings(projectFile, project)
-        attachGradleProjectAndRefresh(mavenProjectSettings, project)
+        attachProjectAndRefresh(mavenProjectSettings, project)
         //todo validate java home
     }
 
     private fun createMavenProjectSettings(projectFile: VirtualFile, project: Project): MavenProjectSettings {
         val projectDirectory = if (projectFile.isDirectory) projectFile else projectFile.parent
         val settings = MavenProjectSettings()
-        settings.mavenHome = Path.of("/home/Grigoriy.Myasoedov/.sdkman/candidates/maven/3.8.5").toString()
+        settings.mavenHome = MavenUtils.resolveMavenHome()?.absolutePath
         settings.externalProjectPath = projectFile.canonicalPath
         settings.projectDirectory = projectDirectory.canonicalPath
-        settings.jdkPath = ExternalSystemJdkUtil.getJdk(project, ExternalSystemJdkUtil.USE_INTERNAL_JAVA)?.homePath
+        settings.jdkName = (MavenUtils.suggestProjectSdk()
+            ?: ExternalSystemJdkUtil.getJdk(project, ExternalSystemJdkUtil.USE_PROJECT_JDK))?.name
         return settings;
     }
 
-    private fun attachGradleProjectAndRefresh(settings: ExternalProjectSettings, project: Project) {
-        val internalJdk = JavaAwareProjectJdkTableImpl.getInstanceEx().getInternalJdk()
+    private fun attachProjectAndRefresh(settings: MavenProjectSettings, project: Project) {
+        //val javaHome = ExternalSystemJdkUtil.getJavaHome()
+        //val internalJdk = JavaAwareProjectJdkTableImpl.getInstanceEx().getInternalJdk()
+        //setupMavenJvm(project, settings)
         val externalProjectPath = settings.externalProjectPath
-        val sdk = MavenUtils.suggestProjectSdk() ?: internalJdk
-        val embeddedMavenPath =
-            Path.of("/home/Grigoriy.Myasoedov/.sdkman/candidates/maven/3.8.5")//GMavenConstants.embeddedMavenPath.value
-        /*val t = Thread({
-            val processSupport = GServerRemoteProcessSupport(sdk, null, embeddedMavenPath)
-            val server = processSupport.acquire(this, "", EmptyProgressIndicator())
-            //server.getModel(GetModelRequest())
-            processSupport.stopAll()
-        })
-        t.start()*/
+
 
         ExternalSystemApiUtil.getSettings(project, SYSTEM_ID).linkProject(settings)
         if (Registry.`is`("external.system.auto.import.disabled")) return

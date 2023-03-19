@@ -17,6 +17,7 @@ dependencies {
     implementation(project(":server-api"))
     runtimeOnly(project(":server"))
     runtimeOnly(project(":maven-ext-event-handler"))
+    runtimeOnly(fileTree("libs") { include("*.jar") })
 }
 
 // Configure Gradle IntelliJ Plugin

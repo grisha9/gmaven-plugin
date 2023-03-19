@@ -6,7 +6,7 @@ import com.intellij.openapi.externalSystem.settings.ExternalProjectSettings
 class MavenProjectSettings : ExternalProjectSettings() {
     var projectDirectory: String? = null
     var mavenHome: String? = null
-    var jdkPath: String? = ExternalSystemJdkUtil.USE_PROJECT_JDK
+    var jdkName: String? = ExternalSystemJdkUtil.USE_PROJECT_JDK
     var vmOptions: String? = null
     var resolveModulePerSourceSet = true
     var offline  = false
@@ -16,7 +16,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
         val result = MavenProjectSettings()
         copyTo(result)
         result.mavenHome = mavenHome
-        result.jdkPath = jdkPath
+        result.jdkName = jdkName
         result.resolveModulePerSourceSet = resolveModulePerSourceSet
         result.vmOptions = vmOptions
         result.offline = offline

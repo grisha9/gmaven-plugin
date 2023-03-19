@@ -10,7 +10,6 @@ import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
-import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil;
@@ -24,10 +23,7 @@ import com.intellij.openapi.projectRoots.*;
 import com.intellij.openapi.projectRoots.ex.JavaSdkUtil;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.startup.StartupManager;
-import com.intellij.openapi.util.ClearableLazyValue;
-import com.intellij.openapi.util.Comparing;
-import com.intellij.openapi.util.NlsContexts;
-import com.intellij.openapi.util.Ref;
+import com.intellij.openapi.util.*;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.registry.Registry;
@@ -38,16 +34,13 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.ArrayUtil;
-import com.intellij.util.ContentsUtil;
 import com.intellij.util.DisposeAwareRunnable;
-import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.SystemProperties;
 import com.intellij.util.xml.NanoXmlBuilder;
 import com.intellij.util.xml.NanoXmlUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.intellij.build.dependencies.BuildDependenciesCommunityRoot;
-import org.jetbrains.intellij.build.impl.BundledMavenDownloader;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectsManager;
 import ru.rzn.gmyasoedov.serverapi.model.MavenId;
@@ -57,14 +50,12 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.MissingResourceException;
-import java.util.Optional;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.intellij.openapi.util.text.StringUtil.toUpperCase;
+import static com.intellij.openapi.util.text.StringUtil.*;
 import static com.intellij.util.xml.NanoXmlBuilder.stop;
 
 public class MavenUtils {
@@ -340,5 +331,128 @@ public class MavenUtils {
         return project.getPlugins().stream()
                 .filter(p -> groupId.equals(p.getGroupId()) && artifactId.equals(p.getArtifactId()))
                 .findFirst().orElse(null);
+    }
+
+    @Nullable
+    public static File resolveMavenHome() {
+        String m2home = System.getenv("M2_HOME");
+        if (!isEmptyOrSpaces(m2home)) {
+            final File homeFromEnv = new File(m2home);
+            if (isValidMavenHome(homeFromEnv)) {
+                return homeFromEnv;
+            }
+        }
+
+        String mavenHome = System.getenv("MAVEN_HOME");
+        if (!isEmptyOrSpaces(mavenHome)) {
+            final File mavenHomeFile = new File(mavenHome);
+            if (isValidMavenHome(mavenHomeFile)) {
+                return mavenHomeFile;
+            }
+        }
+
+        String userHome = SystemProperties.getUserHome();
+        if (!isEmptyOrSpaces(userHome)) {
+            File underUserHome = new File(userHome, "m2");
+            if (isValidMavenHome(underUserHome)) {
+                return underUserHome;
+            }
+
+            File sdkManMavenHome = Path.of(userHome, ".sdkman", "candidates", "maven", "current").toFile();
+            if (isValidMavenHome(sdkManMavenHome)) {
+                return sdkManMavenHome;
+            }
+        }
+
+        if (SystemInfo.isMac) {
+            File home = fromBrew();
+            if (home != null) {
+                return home;
+            }
+
+            if ((home = fromMacSystemJavaTools()) != null) {
+                return home;
+            }
+        }
+        else if (SystemInfo.isLinux) {
+            File home = new File("/usr/share/maven");
+            if (isValidMavenHome(home)) {
+                return home;
+            }
+
+            home = new File("/usr/share/maven2");
+            if (isValidMavenHome(home)) {
+                return home;
+            }
+        }
+
+        return null;
+    }
+
+    public static boolean isValidMavenHome(@Nullable File home) {
+        if (home == null) return false;
+        return home.toPath().resolve("bin").resolve("m2.conf").toFile().exists();
+    }
+
+    @Nullable
+    private static File fromBrew() {
+        final File brewDir = new File("/usr/local/Cellar/maven");
+        final String[] list = brewDir.list();
+        if (list == null || list.length == 0) {
+            return null;
+        }
+
+        if (list.length > 1) {
+            Arrays.sort(list, (o1, o2) -> compareVersionNumbers(o2, o1));
+        }
+
+        final File file = new File(brewDir, list[0] + "/libexec");
+        return isValidMavenHome(file) ? file : null;
+    }
+
+    @Nullable
+    private static File fromMacSystemJavaTools() {
+        final File symlinkDir = new File("/usr/share/maven");
+        if (isValidMavenHome(symlinkDir)) {
+            return symlinkDir;
+        }
+
+        // well, try to search
+        final File dir = new File("/usr/share/java");
+        final String[] list = dir.list();
+        if (list == null || list.length == 0) {
+            return null;
+        }
+
+        String home = null;
+        final String prefix = "maven-";
+        final int versionIndex = prefix.length();
+        for (String path : list) {
+            if (path.startsWith(prefix) &&
+                    (home == null || compareVersionNumbers(path.substring(versionIndex), home.substring(versionIndex)) > 0)) {
+                home = path;
+            }
+        }
+
+        if (home != null) {
+            File file = new File(dir, home);
+            if (isValidMavenHome(file)) {
+                return file;
+            }
+        }
+
+        return null;
+    }
+
+    public static @NotNull @NlsSafe Path getGeneratedSourcesDirectory(
+            @NotNull String buildDirectory, boolean testSources) {
+        return Path.of(buildDirectory, (testSources ? "generated-test-sources" : "generated-sources"));
+    }
+
+    public static @NotNull @NlsSafe Path getGeneratedAnnotationsDirectory(
+            @NotNull String buildDirectory,
+            boolean testSources) {
+        return getGeneratedSourcesDirectory(buildDirectory, testSources)
+                .resolve((testSources ? "test-annotations" : "annotations"));
     }
 }

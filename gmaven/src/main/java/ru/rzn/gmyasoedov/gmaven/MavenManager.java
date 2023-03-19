@@ -2,18 +2,13 @@
 package ru.rzn.gmyasoedov.gmaven;
 
 import com.intellij.execution.configurations.SimpleJavaParameters;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.externalSystem.ExternalSystemAutoImportAware;
 import com.intellij.openapi.externalSystem.ExternalSystemConfigurableAware;
 import com.intellij.openapi.externalSystem.ExternalSystemManager;
 import com.intellij.openapi.externalSystem.ExternalSystemUiAware;
-import com.intellij.openapi.externalSystem.importing.ProjectResolverPolicy;
 import com.intellij.openapi.externalSystem.model.ProjectSystemId;
 import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExecutionSettings;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil;
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver;
-import com.intellij.openapi.externalSystem.service.project.autoimport.CachingExternalSystemAutoImportAware;
 import com.intellij.openapi.externalSystem.service.ui.DefaultExternalSystemUiAware;
 import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager;
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil;
@@ -23,6 +18,9 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ui.configuration.SdkLookupDecision;
+import com.intellij.openapi.roots.ui.configuration.SdkLookupUtil;
 import com.intellij.openapi.startup.StartupActivity;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.text.StringUtil;
@@ -31,7 +29,6 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.Function;
 import com.intellij.util.containers.JBIterable;
 import icons.GMavenIcons;
-import icons.OpenapiIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.chooser.MavenPomFileChooserDescriptor;
@@ -40,12 +37,10 @@ import ru.rzn.gmyasoedov.gmaven.settings.*;
 import ru.rzn.gmyasoedov.gmaven.task.MavenTaskManager;
 
 import javax.swing.*;
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
-import static com.intellij.openapi.util.text.StringUtil.endsWith;
-import static com.intellij.openapi.util.text.StringUtil.endsWithIgnoreCase;
+import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_PROJECT_JDK;
+import static java.util.Objects.requireNonNullElse;
 
 public final class MavenManager //manager
         implements ExternalSystemConfigurableAware,
@@ -85,15 +80,23 @@ public final class MavenManager //manager
             MavenSettings settings = MavenSettings.getInstance(project);
             MavenProjectSettings projectSettings = settings.getLinkedProjectSettings(projectPath);
             String rootProjectPath = projectSettings != null ? projectSettings.getExternalProjectPath() : projectPath;
-            String mavenHomePath = projectSettings != null ? projectSettings.getMavenHome()
-                    : "/home/Grigoriy.Myasoedov/.sdkman/candidates/maven/3.8.5";
+            String mavenHomePath = projectSettings != null ? projectSettings.getMavenHome() : null;
 
             MavenExecutionSettings result = new MavenExecutionSettings(mavenHomePath,
                     projectPath,
                     projectSettings != null ? projectSettings.getVmOptions() : null,
                     projectSettings != null && projectSettings.getOffline());
-            result.setJavaHome(projectSettings != null ? projectSettings.getJdkPath()
-                    : ExternalSystemJdkUtil.getJdk(project, ExternalSystemJdkUtil.USE_INTERNAL_JAVA).getHomePath());
+
+            String jdkName = projectSettings != null ? projectSettings.getJdkName() : null;
+            Sdk jdk = SdkLookupUtil.lookupSdk(builder -> builder
+                    .withSdkName(requireNonNullElse(jdkName, USE_PROJECT_JDK))
+                    .withSdkType(ExternalSystemJdkUtil.getJavaSdkType())
+                    .onDownloadableSdkSuggested(__ -> SdkLookupDecision.STOP)
+            );
+            if (jdk != null) {
+                result.setJavaHome(jdk.getHomePath());
+                result.setJdkName(jdk.getName());
+            }
             String ideProjectPath;
             if (project.getBasePath() == null ||
                     (project.getProjectFilePath() != null && StringUtil.endsWith(project.getProjectFilePath(), ".ipr"))) {

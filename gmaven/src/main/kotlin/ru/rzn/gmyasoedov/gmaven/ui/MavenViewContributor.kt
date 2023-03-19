@@ -1,3 +1,4 @@
+/*
 package ru.rzn.gmyasoedov.gmaven.ui
 
 import com.intellij.openapi.externalSystem.model.DataNode
@@ -24,4 +25,4 @@ class MavenViewContributor : ExternalSystemViewContributor() {
         val task = node.data as? TaskData ?: return null
         return task.name.run { substringAfterLast(':').nullize() ?: this }
     }
-}
+}*/

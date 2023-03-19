@@ -12,126 +12,143 @@ import java.util.Objects;
  */
 public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  /*@NotNull private final GradleExecutionWorkspace myExecutionWorkspace = new GradleExecutionWorkspace();*/
+    /*@NotNull private final GradleExecutionWorkspace myExecutionWorkspace = new GradleExecutionWorkspace();*/
 
-  @Nullable private final String mavenHome;
+    @Nullable
+    private final String mavenHome;
 
-  @Nullable private final String serviceDirectory;
-  private final boolean offlineWork;
+    @Nullable
+    private final String serviceDirectory;
+    private final boolean offlineWork;
 
-  /*@NotNull private final DistributionType myDistributionType;*/
-  @Nullable private String wrapperPropertyFile;
+    /*@NotNull private final DistributionType myDistributionType;*/
+    @Nullable
+    private String wrapperPropertyFile;
 
-  @Nullable private String myJavaHome;
-  @Nullable
-  private String myIdeProjectPath;
-  private boolean resolveModulePerSourceSet = true;
-  private boolean useQualifiedModuleNames = false;
+    @Nullable
+    private String javaHome;
+    @Nullable
+    private String jdkName;
+    @Nullable
+    private String myIdeProjectPath;
+    private boolean resolveModulePerSourceSet = true;
+    private boolean useQualifiedModuleNames = false;
 
-  public MavenExecutionSettings(@Nullable String mavenHome,
-                                @Nullable String serviceDirectory,
-                                /*@NotNull DistributionType distributionType,*/
-                                boolean isOfflineWork) {
-    this.mavenHome = mavenHome;
-    this.serviceDirectory = serviceDirectory;
-    /*myDistributionType = distributionType;*/
-    this.offlineWork = isOfflineWork;
-  }
-
-  public MavenExecutionSettings(@Nullable String mavenHome,
-                                @Nullable String serviceDirectory,
-                               /* @NotNull DistributionType distributionType,*/
-                                @Nullable String daemonVmOptions,
-                                boolean isOfflineWork) {
-    this.mavenHome = mavenHome;
-    this.serviceDirectory = serviceDirectory;
-    if (daemonVmOptions != null) {
-      withVmOptions(ParametersListUtil.parse(daemonVmOptions));
+    public MavenExecutionSettings(@Nullable String mavenHome,
+                                  @Nullable String serviceDirectory,
+            /*@NotNull DistributionType distributionType,*/
+                                  boolean isOfflineWork) {
+        this.mavenHome = mavenHome;
+        this.serviceDirectory = serviceDirectory;
+        /*myDistributionType = distributionType;*/
+        this.offlineWork = isOfflineWork;
     }
-    offlineWork = isOfflineWork;
-  }
 
-  public void setIdeProjectPath(@Nullable String ideProjectPath) {
-    myIdeProjectPath = ideProjectPath;
-  }
+    public MavenExecutionSettings(@Nullable String mavenHome,
+                                  @Nullable String serviceDirectory,
+            /* @NotNull DistributionType distributionType,*/
+                                  @Nullable String daemonVmOptions,
+                                  boolean isOfflineWork) {
+        this.mavenHome = mavenHome;
+        this.serviceDirectory = serviceDirectory;
+        if (daemonVmOptions != null) {
+            withVmOptions(ParametersListUtil.parse(daemonVmOptions));
+        }
+        offlineWork = isOfflineWork;
+    }
 
-  @Nullable
-  public String getIdeProjectPath() {
-    return myIdeProjectPath;
-  }
+    public void setIdeProjectPath(@Nullable String ideProjectPath) {
+        myIdeProjectPath = ideProjectPath;
+    }
 
-  public String getMavenHome() {
-    return mavenHome;
-  }
+    @Nullable
+    public String getIdeProjectPath() {
+        return myIdeProjectPath;
+    }
 
-  @Nullable
-  public String getServiceDirectory() {
-    return serviceDirectory;
-  }
+    @Nullable
+    public String getMavenHome() {
+        return mavenHome;
+    }
 
-  @Nullable
-  public String getJavaHome() {
-    return myJavaHome;
-  }
+    @Nullable
+    public String getServiceDirectory() {
+        return serviceDirectory;
+    }
 
-  public void setJavaHome(@Nullable String javaHome) {
-    myJavaHome = javaHome;
-  }
+    @Nullable
+    public String getJavaHome() {
+        return javaHome;
+    }
 
-  public boolean isOfflineWork() {
-    return offlineWork;
-  }
+    public void setJavaHome(@Nullable String javaHome) {
+        this.javaHome = javaHome;
+    }
 
-  public boolean isResolveModulePerSourceSet() {
-    return resolveModulePerSourceSet;
-  }
+    @Nullable
+    public String getJdkName() {
+        return jdkName;
+    }
 
-  public void setResolveModulePerSourceSet(boolean resolveModulePerSourceSet) {
-    this.resolveModulePerSourceSet = resolveModulePerSourceSet;
-  }
+    @Nullable
+    public void setJdkName(String jdkName) {
+        this.jdkName = jdkName;
+    }
 
-  public boolean isUseQualifiedModuleNames() {
-    return useQualifiedModuleNames;
-  }
+    public boolean isOfflineWork() {
+        return offlineWork;
+    }
 
-  public void setUseQualifiedModuleNames(boolean useQualifiedModuleNames) {
-    this.useQualifiedModuleNames = useQualifiedModuleNames;
-  }
+    public boolean isResolveModulePerSourceSet() {
+        return resolveModulePerSourceSet;
+    }
 
-  @Nullable
-  public String getWrapperPropertyFile() {
-    return wrapperPropertyFile;
-  }
+    public void setResolveModulePerSourceSet(boolean resolveModulePerSourceSet) {
+        this.resolveModulePerSourceSet = resolveModulePerSourceSet;
+    }
 
-  public void setWrapperPropertyFile(@Nullable String wrapperPropertyFile) {
-    this.wrapperPropertyFile = wrapperPropertyFile;
-  }
+    public boolean isUseQualifiedModuleNames() {
+        return useQualifiedModuleNames;
+    }
 
-  @Override
-  public int hashCode() {
-    int result = super.hashCode();
-    result = 31 * result + (mavenHome != null ? mavenHome.hashCode() : 0);
-    result = 31 * result + (serviceDirectory != null ? serviceDirectory.hashCode() : 0);
-   /* result = 31 * result + myDistributionType.hashCode();*/
-    result = 31 * result + (myJavaHome != null ? myJavaHome.hashCode() : 0);
-    return result;
-  }
+    public void setUseQualifiedModuleNames(boolean useQualifiedModuleNames) {
+        this.useQualifiedModuleNames = useQualifiedModuleNames;
+    }
 
-  @Override
-  public boolean equals(Object o) {
-    if (!super.equals(o)) return false;
-    MavenExecutionSettings that = (MavenExecutionSettings)o;
-    /*if (myDistributionType != that.myDistributionType) return false;*/
-    if (!Objects.equals(mavenHome, that.mavenHome)) return false;
-    if (!Objects.equals(myJavaHome, that.myJavaHome)) return false;
-    if (!Objects.equals(serviceDirectory, that.serviceDirectory)) return false;
-    return true;
-  }
+    @Nullable
+    public String getWrapperPropertyFile() {
+        return wrapperPropertyFile;
+    }
 
-  @Override
-  public String toString() {
-    return "home: " + mavenHome + ", distributionType: " /*+ myDistributionType*/;
-  }
+    public void setWrapperPropertyFile(@Nullable String wrapperPropertyFile) {
+        this.wrapperPropertyFile = wrapperPropertyFile;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (mavenHome != null ? mavenHome.hashCode() : 0);
+        result = 31 * result + (serviceDirectory != null ? serviceDirectory.hashCode() : 0);
+        result = 31 * result + (jdkName != null ? jdkName.hashCode() : 0);
+        result = 31 * result + (javaHome != null ? javaHome.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!super.equals(o)) return false;
+        MavenExecutionSettings that = (MavenExecutionSettings) o;
+        if (!Objects.equals(mavenHome, that.mavenHome)) return false;
+        if (!Objects.equals(jdkName, that.jdkName)) return false;
+        if (!Objects.equals(javaHome, that.javaHome)) return false;
+        if (!Objects.equals(serviceDirectory, that.serviceDirectory)) return false;
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "home: " + mavenHome + ", distributionType: " /*+ myDistributionType*/;
+    }
 }

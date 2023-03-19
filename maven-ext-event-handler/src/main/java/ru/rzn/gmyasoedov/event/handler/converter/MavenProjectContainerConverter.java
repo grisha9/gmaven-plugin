@@ -50,6 +50,8 @@ public class MavenProjectContainerConverter {
 
             File moduleFile = new File(module);
             MavenProject mavenProjectByModuleFile = projectByDirectoryMap.get(moduleFile);
+            if (mavenProjectByModuleFile == null) continue;
+
             MavenProjectContainer projectContainer = new MavenProjectContainer(
                     MavenProjectConverter.convert(mavenProjectByModuleFile, session)
             );
