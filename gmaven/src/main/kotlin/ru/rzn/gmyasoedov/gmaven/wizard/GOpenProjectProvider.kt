@@ -19,6 +19,9 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.projectImport.ProjectImportBuilder
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
+import ru.rzn.gmyasoedov.gmaven.project.wrapper.MvnDotProperties
+import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
+import ru.rzn.gmyasoedov.gmaven.settings.DistributionType
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
@@ -42,12 +45,28 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
     private fun createMavenProjectSettings(projectFile: VirtualFile, project: Project): MavenProjectSettings {
         val projectDirectory = if (projectFile.isDirectory) projectFile else projectFile.parent
         val settings = MavenProjectSettings()
-        settings.mavenHome = MavenUtils.resolveMavenHome()?.absolutePath
+        settings.distributionSettings = getDistributionSettings(settings, project, projectDirectory)
         settings.externalProjectPath = projectFile.canonicalPath
         settings.projectDirectory = projectDirectory.canonicalPath
         settings.jdkName = (MavenUtils.suggestProjectSdk()
             ?: ExternalSystemJdkUtil.getJdk(project, ExternalSystemJdkUtil.USE_PROJECT_JDK))?.name
         return settings;
+    }
+
+    private fun getDistributionSettings(
+        settings: MavenProjectSettings,
+        project: Project,
+        projectDirectory: VirtualFile
+    ): DistributionSettings {
+        if (settings.distributionSettings.type == DistributionType.CUSTOM) return settings.distributionSettings
+
+        val distributionUrl = MvnDotProperties.getDistributionUrl(project, projectDirectory.path)
+        if (distributionUrl.isNotEmpty()) return DistributionSettings(DistributionType.WRAPPER, url = distributionUrl)
+
+        val mavenHome = MavenUtils.resolveMavenHome()
+        if (mavenHome != null)  return DistributionSettings(DistributionType.MVN, path = mavenHome.toPath());
+
+        return settings.distributionSettings
     }
 
     private fun attachProjectAndRefresh(settings: MavenProjectSettings, project: Project) {

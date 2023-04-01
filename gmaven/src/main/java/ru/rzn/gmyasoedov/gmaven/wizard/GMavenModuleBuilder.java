@@ -67,9 +67,8 @@ public class GMavenModuleBuilder extends ModuleBuilder implements SourcePathsBui
 
         String modulePathString = root.toNioPath().toAbsolutePath().toString();
         var settings = new MavenProjectSettings();
-        File mavenHome = MavenUtils.resolveMavenHome();
-        if (mavenHome == null) throw new RuntimeException("no maven home");
-        settings.setMavenHome(mavenHome.getAbsolutePath());
+       /* File mavenHome = MavenUtils.resolveMavenHome(); todo
+        if (mavenHome == null) throw new RuntimeException("no maven home");*/
         settings.setExternalProjectPath(modulePathString);
         settings.setProjectDirectory(modulePathString);
         settings.setJdkName(myJdk.getName());

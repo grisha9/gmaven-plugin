@@ -1,19 +1,15 @@
 package ru.rzn.gmyasoedov.gmaven.settings;
 
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManager;
 import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManagerImpl;
 import com.intellij.openapi.externalSystem.settings.AbstractExternalSystemSettings;
-import com.intellij.openapi.externalSystem.settings.DelegatingExternalSystemSettingsListener;
 import com.intellij.openapi.externalSystem.settings.ExternalSystemSettingsListener;
 import com.intellij.openapi.project.ExternalStorageConfigurationManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Comparing;
-import com.intellij.openapi.util.NlsSafe;
 import com.intellij.util.xmlb.annotations.XCollection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -87,8 +83,11 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
 
     @Override
     protected void checkSettings(@NotNull MavenProjectSettings old, @NotNull MavenProjectSettings current) {
-        if (!Objects.equals(old.getMavenHome(), current.getMavenHome())) {
-            getPublisher().onMavenHomeChange(old.getMavenHome(), current.getMavenHome(), current.getExternalProjectPath());
+        if (!Objects.equals(old.getDistributionSettings(), current.getDistributionSettings())) {
+            getPublisher().onMavenHomeChange(
+                    old.getDistributionSettings().getPath().toString(), //todo
+                    current.getDistributionSettings().getPath().toString(),
+                    current.getExternalProjectPath());
         }
         /*if (old.getDistributionType() != current.getDistributionType()) {
             getPublisher().onGradleDistributionTypeChange(current.getDistributionType(), current.getExternalProjectPath());

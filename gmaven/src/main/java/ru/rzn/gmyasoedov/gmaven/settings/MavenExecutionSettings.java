@@ -3,6 +3,7 @@ package ru.rzn.gmyasoedov.gmaven.settings;
 
 import com.intellij.openapi.externalSystem.model.settings.ExternalSystemExecutionSettings;
 import com.intellij.util.execution.ParametersListUtil;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -16,16 +17,12 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     /*@NotNull private final GradleExecutionWorkspace myExecutionWorkspace = new GradleExecutionWorkspace();*/
 
-    @Nullable
-    private final String mavenHome;
+    @NotNull
+    private final DistributionSettings distributionSettings;
 
     @Nullable
     private final String serviceDirectory;
     private final boolean offlineWork;
-
-    /*@NotNull private final DistributionType myDistributionType;*/
-    @Nullable
-    private String wrapperPropertyFile;
 
     @Nullable
     private String javaHome;
@@ -36,22 +33,19 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private boolean resolveModulePerSourceSet = true;
     private boolean useQualifiedModuleNames = false;
 
-    public MavenExecutionSettings(@Nullable String mavenHome,
+    public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,
                                   @Nullable String serviceDirectory,
-            /*@NotNull DistributionType distributionType,*/
                                   boolean isOfflineWork) {
-        this.mavenHome = mavenHome;
+        this.distributionSettings = Objects.requireNonNull(distributionSettings);
         this.serviceDirectory = serviceDirectory;
-        /*myDistributionType = distributionType;*/
         this.offlineWork = isOfflineWork;
     }
 
-    public MavenExecutionSettings(@Nullable String mavenHome,
+    public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,
                                   @Nullable String serviceDirectory,
-            /* @NotNull DistributionType distributionType,*/
                                   @Nullable String daemonVmOptions,
                                   boolean isOfflineWork) {
-        this.mavenHome = mavenHome;
+        this.distributionSettings = Objects.requireNonNull(distributionSettings);
         this.serviceDirectory = serviceDirectory;
         if (daemonVmOptions != null) {
             withVmOptions(ParametersListUtil.parse(daemonVmOptions));
@@ -68,9 +62,9 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         return myIdeProjectPath;
     }
 
-    @Nullable
-    public String getMavenHome() {
-        return mavenHome;
+    @NotNull
+    public DistributionSettings getDistributionSettings() {
+        return distributionSettings;
     }
 
     @Nullable
@@ -117,19 +111,10 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         this.useQualifiedModuleNames = useQualifiedModuleNames;
     }
 
-    @Nullable
-    public String getWrapperPropertyFile() {
-        return wrapperPropertyFile;
-    }
-
-    public void setWrapperPropertyFile(@Nullable String wrapperPropertyFile) {
-        this.wrapperPropertyFile = wrapperPropertyFile;
-    }
-
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (mavenHome != null ? mavenHome.hashCode() : 0);
+        result = 31 * result + distributionSettings.hashCode();
         result = 31 * result + (serviceDirectory != null ? serviceDirectory.hashCode() : 0);
         result = 31 * result + (jdkName != null ? jdkName.hashCode() : 0);
         result = 31 * result + (javaHome != null ? javaHome.hashCode() : 0);
@@ -140,7 +125,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     public boolean equals(Object o) {
         if (!super.equals(o)) return false;
         MavenExecutionSettings that = (MavenExecutionSettings) o;
-        if (!Objects.equals(mavenHome, that.mavenHome)) return false;
+        if (!Objects.equals(distributionSettings, that.distributionSettings)) return false;
         if (!Objects.equals(jdkName, that.jdkName)) return false;
         if (!Objects.equals(javaHome, that.javaHome)) return false;
         if (!Objects.equals(serviceDirectory, that.serviceDirectory)) return false;
@@ -149,6 +134,6 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     @Override
     public String toString() {
-        return "home: " + mavenHome + ", distributionType: " /*+ myDistributionType*/;
+        return distributionSettings.toString();
     }
 }

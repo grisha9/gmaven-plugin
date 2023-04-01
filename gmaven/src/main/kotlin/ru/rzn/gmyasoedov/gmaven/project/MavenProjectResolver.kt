@@ -4,6 +4,7 @@ import com.intellij.externalSystem.JavaModuleData
 import com.intellij.externalSystem.JavaProjectData
 import com.intellij.openapi.externalSystem.importing.ProjectResolverPolicy
 import com.intellij.openapi.externalSystem.model.DataNode
+import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.project.*
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
@@ -24,15 +25,18 @@ import com.intellij.pom.java.LanguageLevel
 import org.apache.commons.lang.StringUtils
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.project.importing.AnnotationProcessingData
+import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModelFirstRun
+import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenArtifact
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
 import java.io.File
+import java.nio.file.Path
 import java.nio.file.Path.of
 
 class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSettings> {
@@ -46,15 +50,33 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         resolverPolicy: ProjectResolverPolicy?,
         listener: ExternalSystemTaskNotificationListener
     ): DataNode<ProjectData> {
-        val sdk = (settings ?: throw RuntimeException("settings is empty"))
-            .jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) } ?: throw ProjectJdkNotFoundException()
+        val sdk = (settings ?: throw ExternalSystemException("settings is empty"))
+            .jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) } ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
 
         if (isPreviewMode) {
             return getPreviewProjectDataNode(settings, id, projectPath, sdk)
         }
-        val request = GServerRequest(id, of(projectPath), of(settings.mavenHome!!), sdk) //todo mavenHome
+
+        val mavenHome = getMavenHome(settings.distributionSettings)
+        /*if (distributionUrl != null) {
+            *//*listener.onStatusChange(ExternalSystemTaskNotificationEvent(id, "download wrapper"))
+            listener.onTaskOutput(id, "test test...", true)
+            val distribution = MavenWrapperDistribution.downloadAndInstallMaven(distributionUrl)
+            println(distribution)*//*
+        }*/
+
+        val request = GServerRequest(id, of(projectPath), mavenHome, sdk)
         val projectModel = getProjectModel(request)
         return getProjectDataNode(projectPath, projectModel, settings)
+    }
+
+    private fun getMavenHome(distributionSettings: DistributionSettings): Path {
+        if (distributionSettings.path != null) return distributionSettings.path
+        if (distributionSettings.url != null) {
+            val mavenHome = MavenWrapperDistribution.getOrDownload(distributionSettings.url)
+            return mavenHome.path
+        }
+        throw ExternalSystemException("maven home is empty");
     }
 
     private fun getPreviewProjectDataNode(
@@ -63,8 +85,8 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         projectPath: String,
         sdk: Sdk
     ): DataNode<ProjectData> {
-        if (settings.mavenHome != null) {
-            val request = GServerRequest(id, of(projectPath), of(settings.mavenHome), sdk)
+        if (settings.distributionSettings.path != null) {
+            val request = GServerRequest(id, of(projectPath), settings.distributionSettings.path!!, sdk)
             val projectModel = getProjectModelFirstRun(request)
             return getProjectDataNode(projectPath, projectModel, settings)
         } else {

@@ -49,8 +49,12 @@
                      description="Debug maven server"/>
         <registryKey key="gmaven.support.extensions" defaultValue="pom,xml,scala,groovy,atom,rb,yml,clj"
                      description="Maven support extensions"/>
+        <registryKey key="gmaven.bundled.wrapper.version" defaultValue="3.9.1"
+                     description="Maven bundled wrapper version"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
+
+        <notificationGroup id="GMaven" displayType="BALLOON"/>
 
         <!--        <annotator language="XML" implementationClass="ru.rzn.gmyasoedov.gmaven.dom.annotator.MavenDomGutterAnnotator"/>
         <backspaceHandlerDelegate implementation="ru.rzn.gmyasoedov.gmaven.dom.code.MavenBackspaceHandlerDelegate"/>

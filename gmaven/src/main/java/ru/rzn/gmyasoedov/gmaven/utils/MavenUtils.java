@@ -3,6 +3,8 @@ package ru.rzn.gmyasoedov.gmaven.utils;
 import com.intellij.codeInsight.actions.ReformatCodeProcessor;
 import com.intellij.codeInsight.template.TemplateManager;
 import com.intellij.codeInsight.template.impl.TemplateImpl;
+import com.intellij.execution.wsl.WSLDistribution;
+import com.intellij.execution.wsl.WslPath;
 import com.intellij.ide.fileTemplates.FileTemplate;
 import com.intellij.ide.fileTemplates.FileTemplateManager;
 import com.intellij.notification.Notification;
@@ -51,12 +53,16 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.intellij.openapi.util.io.JarUtil.getJarAttribute;
+import static com.intellij.openapi.util.io.JarUtil.loadProperties;
 import static com.intellij.openapi.util.text.StringUtil.*;
 import static com.intellij.util.xml.NanoXmlBuilder.stop;
+import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.M2;
 
 public class MavenUtils {
     private MavenUtils() {
@@ -390,8 +396,12 @@ public class MavenUtils {
     }
 
     public static boolean isValidMavenHome(@Nullable File home) {
+        return home != null && isValidMavenHome(home.toPath());
+    }
+
+    public static boolean isValidMavenHome(@Nullable Path home) {
         if (home == null) return false;
-        return home.toPath().resolve("bin").resolve("m2.conf").toFile().exists();
+        return home.resolve("bin").resolve("m2.conf").toFile().exists();
     }
 
     @Nullable
@@ -454,5 +464,53 @@ public class MavenUtils {
             boolean testSources) {
         return getGeneratedSourcesDirectory(buildDirectory, testSources)
                 .resolve((testSources ? "test-annotations" : "annotations"));
+    }
+
+    @Nullable
+    public static String getMavenVersion(@Nullable File mavenHome) {
+        if (mavenHome == null) return null;
+        File[] libs = new File(mavenHome, "lib").listFiles();
+
+
+        if (libs != null) {
+            for (File mavenLibFile : libs) {
+                String lib = mavenLibFile.getName();
+                if (lib.equals("maven-core.jar")) {
+                    MavenLog.LOG.debug("Choosing version by maven-core.jar");
+                    return getMavenLibVersion(mavenLibFile);
+                }
+                if (lib.startsWith("maven-core-") && lib.endsWith(".jar")) {
+                    MavenLog.LOG.debug("Choosing version by maven-core.xxx.jar");
+                    String version = lib.substring("maven-core-".length(), lib.length() - ".jar".length());
+                    return contains(version, ".x") ? getMavenLibVersion(mavenLibFile) : version;
+                }
+                if (lib.startsWith("maven-") && lib.endsWith("-uber.jar")) {
+                    MavenLog.LOG.debug("Choosing version by maven-xxx-uber.jar");
+                    return lib.substring("maven-".length(), lib.length() - "-uber.jar".length());
+                }
+            }
+        }
+        MavenLog.LOG.warn("Cannot resolve maven version for " + mavenHome);
+        return null;
+    }
+
+    private static String getMavenLibVersion(final File file) {
+        WSLDistribution distribution = WslPath.getDistributionByWindowsUncPath(file.getPath());
+        File fileToRead = Optional.ofNullable(distribution)
+                .map(it -> distribution.getWslPath(file.getPath()))
+                .map(distribution::resolveSymlink)
+                .map(distribution::getWindowsPath)
+                .map(File::new)
+                .orElse(file);
+
+        Properties props = loadProperties(fileToRead, "META-INF/maven/org.apache.maven/maven-core/pom.properties");
+        return props != null
+                ? nullize(props.getProperty("version"))
+                : nullize(getJarAttribute(file, java.util.jar.Attributes.Name.IMPLEMENTATION_VERSION));
+    }
+
+    @NotNull
+    public static Path resolveM2() {
+        return Path.of(SystemProperties.getUserHome(), M2);
     }
 }

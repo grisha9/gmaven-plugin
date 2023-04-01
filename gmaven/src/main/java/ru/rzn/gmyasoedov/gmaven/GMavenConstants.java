@@ -1,19 +1,21 @@
 // Copyright 2000-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package ru.rzn.gmyasoedov.gmaven;
 
-import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.externalSystem.model.ProjectSystemId;
-import com.intellij.openapi.util.ClearableLazyValue;
 import com.intellij.openapi.util.NlsSafe;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.intellij.build.dependencies.BuildDependenciesCommunityRoot;
-import org.jetbrains.intellij.build.impl.BundledMavenDownloader;
 
-import java.nio.file.Path;
 import java.util.Set;
 
+import static com.intellij.openapi.util.registry.Registry.stringValue;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNullElse;
+
 public final class GMavenConstants {
+    private static final String BUNDLED_MAVEN_VERSION = "3.9.1";
+    private static final String BUNDLED_DISTRIBUTION_URL =
+            "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/%s/apache-maven-%s-bin.zip";
 
     @NotNull
     @NlsSafe
@@ -28,20 +30,21 @@ public final class GMavenConstants {
     public static final String SCOPE_TEST = "test";
     public static final String SCOPE_SYSTEM = "system";
     public static final String SCOPE_IMPORT = "import";
+    public static final String M2 = ".m2";
 
     @NotNull
     @NonNls
     public static final ProjectSystemId SYSTEM_ID = new ProjectSystemId(GMAVEN.toUpperCase(), GMAVEN);
-
-    public final static ClearableLazyValue<Path> embeddedMavenPath = ClearableLazyValue.create(() ->
-            BundledMavenDownloader.downloadMavenDistribution(
-            new BuildDependenciesCommunityRoot(Path.of(PathManager.getCommunityHomePath())))
-    );
 
     private GMavenConstants() {
     }
 
     public static Set<String> getScopes() {
         return Set.of(SCOPE_COMPILE, SCOPE_PROVIDED, SCOPE_RUNTIME, SCOPE_TEST, SCOPE_SYSTEM);
+    }
+
+    public static String getBundledDistributionUrl() {
+        String version = requireNonNullElse(stringValue("gmaven.bundled.wrapper.version"), BUNDLED_MAVEN_VERSION);
+        return format(BUNDLED_DISTRIBUTION_URL, version, version);
     }
 }

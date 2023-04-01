@@ -41,18 +41,19 @@ import java.util.List;
 
 import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_PROJECT_JDK;
 import static java.util.Objects.requireNonNullElse;
+import static ru.rzn.gmyasoedov.gmaven.settings.DistributionType.BUNDLED;
 
 public final class MavenManager //manager
         implements ExternalSystemConfigurableAware,
         ExternalSystemUiAware,
-       // ExternalSystemAutoImportAware,
+        // ExternalSystemAutoImportAware,
         StartupActivity,
         ExternalSystemManager<MavenProjectSettings, MavenSettingsListener,
                 MavenSettings, MavenLocalSettings, MavenExecutionSettings> {
 
-  /*  @NotNull
-    private final ExternalSystemAutoImportAware myAutoImportDelegate = new CachingExternalSystemAutoImportAware(new GradleAutoImportAware());
-*/
+    /*  @NotNull
+      private final ExternalSystemAutoImportAware myAutoImportDelegate = new CachingExternalSystemAutoImportAware(new GradleAutoImportAware());
+  */
     @NotNull
     @Override
     public ProjectSystemId getSystemId() {
@@ -78,11 +79,13 @@ public final class MavenManager //manager
             Project project = pair.first;
             String projectPath = pair.second;
             MavenSettings settings = MavenSettings.getInstance(project);
-            MavenProjectSettings projectSettings = settings.getLinkedProjectSettings(projectPath);
+            MavenProjectSettings projectSettings = settings.getLinkedProjectSettings(projectPath);//to do??
             String rootProjectPath = projectSettings != null ? projectSettings.getExternalProjectPath() : projectPath;
-            String mavenHomePath = projectSettings != null ? projectSettings.getMavenHome() : null;
+            DistributionSettings distributionSettings = projectSettings != null
+                    ? projectSettings.getDistributionSettings()
+                    : new DistributionSettings(BUNDLED, null, GMavenConstants.getBundledDistributionUrl());
 
-            MavenExecutionSettings result = new MavenExecutionSettings(mavenHomePath,
+            MavenExecutionSettings result = new MavenExecutionSettings(distributionSettings,
                     projectPath,
                     projectSettings != null ? projectSettings.getVmOptions() : null,
                     projectSettings != null && projectSettings.getOffline());
@@ -97,12 +100,12 @@ public final class MavenManager //manager
                 result.setJavaHome(jdk.getHomePath());
                 result.setJdkName(jdk.getName());
             }
+
             String ideProjectPath;
             if (project.getBasePath() == null ||
                     (project.getProjectFilePath() != null && StringUtil.endsWith(project.getProjectFilePath(), ".ipr"))) {
                 ideProjectPath = rootProjectPath;
-            }
-            else {
+            } else {
                 ideProjectPath = project.getBasePath() + "/.idea/modules";
             }
             result.setIdeProjectPath(ideProjectPath);
