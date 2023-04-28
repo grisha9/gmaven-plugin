@@ -1,13 +1,7 @@
 package ru.rzn.gmyasoedov.model.reader;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DefaultArtifact;
-import org.apache.maven.artifact.handler.ArtifactHandler;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
-import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
-import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
 import org.apache.maven.artifact.resolver.ResolutionErrorHandler;
-import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.AbstractMojo;
@@ -24,10 +18,11 @@ import java.util.*;
 
 import static org.apache.maven.plugins.annotations.LifecyclePhase.NONE;
 import static org.apache.maven.plugins.annotations.ResolutionScope.TEST;
+import static ru.rzn.gmyasoedov.model.reader.PluginConverter.resolvePluginBody;
 
 @Mojo(name = "resolve", defaultPhase = NONE, aggregator = true, requiresDependencyResolution = TEST)
 public class ResolveProjectMojo extends AbstractMojo {
-    private static final String ANNOTATION_PROCESSOR_PATH_MAP = "annotationProcessorPathMap";
+    private static final String ANNOTATION_PROCESSOR_PATH = "annotationProcessorPath";
 
     @Component
     private RepositorySystem repositorySystem;
@@ -41,30 +36,39 @@ public class ResolveProjectMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException {
+        Set<String> gPluginSet = getPluginForBodyProcessing();
         getLog().info("!!!-----------------ResolveProjectMojo-----------------------!!!");
-        for (MavenProject allProject : session.getAllProjects()) {
-            resolveAnnotationProcessor(allProject);
+        for (MavenProject mavenProject : session.getAllProjects()) {
+            resolveAnnotationProcessor(mavenProject);
+            resolvePluginBody(mavenProject, gPluginSet);
         }
+    }
+
+    private Set<String> getPluginForBodyProcessing() {
+        String gPlugins = System.getProperty("gmaveng.plugins", "");
+        if(gPlugins.isEmpty()) return Collections.emptySet();
+        String[] gPluginsArray = gPlugins.split(";");
+        HashSet<String> gPluginSet = new HashSet<>(gPluginsArray.length);
+        Collections.addAll(gPluginSet, gPluginsArray);
+        return gPluginSet;
     }
 
     private void resolveAnnotationProcessor(MavenProject project) throws MojoExecutionException {
         Plugin plugin = project.getPlugin("org.apache.maven.plugins:maven-compiler-plugin");
         if (plugin == null || plugin.getConfiguration() == null) return;
         List<DependencyCoordinate> dependencies = getDependencyCoordinates(plugin);
-        List<String> paths = resolveProcessorPathEntries(dependencies, project);
+        List<String> paths = GUtils.resolveArtifacts(
+                dependencies, project,
+                repositorySystem, artifactHandlerManager,
+                resolutionErrorHandler, session
+        );
         if (paths != null && !paths.isEmpty()) {
             setPathToSession(project, paths);
         }
     }
 
     private void setPathToSession(MavenProject project, List<String> paths) {
-        Map<String, List<String>> processorPathMap = (Map<String, List<String>>) session.getUserProperties()
-                .get(ANNOTATION_PROCESSOR_PATH_MAP);
-        if (processorPathMap == null) {
-            processorPathMap = new HashMap<>();
-            session.getUserProperties().put(ANNOTATION_PROCESSOR_PATH_MAP, processorPathMap);
-        }
-        processorPathMap.put(project.getArtifactId(), paths);
+        project.setContextValue(ANNOTATION_PROCESSOR_PATH, paths);
     }
 
     private List<DependencyCoordinate> getDependencyCoordinates(Plugin plugin) throws MojoExecutionException {
@@ -109,49 +113,5 @@ public class ResolveProjectMojo extends AbstractMojo {
             map.put(field.getName().toLowerCase(), field);
         }
         return map;
-    }
-
-    private List<String> resolveProcessorPathEntries(
-            List<DependencyCoordinate> annotationProcessorPaths, MavenProject project
-    ) throws MojoExecutionException {
-        if (annotationProcessorPaths == null || annotationProcessorPaths.isEmpty()) {
-            return null;
-        }
-
-        try {
-            Set<String> elements = new LinkedHashSet<>();
-            for (DependencyCoordinate coord : annotationProcessorPaths) {
-                ArtifactHandler handler = artifactHandlerManager.getArtifactHandler(coord.getType());
-
-                Artifact artifact = new DefaultArtifact(
-                        coord.getGroupId(),
-                        coord.getArtifactId(),
-                        VersionRange.createFromVersionSpec(coord.getVersion()),
-                        Artifact.SCOPE_RUNTIME,
-                        coord.getType(),
-                        coord.getClassifier(),
-                        handler,
-                        false);
-
-                ArtifactResolutionRequest request = new ArtifactResolutionRequest()
-                        .setArtifact(artifact)
-                        .setResolveRoot(true)
-                        .setResolveTransitively(true)
-                        .setLocalRepository(session.getLocalRepository())
-                        .setRemoteRepositories(project.getRemoteArtifactRepositories());
-
-                ArtifactResolutionResult resolutionResult = repositorySystem.resolve(request);
-
-                resolutionErrorHandler.throwErrors(request, resolutionResult);
-
-                for (Artifact resolved : resolutionResult.getArtifacts()) {
-                    elements.add(resolved.getFile().getAbsolutePath());
-                }
-            }
-            return new ArrayList<>(elements);
-        } catch (Exception e) {
-            throw new MojoExecutionException("Resolution of annotationProcessorPath dependencies failed: "
-                    + e.getLocalizedMessage(), e);
-        }
     }
 }
