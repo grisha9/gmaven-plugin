@@ -4,7 +4,7 @@ import com.intellij.openapi.util.text.StringUtilRt;
 import org.codehaus.plexus.classworlds.launcher.Launcher;
 import ru.rzn.gmyasoedov.gmaven.server.result.ResultHolder;
 import ru.rzn.gmyasoedov.serverapi.GMavenServer;
-import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer;
+import ru.rzn.gmyasoedov.serverapi.model.MavenResult;
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest;
 
 import java.nio.file.Paths;
@@ -16,11 +16,11 @@ import java.util.List;
 public class GMavenServerImpl implements GMavenServer {
 
     @Override
-    public MavenProjectContainer getProjectModel(GetModelRequest request) throws RemoteException {
+    public MavenResult getProjectModel(GetModelRequest request) throws RemoteException {
         fillSystemProperties(request);
         try {
             Launcher.mainWithExitCode(getMvnArgs(request));
-            return ResultHolder.projectContainer;
+            return ResultHolder.result;
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }

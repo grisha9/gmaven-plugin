@@ -20,16 +20,13 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.util.text.StringUtilRt;
 import com.intellij.util.PathUtil;
 import com.intellij.util.net.NetUtils;
-import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
 import ru.rzn.gmyasoedov.serverapi.GMavenServer;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -64,9 +61,19 @@ public class MavenServerCmdState extends CommandLineState {
         setupMavenOpts(params);
         setupDebugParam(params);
         setupClasspath(params);
+        setupGmavenPluginsProperty(params);
         processVmOptions(vmOptions, params);
         params.setMainClass("ru.rzn.gmyasoedov.gmaven.server.RemoteGMavenServer");
         return params;
+    }
+
+    private void setupGmavenPluginsProperty(SimpleJavaParameters params) {
+        String pluginsParam = MavenFullImportPlugin.EP_NAME.getExtensionList().stream()
+                .map(MavenFullImportPlugin::getKey)
+                .collect(Collectors.joining(";"));
+        if (!StringUtilRt.isEmpty(pluginsParam)) {
+            params.getVMParametersList().addProperty(GMAVEN_PLUGINS, pluginsParam);
+        }
     }
 
     private void setupClasspath(SimpleJavaParameters params) {
@@ -235,16 +242,6 @@ public class MavenServerCmdState extends CommandLineState {
                 + ApplicationInfoImpl.getShadowInstance().getMinorVersion();
     }
 
-    private Path getResourcePath(Path relativePath) {
-        final URL resource = getClass().getResource(File.separatorChar + relativePath.toString());
-        if (resource == null) {
-            String message = "Cannot find standard resource. filename:" + relativePath + " class=" + getClass();
-            throw new RuntimeException(message);
-        }
-
-        return Path.of(resource.getFile());
-    }
-
     @Nullable
     static String getMaxXmxStringValue(@Nullable String memoryValueA, @Nullable String memoryValueB) {
         MemoryProperty propertyA = MemoryProperty.valueOf(memoryValueA);
@@ -315,9 +312,5 @@ public class MavenServerCmdState extends CommandLineState {
                 this.type = type;
             }
         }
-    }
-
-    public static void main(String[] args) {
-        String plexusClassWorlds = getPlexusClassWorlds(Path.of("/home/Grigoriy.Myasoedov/.sdkman/candidates/maven/3.8.5"));
     }
 }

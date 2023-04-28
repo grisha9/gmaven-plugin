@@ -35,6 +35,7 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenArtifact
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
+import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Path.of
@@ -115,8 +116,9 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     }
 
     private fun getProjectDataNode(
-        projectPath: String, container: MavenProjectContainer, settings: MavenExecutionSettings
+        projectPath: String, mavenResult: MavenResult, settings: MavenExecutionSettings
     ): DataNode<ProjectData> {
+        val container = mavenResult.projectContainer
         val project = container.project
         val projectName = project.displayName
         val absolutePath = project.file.parent
@@ -141,7 +143,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val moduleNode = createModuleData(container, projectDataNode, context, moduleDataByArtifactId)
 
         for (childContainer in container.modules) {
-            createModuleData(childContainer, moduleNode!!, context, moduleDataByArtifactId)
+            createModuleData(childContainer, moduleNode, context, moduleDataByArtifactId)
         }
         addDependencies(container, moduleDataByArtifactId)
         return projectDataNode

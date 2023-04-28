@@ -8,7 +8,7 @@ import ru.rzn.gmyasoedov.gmaven.settings.DistributionType.BUNDLED
 class MavenProjectSettings : ExternalProjectSettings() {
     var projectDirectory: String? = null
    // var mavenHome: String? = null
-    var distributionSettings: DistributionSettings = DistributionSettings(BUNDLED, url = getBundledDistributionUrl())
+    var distributionSettings: DistributionSettings = DistributionSettings(BUNDLED, null, getBundledDistributionUrl())
     var jdkName: String? = ExternalSystemJdkUtil.USE_PROJECT_JDK
     var vmOptions: String? = null
     var resolveModulePerSourceSet = true

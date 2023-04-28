@@ -18,14 +18,8 @@ import static ru.rzn.gmyasoedov.event.handler.GMavenEventSpy.DEPENDENCY_RESULT_M
 public class MavenProjectConverter {
 
     public static MavenProject convert(org.apache.maven.project.MavenProject mavenProject, MavenSession session) {
-        Map<String, List<String>> annotationProcessorPathMap = Collections.emptyMap();
         Map<String, List<DependencyNode>> dependencyResultMap = Collections.emptyMap();
         if (session != null) {
-            annotationProcessorPathMap = (Map<String, List<String>>) session
-                    .getUserProperties().get("annotationProcessorPathMap");
-            if (annotationProcessorPathMap == null) {
-                annotationProcessorPathMap = Collections.emptyMap();
-            }
             dependencyResultMap = (Map<String, List<DependencyNode>>) session
                     .getUserProperties().get(DEPENDENCY_RESULT_MAP);
             if (dependencyResultMap == null) {
@@ -35,7 +29,7 @@ public class MavenProjectConverter {
 
         List<MavenPlugin> plugins = new ArrayList<>(mavenProject.getBuildPlugins().size());
         for (Plugin plugin : mavenProject.getBuildPlugins()) {
-            plugins.add(MavenPluginConverter.convert(plugin));
+            plugins.add(MavenPluginConverter.convert(plugin, mavenProject));
         }
         List<MavenArtifact> artifacts = new ArrayList<>(mavenProject.getArtifacts().size());
 
@@ -61,7 +55,8 @@ public class MavenProjectConverter {
                 .plugins(plugins)
                 .artifacts(artifacts)
                 .dependencyTreeNodes(dependencyTreeNodes)
-                .annotationProcessorPaths(annotationProcessorPathMap.get(mavenProject.getArtifactId()))
+                .annotationProcessorPaths((List<String>) mavenProject
+                        .getContextValue("annotationProcessorPath"))
                 .sourceRoots(mavenProject.getCompileSourceRoots())
                 .testSourceRoots(mavenProject.getTestCompileSourceRoots())
                 .resourceRoots(convertResorce(mavenProject.getResources()))

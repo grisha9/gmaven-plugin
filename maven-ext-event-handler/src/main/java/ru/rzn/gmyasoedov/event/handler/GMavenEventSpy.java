@@ -9,9 +9,11 @@ import org.apache.maven.settings.building.DefaultSettingsBuildingRequest;
 import org.eclipse.aether.graph.DependencyNode;
 import ru.rzn.gmyasoedov.event.handler.converter.MavenProjectContainerConverter;
 import ru.rzn.gmyasoedov.gmaven.server.result.ResultHolder;
-import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer;
+import ru.rzn.gmyasoedov.serverapi.model.MavenException;
+import ru.rzn.gmyasoedov.serverapi.model.MavenResult;
 
 import javax.inject.Named;
+import java.util.Collections;
 import java.util.List;
 
 @Named
@@ -36,12 +38,20 @@ public class GMavenEventSpy extends AbstractEventSpy {
             if (resultHolder.session != null) {
                 resultHolder.session.getUserProperties().put(DEPENDENCY_RESULT_MAP, resultHolder.dependencyResult);
             }
-            if (isGPluginResolutionError(resultHolder.executionResult)) {
-                ResultHolder.projectContainer = new MavenProjectContainer(true);
-            } else {
-                ResultHolder.projectContainer = MavenProjectContainerConverter.convert(resultHolder);
-            }
+            setResult();
         }
+    }
+
+    private void setResult() {
+        boolean pluginResolutionError = isGPluginResolutionError(resultHolder.executionResult);
+        String localRepository = resultHolder.session != null
+                ? resultHolder.session.getLocalRepository().getBasedir() : null;
+        ResultHolder.result = new MavenResult(
+                pluginResolutionError,
+                localRepository,
+                MavenProjectContainerConverter.convert(resultHolder),
+                Collections.<MavenException>emptyList()
+        );
     }
 
     private boolean isGPluginResolutionError(MavenExecutionResult result) {

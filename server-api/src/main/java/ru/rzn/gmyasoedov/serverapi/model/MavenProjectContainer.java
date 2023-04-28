@@ -6,12 +6,10 @@ import java.util.Collections;
 import java.util.List;
 
 public class MavenProjectContainer implements Serializable {
-    private final boolean pluginNotResolved;
     private final MavenProject project;
     private final List<MavenProjectContainer> modules;
 
-    public MavenProjectContainer(boolean pluginNotResolved) {
-        this.pluginNotResolved = pluginNotResolved;
+    public MavenProjectContainer() {
         this.project = null;
         this.modules = Collections.emptyList();
     }
@@ -19,7 +17,6 @@ public class MavenProjectContainer implements Serializable {
     public MavenProjectContainer(MavenProject project) {
         this.project = project;
         this.modules = new ArrayList<>(project.getModulesDir().size());
-        this.pluginNotResolved = false;
     }
 
     public MavenProject getProject() {
@@ -28,10 +25,6 @@ public class MavenProjectContainer implements Serializable {
 
     public List<MavenProjectContainer> getModules() {
         return modules;
-    }
-
-    public boolean isPluginNotResolved() {
-        return pluginNotResolved;
     }
 
     @Override

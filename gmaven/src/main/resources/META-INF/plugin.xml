@@ -20,6 +20,13 @@
     <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.properties</depends>
 
+    <extensionPoints>
+        <extensionPoint name="import.full.plugin" dynamic="true"
+                        interface="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin"/>
+    </extensionPoints>
+    <extensions defaultExtensionNs="ru.rzn.gmyasoedov.gmaven">
+        <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin"/>
+    </extensions>
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">

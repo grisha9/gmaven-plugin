@@ -3,8 +3,6 @@ package ru.rzn.gmyasoedov.gmaven.dom;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.JarFileSystem;
-import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.xml.XmlElement;
@@ -19,8 +17,6 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenDomUtil;
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
-
-import java.nio.file.Path;
 
 public final class MavenPluginDomUtil {
 
@@ -92,13 +88,14 @@ public final class MavenPluginDomUtil {
 
   @Nullable
   private static VirtualFile getPluginXmlFile(Project project, String groupId, String artifactId, String version) {
-    Path file = MavenArtifactUtil.getArtifactNioPath(MavenProjectsManager.getInstance(project).getLocalRepository(),
+   /* Path file = MavenArtifactUtil.getArtifactNioPath(MavenProjectsManager.getInstance(project).getLocalRepository(),
                                                      groupId, artifactId, version, "jar");
     VirtualFile pluginFile = LocalFileSystem.getInstance().findFileByNioFile(file);
     if (pluginFile == null) return null;
 
     VirtualFile pluginJarRoot = JarFileSystem.getInstance().getJarRootForLocalFile(pluginFile);
     if (pluginJarRoot == null) return null;
-    return pluginJarRoot.findFileByRelativePath(MavenArtifactUtil.MAVEN_PLUGIN_DESCRIPTOR);
+    return pluginJarRoot.findFileByRelativePath(MavenArtifactUtil.MAVEN_PLUGIN_DESCRIPTOR);*/
+    return null;
   }
 }

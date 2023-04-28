@@ -1,7 +1,7 @@
 package ru.rzn.gmyasoedov.gmaven.server.result;
 
-import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer;
+import ru.rzn.gmyasoedov.serverapi.model.MavenResult;
 
 public class ResultHolder {
-    public static MavenProjectContainer projectContainer;
+    public static MavenResult result;
 }

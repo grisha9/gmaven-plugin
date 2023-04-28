@@ -6,10 +6,10 @@ import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.util.PathUtil
 import com.intellij.util.io.isDirectory
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
-import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
+import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest
 
-fun getProjectModelFirstRun(gServerRequest: GServerRequest): MavenProjectContainer {
+fun getProjectModelFirstRun(gServerRequest: GServerRequest): MavenResult {
     val request = GServerRequest(
         gServerRequest.taskId,
         gServerRequest.projectPath,
@@ -30,7 +30,7 @@ fun getProjectModelFirstRun(gServerRequest: GServerRequest): MavenProjectContain
     }
 }
 
-fun getProjectModel(request: GServerRequest): MavenProjectContainer {
+fun getProjectModel(request: GServerRequest): MavenResult {
     val processSupport = GServerRemoteProcessSupport(request.sdk, request.vmOptions, request.mavenPath)
     try {
         val server = processSupport.acquire(request.taskId, "", EmptyProgressIndicator())
@@ -49,8 +49,8 @@ fun getProjectModel(request: GServerRequest): MavenProjectContainer {
     }
 }
 
-private fun tryInstallGMavenPlugin(request: GServerRequest, projectContainer: MavenProjectContainer) =
-    !request.installGMavenPlugin && projectContainer.isPluginNotResolved
+private fun tryInstallGMavenPlugin(request: GServerRequest, mavenResult: MavenResult) =
+    !request.installGMavenPlugin && mavenResult.pluginNotResolved
 
 private fun getModelRequest(request: GServerRequest): GetModelRequest {
     val projectPath = request.projectPath
