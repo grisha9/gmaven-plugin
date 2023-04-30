@@ -48,7 +48,7 @@ public class MavenPluginConverter {
             result.add(PluginExecution.builder()
                             .id((String) execution.get("id"))
                             .phase((String) execution.get("phase"))
-                            .goals(goals == null ? Collections.<String>emptyList() : goals)
+                            .goals(goals == null ? Collections.<String>emptyList() : new ArrayList<>(goals))
                             .configuration(getConfiguration(execution))
                     .build());
         }

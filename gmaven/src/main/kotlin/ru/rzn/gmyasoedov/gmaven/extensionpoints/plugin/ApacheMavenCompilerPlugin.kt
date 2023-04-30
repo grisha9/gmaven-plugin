@@ -65,22 +65,22 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         val executions = body.executions.filter { it.phase.equals("compile") || it.phase.equals("test-compile") }
         val compilerProp = if (executions.isEmpty()) getCompilerProp(body.configuration) else compilerProp(executions)
         if (compilerProp.release == null) {
-            compilerProp.release = getLanguageLevel(project.properties.getProperty("maven.compiler.release"))
+            compilerProp.release = getLanguageLevel(project.properties.get("maven.compiler.release"))
         }
         if (compilerProp.source == null) {
-            compilerProp.source = getLanguageLevel(project.properties.getProperty("maven.compiler.source"))
+            compilerProp.source = getLanguageLevel(project.properties.get("maven.compiler.source"))
         }
         if (compilerProp.target == null) {
-            compilerProp.target = getLanguageLevel(project.properties.getProperty("maven.compiler.target"))
+            compilerProp.target = getLanguageLevel(project.properties.get("maven.compiler.target"))
         }
         if (compilerProp.testRelease == null) {
-            compilerProp.testRelease = getLanguageLevel(project.properties.getProperty("maven.compiler.testRelease"))
+            compilerProp.testRelease = getLanguageLevel(project.properties.get("maven.compiler.testRelease"))
         }
         if (compilerProp.testSource == null) {
-            compilerProp.testSource = getLanguageLevel(project.properties.getProperty("maven.compiler.testSource"))
+            compilerProp.testSource = getLanguageLevel(project.properties.get("maven.compiler.testSource"))
         }
         if (compilerProp.testTarget == null) {
-            compilerProp.testTarget = getLanguageLevel(project.properties.getProperty("maven.compiler.testTarget"))
+            compilerProp.testTarget = getLanguageLevel(project.properties.get("maven.compiler.testTarget"))
         }
         return compilerProp;
     }

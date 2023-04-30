@@ -42,6 +42,7 @@ public class MavenProjectConverter {
         List<DependencyTreeNode> dependencyTreeNodes = DependencyTreeNodeConverter
                 .convert(dependencyResultMap.get(mavenProject.getArtifactId()), convertedArtifactMap);
         List<String> modulesDir = convertModules(mavenProject.getBasedir(), mavenProject.getModules());
+
         return MavenProject.builder()
                 .groupId(mavenProject.getGroupId())
                 .artifactId(mavenProject.getArtifactId())
@@ -68,8 +69,19 @@ public class MavenProjectConverter {
                 .dependencyArtifacts(convertMavenArtifact(mavenProject.getDependencyArtifacts()))
                 .parentArtifact(mavenProject.getParentArtifact() != null
                         ? MavenArtifactConverter.convert(mavenProject.getParentArtifact()) : null)
-                .properties(mavenProject.getProperties())
+                .properties(getProperties(mavenProject))
                 .build();
+    }
+
+    private static Map<Object, Object> getProperties(org.apache.maven.project.MavenProject mavenProject) {
+        Properties projectProperties = mavenProject.getProperties();
+        if (projectProperties == null) {
+            return Collections.emptyMap();
+        } else {
+            HashMap<Object, Object> result = new HashMap<>(projectProperties.size());
+            result.putAll(projectProperties);
+            return result;
+        }
     }
 
     private static List<String> convertModules(File basedir, List<String> modules) {

@@ -3,11 +3,10 @@ package ru.rzn.gmyasoedov.serverapi.model;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 
 @Getter
 @SuperBuilder
@@ -34,7 +33,7 @@ public class MavenProject extends MavenId {
     private final String buildDirectory;
     private final String outputDirectory;
     private final String testOutputDirectory;
-    private final Properties properties;
+    private final Map<Object, Object> properties;
 
     public @NotNull String getDisplayName() {
         return (name == null || name.isEmpty()) ? artifactId : name;
