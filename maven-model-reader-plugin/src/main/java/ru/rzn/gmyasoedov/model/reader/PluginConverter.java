@@ -70,10 +70,23 @@ public class PluginConverter {
         if (children == null || children.length == 0) {
             result.put(xpp.getName(), xpp.getValue());
         } else {
-            HashMap<String, Object> value = new HashMap<>();
-            result.put(xpp.getName(), value);
+            Map<String, Object> node = new HashMap<>();
+            Object value = result.get(xpp.getName());
+            if (value != null) {
+                if (value instanceof List) {
+                    ((List) value).add(node);
+                } else {
+                    ArrayList<Object> objectList = new ArrayList<>(3);
+                    objectList.add(value);
+                    objectList.add(node);
+                    result.put(xpp.getName(), objectList);
+                }
+            } else {
+                result.put(xpp.getName(), node);
+            }
+
             for (Xpp3Dom each : children) {
-                xppToMap(each, value);
+                xppToMap(each, node);
             }
         }
     }
