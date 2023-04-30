@@ -56,11 +56,16 @@ public class PluginConverter {
     }
 
     private static Map<String, Object> convertConfiguration(Object config) {
-        return config instanceof Xpp3Dom ? xppToMap((Xpp3Dom) config) : null;
+        if (config instanceof Xpp3Dom) {
+            HashMap<String, Object> result = new HashMap<>();
+            xppToMap((Xpp3Dom) config, result);
+            return result;
+        } else {
+            return Collections.emptyMap();
+        }
     }
 
-    private static Map<String, Object> xppToMap(Xpp3Dom xpp) {
-        Map<String, Object> result = new HashMap<>();
+    private static void xppToMap(Xpp3Dom xpp, Map<String, Object> result) {
         Xpp3Dom[] children = xpp.getChildren();
         if (children == null || children.length == 0) {
             result.put(xpp.getName(), xpp.getValue());
@@ -68,10 +73,8 @@ public class PluginConverter {
             HashMap<String, Object> value = new HashMap<>();
             result.put(xpp.getName(), value);
             for (Xpp3Dom each : children) {
-                Map<String, Object> child = xppToMap(each);
-                value.put(each.getName(), child);
+                xppToMap(each, value);
             }
         }
-        return result;
     }
 }
