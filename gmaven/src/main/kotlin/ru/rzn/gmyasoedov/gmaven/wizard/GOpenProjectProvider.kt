@@ -61,10 +61,10 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         if (settings.distributionSettings.type == DistributionType.CUSTOM) return settings.distributionSettings
 
         val distributionUrl = MvnDotProperties.getDistributionUrl(project, projectDirectory.path)
-        if (distributionUrl.isNotEmpty()) return DistributionSettings(DistributionType.WRAPPER, null, distributionUrl)
+        if (distributionUrl.isNotEmpty()) return DistributionSettings.getWrapper(distributionUrl)
 
         val mavenHome = MavenUtils.resolveMavenHome()
-        if (mavenHome != null)  return DistributionSettings(DistributionType.MVN, mavenHome.toPath(), null);
+        if (mavenHome != null)  return DistributionSettings.getLocal(mavenHome.toPath())
 
         return settings.distributionSettings
     }

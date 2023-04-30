@@ -41,7 +41,6 @@ import java.util.List;
 
 import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_PROJECT_JDK;
 import static java.util.Objects.requireNonNullElse;
-import static ru.rzn.gmyasoedov.gmaven.settings.DistributionType.BUNDLED;
 
 public final class MavenManager //manager
         implements ExternalSystemConfigurableAware,
@@ -82,8 +81,7 @@ public final class MavenManager //manager
             MavenProjectSettings projectSettings = settings.getLinkedProjectSettings(projectPath);//to do??
             String rootProjectPath = projectSettings != null ? projectSettings.getExternalProjectPath() : projectPath;
             DistributionSettings distributionSettings = projectSettings != null
-                    ? projectSettings.getDistributionSettings()
-                    : new DistributionSettings(BUNDLED, null, GMavenConstants.getBundledDistributionUrl());
+                    ? projectSettings.getDistributionSettings() : DistributionSettings.getBundled();
 
             MavenExecutionSettings result = new MavenExecutionSettings(distributionSettings,
                     projectPath,

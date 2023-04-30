@@ -15,29 +15,19 @@ import com.intellij.openapi.externalSystem.service.project.ExternalSystemProject
 import com.intellij.openapi.module.ModuleTypeManager
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.roots.DependencyScope
-import com.intellij.openapi.roots.ui.configuration.SdkLookupBuilder
-import com.intellij.openapi.roots.ui.configuration.SdkLookupDecision
-import com.intellij.openapi.roots.ui.configuration.UnknownSdkDownloadableSdkFix
-import com.intellij.openapi.roots.ui.configuration.lookupSdk
 import com.intellij.openapi.util.io.FileUtil
-import com.intellij.openapi.util.text.StringUtil
 import com.intellij.pom.java.LanguageLevel
-import org.apache.commons.lang.StringUtils
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.project.importing.AnnotationProcessingData
-import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModelFirstRun
-import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
-import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenArtifact
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import java.io.File
-import java.nio.file.Path
 import java.nio.file.Path.of
 
 class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSettings> {
@@ -69,15 +59,6 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val request = GServerRequest(id, of(projectPath), mavenHome, sdk)
         val projectModel = getProjectModel(request)
         return getProjectDataNode(projectPath, projectModel, settings)
-    }
-
-    private fun getMavenHome(distributionSettings: DistributionSettings): Path {
-        if (distributionSettings.path != null) return distributionSettings.path
-        if (distributionSettings.url != null) {
-            val mavenHome = MavenWrapperDistribution.getOrDownload(distributionSettings.url)
-            return mavenHome.path
-        }
-        throw ExternalSystemException("maven home is empty");
     }
 
     private fun getPreviewProjectDataNode(
@@ -137,7 +118,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
 
         var ideProjectPath = settings.ideProjectPath
         ideProjectPath = ideProjectPath ?: projectPath
-        val context = ProjectResolverContext(absolutePath, ideProjectPath)
+        val context = ProjectResolverContext(absolutePath, ideProjectPath, mavenResult)
 
         val moduleDataByArtifactId = HashMap<String, DataNode<ModuleData>>()
         val moduleNode = createModuleData(container, projectDataNode, context, moduleDataByArtifactId)
@@ -205,11 +186,9 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         storePath(project.testSourceRoots, contentRootData, ExternalSystemSourceType.TEST)
         storePath(project.testResourceRoots, contentRootData, ExternalSystemSourceType.TEST_RESOURCE)
         contentRootData.storePath(ExternalSystemSourceType.EXCLUDED, project.buildDirectory)
-        val compilerPluginVersion: String = getCompilerPluginVersion(project)
-        val sourceLanguageLevel: LanguageLevel =
-            getMavenLanguageLevel(project, compilerPluginVersion, "maven.compiler.source")
-        val targetBytecodeLevel: LanguageLevel =
-            getMavenLanguageLevel(project, compilerPluginVersion, "maven.compiler.target")
+        val compilerData = getCompilerData(project, context.mavenResult)
+        val sourceLanguageLevel: LanguageLevel = compilerData.sourceLevel
+        val targetBytecodeLevel: LanguageLevel = compilerData.targetLevel
         moduleDataNode.createChild(ModuleSdkData.KEY, ModuleSdkData(null))
 
         moduleDataNode.createChild(
@@ -263,7 +242,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         }
     }
 
-    private fun resolveJdkName(jdkNameOrVersion: String): String? {
+ /*   private fun resolveJdkName(jdkNameOrVersion: String): String? {
         val sdk = lookupSdk { builder: SdkLookupBuilder ->
             builder
                 .withSdkName(jdkNameOrVersion)
@@ -271,28 +250,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
                 .onDownloadableSdkSuggested { _: UnknownSdkDownloadableSdkFix? -> SdkLookupDecision.STOP }
         }
         return sdk?.name
-    }
-
-    private fun getMavenLanguageLevel(
-        mavenProject: MavenProject,
-        compilerPluginVersion: String,
-        property: String
-    ): LanguageLevel {
-        val isReleaseEnabled = StringUtil.compareVersionNumbers(compilerPluginVersion, "3.6") >= 0
-        val mavenProjectReleaseLevel =
-            if (isReleaseEnabled) mavenProject.properties["maven.compiler.release"] as String? else null
-        var level = LanguageLevel.parse(mavenProjectReleaseLevel)
-        if (level == null) {
-            val mavenProjectLanguageLevel = mavenProject.properties[property] as String?
-            level = LanguageLevel.parse(mavenProjectLanguageLevel)
-        }
-        return level ?: LanguageLevel.HIGHEST
-    }
-
-    private fun getCompilerPluginVersion(mavenProject: MavenProject): String {
-        val plugin = MavenUtils.findPlugin(mavenProject, "org.apache.maven.plugins", "maven-compiler-plugin")
-        return plugin?.version ?: StringUtils.EMPTY
-    }
+    }*/
 
     private fun addLibrary(parentNode: DataNode<ModuleData>, artifact: MavenArtifact) {
         val library = LibraryData(GMavenConstants.SYSTEM_ID, artifact.id)
@@ -314,7 +272,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         }
     }
 
-    fun getScope(artifact: MavenArtifact): DependencyScope {
+    private fun getScope(artifact: MavenArtifact): DependencyScope {
         return when {
             isTestScope(artifact) -> DependencyScope.TEST
             GMavenConstants.SCOPE_RUNTIME == artifact.scope -> DependencyScope.RUNTIME
@@ -338,5 +296,9 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         return if (parentName == null) moduleName else "$parentName.$moduleName"
     }
 
-    private class ProjectResolverContext(val rootProjectPath: String, val ideaProjectPath: String)
+    private class ProjectResolverContext(
+        val rootProjectPath: String,
+        val ideaProjectPath: String,
+        val mavenResult: MavenResult
+    )
 }

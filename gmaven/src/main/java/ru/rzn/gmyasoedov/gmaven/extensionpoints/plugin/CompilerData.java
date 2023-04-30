@@ -11,7 +11,7 @@ public class CompilerData {
     private final LanguageLevel targetLevel;
     private final LanguageLevel testSourceLevel;
     private final LanguageLevel testTargetLevel;
-    private final Collection<String> arguments;//todo
+    private final Collection<String> arguments;// todo main/test? split it
 
     public CompilerData(@Nonnull LanguageLevel sourceLevel,
                         @Nonnull LanguageLevel targetLevel,

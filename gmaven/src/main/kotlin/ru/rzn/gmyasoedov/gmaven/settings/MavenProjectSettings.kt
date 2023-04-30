@@ -2,13 +2,11 @@ package ru.rzn.gmyasoedov.gmaven.settings
 
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.openapi.externalSystem.settings.ExternalProjectSettings
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants.getBundledDistributionUrl
-import ru.rzn.gmyasoedov.gmaven.settings.DistributionType.BUNDLED
 
 class MavenProjectSettings : ExternalProjectSettings() {
     var projectDirectory: String? = null
    // var mavenHome: String? = null
-    var distributionSettings: DistributionSettings = DistributionSettings(BUNDLED, null, getBundledDistributionUrl())
+    var distributionSettings: DistributionSettings = DistributionSettings.getBundled()
     var jdkName: String? = ExternalSystemJdkUtil.USE_PROJECT_JDK
     var vmOptions: String? = null
     var resolveModulePerSourceSet = true
