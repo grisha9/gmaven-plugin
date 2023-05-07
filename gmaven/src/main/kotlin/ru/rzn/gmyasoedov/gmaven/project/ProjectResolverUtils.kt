@@ -1,12 +1,18 @@
 package ru.rzn.gmyasoedov.gmaven.project
 
+import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
+import com.intellij.openapi.externalSystem.model.ProjectKeys
+import com.intellij.openapi.externalSystem.model.project.ModuleData
+import com.intellij.openapi.externalSystem.model.task.TaskData
 import com.intellij.pom.java.LanguageLevel.HIGHEST
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
+import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import java.nio.file.Path
@@ -33,4 +39,20 @@ fun getCompilerData(mavenProject: MavenProject, mavenResult: MavenResult): Compi
         }
     }
     return CompilerData(HIGHEST, Collections.emptyList());
+}
+
+fun populateTasks(moduleDataNode: DataNode<ModuleData>, mavenProject: MavenProject, localRepo: Path?) {
+    for (basicPhase in GMavenConstants.BASIC_PHASES) {
+        val taskData = TaskData(GMavenConstants.SYSTEM_ID, basicPhase, mavenProject.basedir, null)
+        taskData.group = GMavenConstants.TASK_LIFECYCLE
+        moduleDataNode.createChild(ProjectKeys.TASK, taskData)
+    }
+    for (plugin in mavenProject.plugins) {
+        val pluginDescriptor = MavenArtifactUtil.readPluginDescriptor(localRepo, plugin) ?: continue
+        for (mojo in pluginDescriptor.mojos) {
+            val taskData = TaskData(GMavenConstants.SYSTEM_ID, mojo.displayName, mavenProject.basedir, null)
+            taskData.group = GMavenConstants.TASK_PLUGINS
+            moduleDataNode.createChild(ProjectKeys.TASK, taskData)
+        }
+    }
 }

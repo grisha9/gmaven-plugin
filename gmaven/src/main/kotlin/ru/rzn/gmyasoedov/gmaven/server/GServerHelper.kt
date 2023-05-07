@@ -19,7 +19,7 @@ fun getProjectModelFirstRun(gServerRequest: GServerRequest): MavenResult {
         installGMavenPlugin = true
     )
     val modelRequest = getModelRequest(request)
-    val processSupport = GServerRemoteProcessSupport(request.sdk, request.vmOptions, request.mavenPath)
+    val processSupport = GServerRemoteProcessSupport(request)
     try {
         return processSupport.acquire(request.taskId, "", EmptyProgressIndicator()).getProjectModel(modelRequest)
     } catch (e: Exception) {
@@ -31,7 +31,7 @@ fun getProjectModelFirstRun(gServerRequest: GServerRequest): MavenResult {
 }
 
 fun getProjectModel(request: GServerRequest): MavenResult {
-    val processSupport = GServerRemoteProcessSupport(request.sdk, request.vmOptions, request.mavenPath)
+    val processSupport = GServerRemoteProcessSupport(request)
     try {
         val server = processSupport.acquire(request.taskId, "", EmptyProgressIndicator())
         val modelRequest = getModelRequest(request)

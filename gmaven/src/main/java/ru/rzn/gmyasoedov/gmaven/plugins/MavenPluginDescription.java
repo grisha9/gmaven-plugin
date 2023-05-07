@@ -18,9 +18,7 @@ public class MavenPluginDescription {
     private final Map<String, Mojo> myMojos;
     private final Map<String, String> myParams = new HashMap<>();
 
-    public MavenPluginDescription(byte[] text) {
-        Element plugin = MavenJDOMUtil.read(text);
-
+    public MavenPluginDescription(Element plugin) {
         myGroupId = MavenJDOMUtil.findChildValueByPath(plugin, "groupId", "unknown");
         myArtifactId = MavenJDOMUtil.findChildValueByPath(plugin, "artifactId", "unknown");
         myVersion = MavenJDOMUtil.findChildValueByPath(plugin, "version", "unknown");

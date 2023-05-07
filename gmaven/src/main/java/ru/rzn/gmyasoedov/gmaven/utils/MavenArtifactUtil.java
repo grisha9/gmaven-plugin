@@ -1,11 +1,14 @@
 // Copyright 2000-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package ru.rzn.gmyasoedov.gmaven.utils;
 
+import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
+import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.plugins.MavenPluginDescription;
+import ru.rzn.gmyasoedov.serverapi.model.MavenId;
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
 
 import java.io.File;
@@ -14,10 +17,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -26,6 +27,7 @@ public final class MavenArtifactUtil {
     public static final String[] DEFAULT_GROUPS = new String[]{"org.apache.maven.plugins", "org.codehaus.mojo"};
     public static final String MAVEN_PLUGIN_DESCRIPTOR = "META-INF/maven/plugin.xml";
 
+    private static final Map<MavenId, MavenPluginDescription> PLUGIN_DESCRIPTOR_CACHE = new ConcurrentHashMap<>();
 
     public static boolean isPluginIdEquals(@Nullable String groupId1, @Nullable String artifactId1,
                                            @Nullable String groupId2, @Nullable String artifactId2) {
@@ -56,9 +58,17 @@ public final class MavenArtifactUtil {
 
     @Nullable
     public static MavenPluginDescription readPluginDescriptor(Path localRepository, MavenPlugin plugin) {
+        MavenPluginDescription description = PLUGIN_DESCRIPTOR_CACHE.get(plugin);
+        if (description != null) {
+            return description;
+        }
         Path path = getArtifactNioPath(localRepository, plugin.getGroupId(),
                 plugin.getArtifactId(), plugin.getVersion(), "jar");
-        return getPluginDescriptor(path);
+        MavenPluginDescription pluginDescriptor = getPluginDescriptor(path);
+        if (pluginDescriptor != null) {
+            PLUGIN_DESCRIPTOR_CACHE.putIfAbsent(plugin, pluginDescriptor);
+        }
+        return pluginDescriptor;
     }
 
     @NotNull
@@ -113,11 +123,16 @@ public final class MavenArtifactUtil {
 
                 try (InputStream is = jar.getInputStream(entry)) {
                     byte[] bytes = FileUtil.loadBytes(is);
-                    return new MavenPluginDescription(bytes);
+                    try {
+                        Element pluginDescriptionElement = JDOMUtil.load(bytes);
+                        return new MavenPluginDescription(pluginDescriptionElement);
+                    } catch (Exception e) {
+                        MavenLog.LOG.error("repository.plugin.corrupt " + file, e);
+                        return null;
+                    }
                 }
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             MavenLog.LOG.info(e);
             return null;
         }

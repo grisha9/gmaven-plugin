@@ -28,7 +28,7 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import java.io.File
-import java.nio.file.Path.of
+import java.nio.file.Path
 
 class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSettings> {
     override fun cancelTask(taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener) = false
@@ -45,7 +45,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             .jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) } ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
 
         if (isPreviewMode) {
-            return getPreviewProjectDataNode(settings, id, projectPath, sdk)
+            return getPreviewProjectDataNode(settings, id, projectPath, sdk, listener)
         }
 
         val mavenHome = getMavenHome(settings.distributionSettings)
@@ -56,7 +56,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             println(distribution)*//*
         }*/
 
-        val request = GServerRequest(id, of(projectPath), mavenHome, sdk)
+        val request = GServerRequest(id, Path.of(projectPath), mavenHome, sdk, listener = listener)
         val projectModel = getProjectModel(request)
         return getProjectDataNode(projectPath, projectModel, settings)
     }
@@ -65,10 +65,12 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         settings: MavenExecutionSettings,
         id: ExternalSystemTaskId,
         projectPath: String,
-        sdk: Sdk
+        sdk: Sdk,
+        listener: ExternalSystemTaskNotificationListener
     ): DataNode<ProjectData> {
         if (settings.distributionSettings.path != null) {
-            val request = GServerRequest(id, of(projectPath), settings.distributionSettings.path!!, sdk)
+            val request = GServerRequest(id, Path.of(projectPath), settings.distributionSettings.path!!,
+                sdk, listener = listener)
             val projectModel = getProjectModelFirstRun(request)
             return getProjectDataNode(projectPath, projectModel, settings)
         } else {
@@ -198,6 +200,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             )
         )
         populateAnnotationProcessorData(project, moduleDataNode)
+        populateTasks(moduleDataNode, project, context.mavenResult.localRepository?.let { Path.of(it) })
         if (parentDataNode.data is ModuleData) {
             for (childContainer in container.modules) {
                 createModuleData(childContainer, moduleDataNode, context, moduleDataByArtifactId)
@@ -254,12 +257,12 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
 
     private fun addLibrary(parentNode: DataNode<ModuleData>, artifact: MavenArtifact) {
         val library = LibraryData(GMavenConstants.SYSTEM_ID, artifact.id)
-        library.setArtifactId(artifact.artifactId)
+        library.artifactId = artifact.artifactId
         library.setGroup(artifact.groupId)
-        library.setVersion(artifact.version)
+        library.version = artifact.version
         library.addPath(getLibraryPathType(artifact), artifact.file.absolutePath)
         val libraryDependencyData = LibraryDependencyData(parentNode.data, library, LibraryLevel.MODULE)
-        libraryDependencyData.setScope(getScope(artifact))
+        libraryDependencyData.scope = getScope(artifact)
         libraryDependencyData.order = 2
         parentNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData)
     }

@@ -1,98 +1,14 @@
 // Copyright 2000-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package ru.rzn.gmyasoedov.gmaven.utils;
 
-import com.intellij.openapi.util.JDOMUtil;
-import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.CharsetToolkit;
-import com.intellij.openapi.vfs.encoding.EncodingRegistry;
-import com.intellij.psi.impl.source.parsing.xml.XmlBuilder;
-import com.intellij.psi.impl.source.parsing.xml.XmlBuilderDriver;
 import org.jdom.Element;
-import org.jdom.IllegalNameException;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public final class MavenJDOMUtil {
-
-    @Nullable
-    public static Element read(byte[] bytes) {
-        return doRead(CharsetToolkit.bytesToString(bytes, EncodingRegistry.getInstance().getDefaultCharset()));
-    }
-
-    @Nullable
-    private static Element doRead(String text) {
-        final LinkedList<Element> stack = new LinkedList<>();
-
-        final Element[] result = {null};
-        XmlBuilderDriver driver = new XmlBuilderDriver(text);
-        XmlBuilder builder = new XmlBuilder() {
-            @Override
-            public void doctype(@Nullable CharSequence publicId, @Nullable CharSequence systemId, int startOffset, int endOffset) {
-            }
-
-            @Override
-            public ProcessingOrder startTag(CharSequence localName, String namespace, int startoffset, int endoffset, int headerEndOffset) {
-                String name = localName.toString();
-                if (StringUtil.isEmptyOrSpaces(name)) return ProcessingOrder.TAGS;
-
-                Element newElement;
-                try {
-                    newElement = new Element(name);
-                } catch (IllegalNameException e) {
-                    newElement = new Element("invalidName");
-                }
-
-                Element parent = stack.isEmpty() ? null : stack.getLast();
-                if (parent == null) {
-                    result[0] = newElement;
-                } else {
-                    parent.addContent(newElement);
-                }
-                stack.addLast(newElement);
-
-                return ProcessingOrder.TAGS_AND_TEXTS;
-            }
-
-            @Override
-            public void endTag(CharSequence localName, String namespace, int startoffset, int endoffset) {
-                String name = localName.toString();
-                if (StringUtil.isEmptyOrSpaces(name)) return;
-
-                for (Iterator<Element> itr = stack.descendingIterator(); itr.hasNext(); ) {
-                    Element element = itr.next();
-
-                    if (element.getName().equals(name)) {
-                        while (stack.removeLast() != element) {
-                        }
-                        break;
-                    }
-                }
-            }
-
-            @Override
-            public void textElement(CharSequence text, CharSequence physical, int startoffset, int endoffset) {
-                stack.getLast().addContent(JDOMUtil.legalizeText(text.toString()));
-            }
-
-            @Override
-            public void attribute(CharSequence name, CharSequence value, int startoffset, int endoffset) {
-            }
-
-            @Override
-            public void entityRef(CharSequence ref, int startOffset, int endOffset) {
-            }
-
-            @Override
-            public void error(@NotNull String message, int startOffset, int endOffset) {
-                MavenLog.LOG.error("parse error {}", message);
-            }
-        };
-
-        driver.build(builder);
-        return result[0];
-    }
 
     @Nullable
     public static Element findChildByPath(@Nullable Element element, String path) {

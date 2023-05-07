@@ -6,6 +6,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import java.io.ByteArrayInputStream
+import java.nio.file.Path
 import java.util.*
 
 
@@ -16,12 +17,8 @@ class MvnDotProperties {
 
         @JvmStatic
         fun getDistributionUrl(project: Project, projectPath: String): String {
-            val propertiesVFile = getWrapperPropertiesVFile(projectPath) ?: return "";
-            return getWrapperProperties(project, propertiesVFile).getProperty(DISTRIBUTION_URL_PROPERTY, "");
-        }
-
-        private fun getDistributionUrl(wrapperProperties: VirtualFile): String {
-            return getWrapperProperties(wrapperProperties).getProperty(DISTRIBUTION_URL_PROPERTY, "");
+            val propertiesVFile = getWrapperPropertiesVFile(projectPath) ?: return ""
+            return getWrapperProperties(project, propertiesVFile).getProperty(DISTRIBUTION_URL_PROPERTY, "")
         }
 
         private fun getWrapperProperties(project: Project, wrapperProperties: VirtualFile): Properties {
@@ -30,7 +27,7 @@ class MvnDotProperties {
                 { -> CachedValueProvider.Result.create(getWrapperProperties(wrapperProperties), wrapperProperties) }
         }
 
-        fun getWrapperPropertiesVFile(projectPath: String): VirtualFile? {
+        private fun getWrapperPropertiesVFile(projectPath: String): VirtualFile? {
             return LocalFileSystem.getInstance().findFileByPath(projectPath)
                 ?.findChild(".mvn")?.findChild("wrapper")?.findChild("maven-wrapper.properties")
         }
@@ -39,6 +36,17 @@ class MvnDotProperties {
             val properties = Properties()
             properties.load(ByteArrayInputStream(wrapperProperties.contentsToByteArray(true)))
             return properties
+        }
+
+        @JvmStatic
+        fun getJvmConfig(projectPath: Path): String {
+            val jvmConfigVFile = getJvmConfigVFile(projectPath) ?: return ""
+            return String(jvmConfigVFile.contentsToByteArray(true), jvmConfigVFile.charset)
+        }
+
+        private fun getJvmConfigVFile(projectPath: Path): VirtualFile? {
+            return LocalFileSystem.getInstance().findFileByNioFile(projectPath)
+                ?.findChild(".mvn")?.findChild("jvm.config")
         }
     }
 }

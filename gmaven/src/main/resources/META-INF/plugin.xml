@@ -48,6 +48,7 @@
 
         <toolWindow id="GMaven" anchor="right" icon="GMavenIcons.ToolWindowMaven"
                     factoryClass="ru.rzn.gmyasoedov.gmaven.ui.MavenToolWindowFactory"/>
+        <!--<consoleFilterProvider implementation="ru.rzn.gmyasoedov.gmaven.project.filter.MavenConsoleFilterProvider"/>-->
         <!--<externalSystemViewContributor id="GMaven" implementation="ru.rzn.gmyasoedov.gmaven.ui.MavenViewContributor"/>-->
 
         <registryKey key="gmaven.server.debug" defaultValue="false"
@@ -58,6 +59,8 @@
                      description="Maven support extensions"/>
         <registryKey key="gmaven.bundled.wrapper.version" defaultValue="3.9.1"
                      description="Maven bundled wrapper version"/>
+        <registryKey key="gmaven.vm.remove.javaagent" defaultValue="true"
+                     description="Remove java vm parameter -javaagent for maven import process"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
 

@@ -6,6 +6,7 @@ import com.intellij.openapi.util.NlsSafe;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Set;
 
 import static com.intellij.openapi.util.registry.Registry.stringValue;
@@ -31,6 +32,10 @@ public final class GMavenConstants {
     public static final String SCOPE_SYSTEM = "system";
     public static final String SCOPE_IMPORT = "import";
     public static final String M2 = ".m2";
+    public static final String TASK_LIFECYCLE = "Lifecycle";
+    public static final String TASK_PLUGINS = "Plugins";
+    public static final List<String> BASIC_PHASES =
+            List.of("clean", "validate", "compile", "test", "package", "verify", "install", "deploy", "site");
 
     @NotNull
     @NonNls

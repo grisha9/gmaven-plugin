@@ -1,14 +1,14 @@
 // Copyright 2000-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package ru.rzn.gmyasoedov.gmaven.server;
 
-import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
-import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.execution.rmi.RemoteProcessSupport;
 import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -26,21 +26,26 @@ import java.nio.file.Path;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import static java.util.Objects.requireNonNullElse;
+import static ru.rzn.gmyasoedov.gmaven.project.wrapper.MvnDotProperties.getJvmConfig;
+
 public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GMavenServer, Object> {
-    protected final Sdk jdk;
-    protected final String vmOptions;
-    protected final Path mavenPath;
+    private final ExternalSystemTaskId id;
+    private final Sdk jdk;
+    private final String vmOptions;
+    private final Path mavenPath;
+    private final ExternalSystemTaskNotificationListener systemTaskNotificationListener;
 
     @Nullable
     protected Consumer<ProcessEvent> onTerminate;
 
-    public GServerRemoteProcessSupport(@NotNull Sdk jdk,
-                                       @Nullable String vmOptions,
-                                       @NotNull Path mavenPath) {
+    public GServerRemoteProcessSupport(@NotNull GServerRequest request) {
         super(GMavenServer.class);
-        this.jdk = jdk;
-        this.vmOptions = vmOptions;
-        this.mavenPath = mavenPath;
+        this.id = request.getTaskId();
+        this.jdk = request.getSdk();
+        this.vmOptions = requireNonNullElse(getJvmConfig(request.getProjectPath()), "") + request.getVmOptions();
+        this.mavenPath = request.getMavenPath();
+        this.systemTaskNotificationListener = request.getListener();
     }
 
 
@@ -103,6 +108,10 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
                            @NotNull Key outputType) {
         String text = StringUtil.notNullize(event.getText());
         System.out.println(text);
+        if (systemTaskNotificationListener != null) {
+            systemTaskNotificationListener.onTaskOutput(id, text, true);
+        }
+
     }
 
     @Override

@@ -51,7 +51,6 @@ public class MavenServerCmdState extends CommandLineState {
         this.mavenPath = mavenPath;
         this.vmOptions = vmOptions;
         this.debugPort = getDebugPort();
-
     }
 
     protected SimpleJavaParameters createJavaParameters() {
@@ -112,6 +111,9 @@ public class MavenServerCmdState extends CommandLineState {
                 }
                 if (param.startsWith("-Xms")) {
                     xmsProperty = param;
+                    continue;
+                }
+                if (Registry.is("gmaven.vm.remove.javaagent") && param.startsWith("-javaagent")) {
                     continue;
                 }
                 params.getVMParametersList().add(param);
