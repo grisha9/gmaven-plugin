@@ -48,6 +48,8 @@ public class GMavenServerImpl implements GMavenServer {
             mvnArgs.add("-DartifactId=model-reader");
             mvnArgs.add("-Dversion=1.0-SNAPSHOT");
             mvnArgs.add("-Dpackaging=jar");
+        } else if (request.tasks != null && !request.tasks.isEmpty()) {
+            mvnArgs.addAll(request.tasks);
         } else {
             mvnArgs.add("ru.rzn.gmyasoedov:model-reader:1.0-SNAPSHOT:resolve");
         }

@@ -51,7 +51,7 @@ fun populateTasks(moduleDataNode: DataNode<ModuleData>, mavenProject: MavenProje
         val pluginDescriptor = MavenArtifactUtil.readPluginDescriptor(localRepo, plugin) ?: continue
         for (mojo in pluginDescriptor.mojos) {
             val taskData = TaskData(GMavenConstants.SYSTEM_ID, mojo.displayName, mavenProject.basedir, null)
-            taskData.group = GMavenConstants.TASK_PLUGINS
+            taskData.group = pluginDescriptor.goalPrefix
             moduleDataNode.createChild(ProjectKeys.TASK, taskData)
         }
     }

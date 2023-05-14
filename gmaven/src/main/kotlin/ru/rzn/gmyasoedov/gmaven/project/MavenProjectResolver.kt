@@ -49,13 +49,6 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         }
 
         val mavenHome = getMavenHome(settings.distributionSettings)
-        /*if (distributionUrl != null) {
-            *//*listener.onStatusChange(ExternalSystemTaskNotificationEvent(id, "download wrapper"))
-            listener.onTaskOutput(id, "test test...", true)
-            val distribution = MavenWrapperDistribution.downloadAndInstallMaven(distributionUrl)
-            println(distribution)*//*
-        }*/
-
         val request = GServerRequest(id, Path.of(projectPath), mavenHome, sdk, listener = listener)
         val projectModel = getProjectModel(request)
         return getProjectDataNode(projectPath, projectModel, settings)

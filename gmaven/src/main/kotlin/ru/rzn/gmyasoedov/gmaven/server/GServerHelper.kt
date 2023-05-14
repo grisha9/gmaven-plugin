@@ -2,6 +2,7 @@
 
 package ru.rzn.gmyasoedov.gmaven.server
 
+import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.util.PathUtil
 import com.intellij.util.io.isDirectory
@@ -41,6 +42,26 @@ fun getProjectModel(request: GServerRequest): MavenResult {
             return server.getProjectModel(getModelRequest(request))
         }
         return projectModel
+    } catch (e: Exception) {
+        MavenLog.LOG.error(e)
+        throw RuntimeException(e)
+    } finally {
+        processSupport.stopAll()
+    }
+}
+
+fun runTasks(request: GServerRequest, tasks: List<String>): MavenResult {
+    if (tasks.isEmpty()) {
+        throw ExternalSystemException("tasks list is empty");
+    }
+    if (request.installGMavenPlugin) {
+        throw ExternalSystemException("no need install gmaven read model plugin on task execution");
+    }
+    val modelRequest = getModelRequest(request)
+    modelRequest.tasks = tasks;
+    val processSupport = GServerRemoteProcessSupport(request)
+    try {
+        return processSupport.acquire(request.taskId, "", EmptyProgressIndicator()).getProjectModel(modelRequest)
     } catch (e: Exception) {
         MavenLog.LOG.error(e)
         throw RuntimeException(e)

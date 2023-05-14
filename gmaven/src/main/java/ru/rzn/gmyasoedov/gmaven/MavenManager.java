@@ -33,8 +33,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.chooser.MavenPomFileChooserDescriptor;
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver;
+import ru.rzn.gmyasoedov.gmaven.project.task.MavenTaskManager;
 import ru.rzn.gmyasoedov.gmaven.settings.*;
-import ru.rzn.gmyasoedov.gmaven.task.MavenTaskManager;
 
 import javax.swing.*;
 import java.util.List;
@@ -78,7 +78,7 @@ public final class MavenManager //manager
             Project project = pair.first;
             String projectPath = pair.second;
             MavenSettings settings = MavenSettings.getInstance(project);
-            MavenProjectSettings projectSettings = settings.getLinkedProjectSettings(projectPath);//to do??
+            MavenProjectSettings projectSettings = getProjectSettings(projectPath, settings);
             String rootProjectPath = projectSettings != null ? projectSettings.getExternalProjectPath() : projectPath;
             DistributionSettings distributionSettings = projectSettings != null
                     ? projectSettings.getDistributionSettings() : DistributionSettings.getBundled();
@@ -113,6 +113,19 @@ public final class MavenManager //manager
             }
             return result;
         };
+    }
+
+    @Nullable
+    private static MavenProjectSettings getProjectSettings(String projectPath, MavenSettings settings) {
+        MavenProjectSettings projectSettings = settings.getLinkedProjectSettings(projectPath);
+        if (projectSettings == null) {
+            for (MavenProjectSettings setting : settings.getLinkedProjectsSettings()) {
+                if (projectPath.contains(setting.getExternalProjectPath())) {
+                    return setting;
+                }
+            }
+        }
+        return projectSettings;
     }
 
     @Override
@@ -198,7 +211,7 @@ public final class MavenManager //manager
         String projectPath = taskExecutionSettings.getExternalProjectPath();
         if (StringUtil.isEmpty(projectPath)) return null;
 
-        MavenProjectSettings projectSettings = getSettingsProvider().fun(project).getLinkedProjectSettings(projectPath);
+        MavenProjectSettings projectSettings = getProjectSettings(projectPath, getSettingsProvider().fun(project));
         if (projectSettings == null) return null;
 
         if (!projectSettings.getResolveModulePerSourceSet()) {
