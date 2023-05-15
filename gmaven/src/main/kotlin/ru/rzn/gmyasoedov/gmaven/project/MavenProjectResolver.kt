@@ -20,8 +20,8 @@ import com.intellij.pom.java.LanguageLevel
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.project.importing.AnnotationProcessingData
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
+import ru.rzn.gmyasoedov.gmaven.server.firstRun
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
-import ru.rzn.gmyasoedov.gmaven.server.getProjectModelFirstRun
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.serverapi.model.MavenArtifact
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
@@ -41,13 +41,13 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         resolverPolicy: ProjectResolverPolicy?,
         listener: ExternalSystemTaskNotificationListener
     ): DataNode<ProjectData> {
-        val sdk = (settings ?: throw ExternalSystemException("settings is empty"))
-            .jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) } ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
-
+        settings ?: throw ExternalSystemException("settings is empty")
+        val sdk = settings.jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) }
         if (isPreviewMode) {
             return getPreviewProjectDataNode(settings, id, projectPath, sdk, listener)
         }
 
+        sdk ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
         val mavenHome = getMavenHome(settings.distributionSettings)
         val request = GServerRequest(id, Path.of(projectPath), mavenHome, sdk, listener = listener)
         val projectModel = getProjectModel(request)
@@ -58,17 +58,17 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         settings: MavenExecutionSettings,
         id: ExternalSystemTaskId,
         projectPath: String,
-        sdk: Sdk,
+        sdk: Sdk?,
         listener: ExternalSystemTaskNotificationListener
     ): DataNode<ProjectData> {
-        if (settings.distributionSettings.path != null) {
-            val request = GServerRequest(id, Path.of(projectPath), settings.distributionSettings.path!!,
-                sdk, listener = listener)
-            val projectModel = getProjectModelFirstRun(request)
-            return getProjectDataNode(projectPath, projectModel, settings)
-        } else {
-            return getPreviewProjectDataNode(projectPath, settings)
+        val projectDataNode = getPreviewProjectDataNode(projectPath, settings)
+        if (sdk != null && settings.distributionSettings.path != null) {
+            val request = GServerRequest(
+                id, Path.of(projectPath), settings.distributionSettings.path!!, sdk, listener = listener
+            )
+            firstRun(request)
         }
+        return projectDataNode;
     }
 
     private fun getPreviewProjectDataNode(
@@ -193,7 +193,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             )
         )
         populateAnnotationProcessorData(project, moduleDataNode)
-        populateTasks(moduleDataNode, project, context.mavenResult.localRepository?.let { Path.of(it) })
+        populateTasks(moduleDataNode, project, context.mavenResult.settings.localRepository?.let { Path.of(it) })
         if (parentDataNode.data is ModuleData) {
             for (childContainer in container.modules) {
                 createModuleData(childContainer, moduleDataNode, context, moduleDataByArtifactId)
@@ -237,16 +237,6 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             contentRootData.storePath(type, path)
         }
     }
-
- /*   private fun resolveJdkName(jdkNameOrVersion: String): String? {
-        val sdk = lookupSdk { builder: SdkLookupBuilder ->
-            builder
-                .withSdkName(jdkNameOrVersion)
-                .withSdkType(ExternalSystemJdkUtil.getJavaSdkType())
-                .onDownloadableSdkSuggested { _: UnknownSdkDownloadableSdkFix? -> SdkLookupDecision.STOP }
-        }
-        return sdk?.name
-    }*/
 
     private fun addLibrary(parentNode: DataNode<ModuleData>, artifact: MavenArtifact) {
         val library = LibraryData(GMavenConstants.SYSTEM_ID, artifact.id)

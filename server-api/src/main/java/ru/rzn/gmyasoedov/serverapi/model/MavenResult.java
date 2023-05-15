@@ -5,16 +5,16 @@ import java.util.List;
 
 public class MavenResult implements Serializable {
     public final boolean pluginNotResolved;
-    public final String localRepository;
+    public final MavenSettings settings;
     public final MavenProjectContainer projectContainer;
     public final List<MavenException> exceptions;
 
     public MavenResult(boolean pluginNotResolved,
-                       String localRepository,
+                       MavenSettings settings,
                        MavenProjectContainer projectContainer,
                        List<MavenException> exceptions) {
         this.pluginNotResolved = pluginNotResolved;
-        this.localRepository = localRepository;
+        this.settings = settings;
         this.projectContainer = projectContainer;
         this.exceptions = exceptions;
     }

@@ -323,6 +323,10 @@ public class MavenUtils {
         Sdk defaultProjectSdk = defaultProjectManager.getProjectSdk();
         if (defaultProjectSdk != null) return null;
         ProjectJdkTable projectJdkTable = ProjectJdkTable.getInstance();
+        Sdk[] allJdks = projectJdkTable.getAllJdks();
+        if (allJdks.length == 0) {
+            projectJdkTable.preconfigure();
+        }
         SdkType sdkType = ExternalSystemJdkUtil.getJavaSdkType();
         return projectJdkTable.getSdksOfType(sdkType).stream()
                 .filter(it -> it.getHomePath() != null && JdkUtil.checkForJre(it.getHomePath()))

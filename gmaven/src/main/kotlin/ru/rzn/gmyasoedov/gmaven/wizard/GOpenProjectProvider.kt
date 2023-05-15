@@ -49,7 +49,7 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         settings.externalProjectPath = projectFile.canonicalPath
         settings.projectDirectory = projectDirectory.canonicalPath
         settings.jdkName = (MavenUtils.suggestProjectSdk()
-            ?: ExternalSystemJdkUtil.getJdk(project, ExternalSystemJdkUtil.USE_PROJECT_JDK))?.name
+            ?: ExternalSystemJdkUtil.getJdk(project, ExternalSystemJdkUtil.USE_INTERNAL_JAVA))?.name
         return settings;
     }
 

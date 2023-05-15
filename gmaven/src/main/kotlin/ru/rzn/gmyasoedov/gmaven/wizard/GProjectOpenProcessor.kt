@@ -11,7 +11,7 @@ internal class GProjectOpenProcessor : ProjectOpenProcessor() {
 
   override fun getName(): String = importProvider.builder.name
 
-  override fun getIcon(): Icon? = importProvider.builder.icon
+  override fun getIcon(): Icon = importProvider.builder.icon
 
   override fun canOpenProject(file: VirtualFile): Boolean = importProvider.canOpenProject(file)
 

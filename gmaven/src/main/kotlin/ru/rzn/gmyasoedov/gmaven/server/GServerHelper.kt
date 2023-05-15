@@ -10,7 +10,7 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest
 
-fun getProjectModelFirstRun(gServerRequest: GServerRequest): MavenResult {
+fun firstRun(gServerRequest: GServerRequest): MavenResult {
     val request = GServerRequest(
         gServerRequest.taskId,
         gServerRequest.projectPath,
@@ -38,7 +38,7 @@ fun getProjectModel(request: GServerRequest): MavenResult {
         val modelRequest = getModelRequest(request)
         val projectModel = server.getProjectModel(modelRequest)
         if (tryInstallGMavenPlugin(request, projectModel)) {
-            getProjectModelFirstRun(request)
+            firstRun(request)
             return server.getProjectModel(getModelRequest(request))
         }
         return projectModel

@@ -8,6 +8,7 @@ import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.settings.building.DefaultSettingsBuildingRequest;
 import org.eclipse.aether.graph.DependencyNode;
 import ru.rzn.gmyasoedov.event.handler.converter.MavenProjectContainerConverter;
+import ru.rzn.gmyasoedov.event.handler.converter.MavenSettingsConverter;
 import ru.rzn.gmyasoedov.gmaven.server.result.ResultHolder;
 import ru.rzn.gmyasoedov.serverapi.model.MavenException;
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult;
@@ -44,11 +45,9 @@ public class GMavenEventSpy extends AbstractEventSpy {
 
     private void setResult() {
         boolean pluginResolutionError = isGPluginResolutionError(resultHolder.executionResult);
-        String localRepository = resultHolder.session != null
-                ? resultHolder.session.getLocalRepository().getBasedir() : null;
         ResultHolder.result = new MavenResult(
                 pluginResolutionError,
-                localRepository,
+                MavenSettingsConverter.convert(resultHolder),
                 MavenProjectContainerConverter.convert(resultHolder),
                 Collections.<MavenException>emptyList()
         );

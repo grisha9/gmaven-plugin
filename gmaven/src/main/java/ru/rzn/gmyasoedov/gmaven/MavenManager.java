@@ -19,8 +19,6 @@ import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ui.configuration.SdkLookupDecision;
-import com.intellij.openapi.roots.ui.configuration.SdkLookupUtil;
 import com.intellij.openapi.startup.StartupActivity;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.text.StringUtil;
@@ -40,7 +38,6 @@ import javax.swing.*;
 import java.util.List;
 
 import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_PROJECT_JDK;
-import static java.util.Objects.requireNonNullElse;
 
 public final class MavenManager //manager
         implements ExternalSystemConfigurableAware,
@@ -88,12 +85,12 @@ public final class MavenManager //manager
                     projectSettings != null ? projectSettings.getVmOptions() : null,
                     projectSettings != null && projectSettings.getOffline());
 
+            //todo - сделать как в org.jetbrains.plugins.gradle.GradleManager#configureExecutionWorkspace
             String jdkName = projectSettings != null ? projectSettings.getJdkName() : null;
-            Sdk jdk = SdkLookupUtil.lookupSdk(builder -> builder
-                    .withSdkName(requireNonNullElse(jdkName, USE_PROJECT_JDK))
-                    .withSdkType(ExternalSystemJdkUtil.getJavaSdkType())
-                    .onDownloadableSdkSuggested(__ -> SdkLookupDecision.STOP)
-            );
+            Sdk jdk = ExternalSystemJdkUtil.getJdk(project, jdkName);
+            if (jdk == null) {
+                jdk = ExternalSystemJdkUtil.getJdk(project, USE_PROJECT_JDK);
+            }
             if (jdk != null) {
                 result.setJavaHome(jdk.getHomePath());
                 result.setJdkName(jdk.getName());

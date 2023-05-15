@@ -28,7 +28,7 @@ fun getMavenHome(distributionSettings: DistributionSettings): Path {
 }
 
 fun getCompilerData(mavenProject: MavenProject, mavenResult: MavenResult): CompilerData {
-    val localRepoPath = mavenResult.localRepository ?: return CompilerData(HIGHEST, Collections.emptyList());
+    val localRepoPath = mavenResult.settings.localRepository ?: return CompilerData(HIGHEST, Collections.emptyList());
     val compilerPlugin = MavenFullImportPlugin.EP_NAME.extensionList
         .filterIsInstance<MavenCompilerFullImportPlugin>()
         .firstOrNull() ?: return CompilerData(HIGHEST, Collections.emptyList())
