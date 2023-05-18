@@ -30,7 +30,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private String jdkName;
     @Nullable
     private String myIdeProjectPath;
-    private boolean resolveModulePerSourceSet = true;
+    private boolean resolveModulePerSourceSet = false;
     private boolean useQualifiedModuleNames = false;
 
     public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,

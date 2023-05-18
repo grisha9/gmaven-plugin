@@ -54,8 +54,7 @@ public class MavenProjectConverter {
                 .parentFile(mavenProject.getParentFile())
                 .modulesDir(modulesDir)
                 .plugins(plugins)
-                .artifacts(artifacts)
-                .dependencyTreeNodes(dependencyTreeNodes)
+                .dependencyTree(dependencyTreeNodes)
                 .annotationProcessorPaths((List<String>) mavenProject
                         .getContextValue("annotationProcessorPath"))
                 .sourceRoots(mavenProject.getCompileSourceRoots())
@@ -65,7 +64,7 @@ public class MavenProjectConverter {
                 .buildDirectory(mavenProject.getBuild().getDirectory())
                 .outputDirectory(mavenProject.getBuild().getOutputDirectory())
                 .testOutputDirectory(mavenProject.getBuild().getTestOutputDirectory())
-                .resolvedArtifacts(convertMavenArtifact(mavenProject.getArtifacts()))
+                .resolvedArtifacts(artifacts)
                 .dependencyArtifacts(convertMavenArtifact(mavenProject.getDependencyArtifacts()))
                 .parentArtifact(mavenProject.getParentArtifact() != null
                         ? MavenArtifactConverter.convert(mavenProject.getParentArtifact()) : null)

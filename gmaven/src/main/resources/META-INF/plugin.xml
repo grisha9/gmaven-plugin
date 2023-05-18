@@ -47,6 +47,7 @@
         <runConfigurationProducer implementation="ru.rzn.gmyasoedov.gmaven.execution.GMavenRuntimeConfigurationProducer"/>
         <configurationType implementation="ru.rzn.gmyasoedov.gmaven.execution.GMavenExternalTaskConfigurationType"/>
         <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.AnnotationProcessingDataService"/>
+        <externalSystemDependencyAnalyzer implementation="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerExtension"/>
 
         <toolWindow id="GMaven" anchor="right" icon="GMavenIcons.ToolWindowMaven"
                     factoryClass="ru.rzn.gmyasoedov.gmaven.ui.MavenToolWindowFactory"/>
@@ -73,4 +74,21 @@
         <typedHandler implementation="ru.rzn.gmyasoedov.gmaven.dom.code.MavenTypedHandlerDelegate"/>-->
 
     </extensions>
+
+    <actions>
+        <action id="GMaven.DependencyAnalyzer.GoTo" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerGoToAction">
+            <add-to-group group-id="ExternalSystem.DependencyAnalyzer.DependencyListGroup"/>
+            <add-to-group group-id="ExternalSystem.DependencyAnalyzer.DependencyTreeGroup"/>
+            <add-to-group group-id="ExternalSystem.DependencyAnalyzer.UsagesTreeGroup"/>
+        </action>
+        <action id="GMaven.ViewDependencyAnalyzer" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ViewDependencyAnalyzerAction"/>
+        <action id="GMaven.ToolbarDependencyAnalyzer" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ToolbarDependencyAnalyzerAction"/>
+
+        <group id="GMaven.View.ActionsToolbar.CenterPanel">
+            <separator/>
+            <reference id="GMaven.ToolbarDependencyAnalyzer"/>
+            <separator/>
+            <add-to-group group-id="ExternalSystemView.ActionsToolbar.CenterPanel" anchor="last"/>
+        </group>
+    </actions>
 </idea-plugin>

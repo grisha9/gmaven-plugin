@@ -14,6 +14,7 @@ import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjec
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.projectImport.ProjectImportBuilder
@@ -101,32 +102,19 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         return object : ExternalProjectRefreshCallback {
             override fun onSuccess(externalProject: DataNode<ProjectData>?) {
                 if (externalProject == null) return
-                //selectDataToImport(project, externalProjectPath, externalProject)
-                importData(project, externalProject)
-                //updateGradleJvm(project, externalProjectPath)
+                ProjectDataManager.getInstance().importData(externalProject, project, false)
+                updateMavenJvm(project, externalProjectPath)
             }
         }
     }
 
-    /*private fun selectDataToImport(project: Project, externalProjectPath: String, externalProject: DataNode<ProjectData>) {
-      val settings = GradleSettings.getInstance(project)
-      val showSelectiveImportDialog = settings.showSelectiveImportDialogOnInitialImport()
-      val application = ApplicationManager.getApplication()
-      if (showSelectiveImportDialog && !application.isHeadlessEnvironment) {
-        application.invokeAndWait {
-          val projectInfo = InternalExternalProjectInfo(GSYSTEM_ID, externalProjectPath, externalProject)
-          val dialog = ExternalProjectDataSelectorDialog(project, projectInfo)
-          if (dialog.hasMultipleDataToSelect()) {
-            dialog.showAndGet()
-          }
-          else {
-            Disposer.dispose(dialog.disposable)
-          }
-        }
-      }
-    }*/
-
-    private fun importData(project: Project, externalProject: DataNode<ProjectData>) {
-        ProjectDataManager.getInstance().importData(externalProject, project, false)
+    private fun updateMavenJvm(project: Project, externalProjectPath: String) {
+        val settings = MavenSettings.getInstance(project)
+        val projectSettings = settings.getLinkedProjectSettings(externalProjectPath) ?: return
+        val jdkName = projectSettings.jdkName ?: return
+        val projectRootManager = ProjectRootManager.getInstance(project)
+        val projectSdk = projectRootManager.projectSdk ?: return
+        if (projectSdk.name != jdkName) return
+        projectSettings.jdkName = ExternalSystemJdkUtil.USE_PROJECT_JDK
     }
 }

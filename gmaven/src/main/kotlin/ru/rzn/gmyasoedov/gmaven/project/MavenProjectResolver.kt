@@ -17,8 +17,10 @@ import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.pom.java.LanguageLevel
+import com.intellij.util.containers.ContainerUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.project.importing.AnnotationProcessingData
+import ru.rzn.gmyasoedov.gmaven.project.importing.DependencyGraphData
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.firstRun
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
@@ -99,6 +101,9 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val projectName = project.displayName
         val absolutePath = project.file.parent
         val projectData = ProjectData(GMavenConstants.SYSTEM_ID, projectName, absolutePath, absolutePath)
+        projectData.version = project.version
+        projectData.group = project.groupId
+
         val projectDataNode = DataNode(ProjectKeys.PROJECT, projectData, null)
 
         val sdkName: String = settings.jdkName!! //todo
@@ -121,26 +126,30 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         for (childContainer in container.modules) {
             createModuleData(childContainer, moduleNode, context, moduleDataByArtifactId)
         }
-        addDependencies(container, moduleDataByArtifactId)
+        addDependencies(container, projectDataNode, moduleDataByArtifactId)
+        /*projectDataNode.createChild(MavenRepositoryData.KEY, todo repo!!!
+            MavenRepositoryData(GMavenConstants.SYSTEM_ID, "MavenRepo", "https://repo.maven.apache.org/maven2/"))*/
         return projectDataNode
     }
 
     private fun addDependencies(
         container: MavenProjectContainer,
+        projectNode: DataNode<ProjectData>,
         moduleDataByArtifactId: Map<String, DataNode<ModuleData>>
     ) {
-        addDependencies(container.project, moduleDataByArtifactId)
+        addDependencies(container.project, projectNode, moduleDataByArtifactId)
         for (childContainer in container.modules) {
-            addDependencies(childContainer, moduleDataByArtifactId)
+            addDependencies(childContainer, projectNode, moduleDataByArtifactId)
         }
     }
 
-    private fun addDependencies(project: MavenProject, moduleDataByArtifactId: Map<String, DataNode<ModuleData>>) {
+    private fun addDependencies(project: MavenProject,  projectNode: DataNode<ProjectData>,
+                                moduleDataByArtifactId: Map<String, DataNode<ModuleData>>) {
         val moduleByMavenProject = moduleDataByArtifactId[project.id]!!
         for (artifact in project.resolvedArtifacts) {
             val moduleDataNodeByMavenArtifact = moduleDataByArtifactId[artifact.id]
             if (moduleDataNodeByMavenArtifact == null) {
-                addLibrary(moduleByMavenProject, artifact)
+                addLibrary(moduleByMavenProject, projectNode, artifact)
             } else {
                 addModuleDependency(moduleByMavenProject, moduleDataNodeByMavenArtifact.data)
             }
@@ -168,10 +177,13 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         moduleData.group = project.groupId
         moduleData.version = project.version
         moduleData.moduleName = project.artifactId
-        moduleData.useExternalCompilerOutput(true)
+        moduleData.publication = ProjectId(project.groupId, project.artifactId, project.version)
         moduleData.isInheritProjectCompileOutputPath = false
+
         moduleData.setCompileOutputPath(ExternalSystemSourceType.SOURCE, project.outputDirectory)
-        moduleData.setExternalCompilerOutputPath(ExternalSystemSourceType.SOURCE, project.outputDirectory)
+        moduleData.setCompileOutputPath(ExternalSystemSourceType.TEST, project.testOutputDirectory)
+        moduleData.useExternalCompilerOutput(false)
+
         val moduleDataNode = parentDataNode.createChild(ProjectKeys.MODULE, moduleData)
         moduleDataByArtifactId.put(project.id, moduleDataNode)
         val contentRootData = ContentRootData(GMavenConstants.SYSTEM_ID, projectPath)
@@ -193,6 +205,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             )
         )
         populateAnnotationProcessorData(project, moduleDataNode)
+        populateDependenciesTree(project, moduleDataNode)
         populateTasks(moduleDataNode, project, context.mavenResult.settings.localRepository?.let { Path.of(it) })
         if (parentDataNode.data is ModuleData) {
             for (childContainer in container.modules) {
@@ -208,6 +221,15 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             .create(annotationProcessorPaths, emptyList(), project.buildDirectory, project.basedir)
         moduleDataNode.createChild(AnnotationProcessingData.KEY, data)
 
+    }
+
+    //todo стоить переделать чтобы не хранить их в модели?
+    // а получать из запуска таска? по типу как в GradleDependencyAnalyzerContributor
+    private fun populateDependenciesTree(project: MavenProject, moduleDataNode: DataNode<ModuleData>) {
+        if (ContainerUtil.isEmpty(project.dependencyTree)) return
+        val data = DependencyGraphData
+            .create(project.dependencyTree, project.artifactId, project.groupId, project.version)
+        moduleDataNode.createChild(DependencyGraphData.KEY, data)
     }
 
     private fun getDefaultModuleTypeId(): String {
@@ -238,16 +260,29 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         }
     }
 
-    private fun addLibrary(parentNode: DataNode<ModuleData>, artifact: MavenArtifact) {
+    private fun addLibrary(parentNode: DataNode<ModuleData>, projectNode: DataNode<ProjectData>,
+                           artifact: MavenArtifact) {
+        val createLibrary = createLibrary(artifact)
+        val libraryDependencyData = LibraryDependencyData(parentNode.data, createLibrary, LibraryLevel.PROJECT)
+        libraryDependencyData.scope = getScope(artifact)
+        libraryDependencyData.order = 2
+        parentNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData)
+        if (libraryDependencyData.scope == DependencyScope.RUNTIME) {
+            val libraryDependencyDataTest = LibraryDependencyData(parentNode.data, createLibrary, LibraryLevel.PROJECT)
+            libraryDependencyDataTest.scope = DependencyScope.TEST
+            libraryDependencyDataTest.order = 2
+            parentNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyDataTest)
+        }
+        projectNode.createChild(ProjectKeys.LIBRARY, createLibrary)
+    }
+
+    private fun createLibrary(artifact: MavenArtifact): LibraryData {
         val library = LibraryData(GMavenConstants.SYSTEM_ID, artifact.id)
         library.artifactId = artifact.artifactId
         library.setGroup(artifact.groupId)
         library.version = artifact.version
         library.addPath(getLibraryPathType(artifact), artifact.file.absolutePath)
-        val libraryDependencyData = LibraryDependencyData(parentNode.data, library, LibraryLevel.MODULE)
-        libraryDependencyData.scope = getScope(artifact)
-        libraryDependencyData.order = 2
-        parentNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData)
+        return library;
     }
 
     private fun getLibraryPathType(artifact: MavenArtifact): LibraryPathType {

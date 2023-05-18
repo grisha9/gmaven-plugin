@@ -4,10 +4,10 @@ import org.apache.maven.RepositoryUtils;
 import org.apache.maven.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
 import ru.rzn.gmyasoedov.serverapi.model.DependencyTreeNode;
 import ru.rzn.gmyasoedov.serverapi.model.MavenArtifact;
+import ru.rzn.gmyasoedov.serverapi.model.MavenArtifactNode;
 import ru.rzn.gmyasoedov.serverapi.model.MavenArtifactState;
 
 import java.util.*;
@@ -31,12 +31,12 @@ public class DependencyTreeNodeConverter {
             MavenArtifactState state = MavenArtifactState.ADDED;
             Object winner = each.getData().get(ConflictResolver.NODE_DATA_WINNER);
 
-            MavenArtifact winnerArtifact = null;
+            MavenArtifactNode winnerArtifact = null;
             MavenArtifact mavenArtifact;
 
             if (winner instanceof DependencyNode) {
                 DependencyNode winnerNode = (DependencyNode) winner;
-                winnerArtifact = MavenArtifactConverter.convert(toArtifact(winnerNode.getDependency()));
+                winnerArtifact = convertToNode(toArtifact(winnerNode.getDependency()));
                 mavenArtifact = MavenArtifactConverter.convert(artifactNode);
                 if (!Objects.equals(each.getVersion().toString(), winnerNode.getVersion().toString())) {
                     state = MavenArtifactState.CONFLICT;
@@ -47,10 +47,10 @@ public class DependencyTreeNodeConverter {
                 mavenArtifact = getArtifact(artifactNode, convertedArtifactMap);
             }
 
-            String premanagedVersion = DependencyManagerUtils.getPremanagedVersion(each);
-            String premanagedScope = DependencyManagerUtils.getPremanagedScope(each);
-            DependencyTreeNode newNode = new DependencyTreeNode(parent, mavenArtifact,
-                    state, winnerArtifact, each.getDependency().getScope(), premanagedVersion, premanagedScope
+            //String premanagedVersion = DependencyManagerUtils.getPremanagedVersion(each);
+            //String premanagedScope = DependencyManagerUtils.getPremanagedScope(each);
+            DependencyTreeNode newNode = new DependencyTreeNode(parent, convertToNode(mavenArtifact),
+                    state, winnerArtifact, each.getDependency().getScope(), Collections.<DependencyTreeNode>emptyList()
             );
             newNode.setDependencies(convert(newNode, each.getChildren(), convertedArtifactMap));
             result.add(newNode);
@@ -58,7 +58,7 @@ public class DependencyTreeNodeConverter {
         return result;
     }
 
-    public static Artifact toArtifact(Dependency dependency) {
+    private static Artifact toArtifact(Dependency dependency) {
         if (dependency == null) {
             return null;
         }
@@ -79,5 +79,29 @@ public class DependencyTreeNodeConverter {
             convertedArtifactMap.put(artifact, result);
         }
         return result;
+    }
+
+    public static MavenArtifactNode convertToNode(Artifact artifact) {
+        return new MavenArtifactNode(artifact.getGroupId(),
+                artifact.getArtifactId(),
+                artifact.getBaseVersion() != null ? artifact.getBaseVersion() : artifact.getVersion(),
+                artifact.getType(),
+                artifact.getClassifier(),
+                artifact.getScope(),
+                artifact.isOptional(),
+                artifact.getFile(),
+                artifact.isResolved());
+    }
+
+    private static MavenArtifactNode convertToNode(MavenArtifact artifact) {
+        return new MavenArtifactNode(artifact.getGroupId(),
+                artifact.getArtifactId(),
+                artifact.getVersion(),
+                artifact.getType(),
+                artifact.getClassifier(),
+                artifact.getScope(),
+                artifact.isOptional(),
+                artifact.getFile(),
+                artifact.isResolvedArtifact());
     }
 }

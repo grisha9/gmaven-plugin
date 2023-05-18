@@ -7,7 +7,7 @@ public class MavenArtifactConverter {
     public static MavenArtifact convert(Artifact artifact) {
         return new MavenArtifact(artifact.getGroupId(),
                 artifact.getArtifactId(),
-                artifact.getVersion(),
+                artifact.getBaseVersion() != null ? artifact.getBaseVersion() : artifact.getVersion(),
                 artifact.getType(),
                 artifact.getClassifier(),
                 artifact.getScope(),

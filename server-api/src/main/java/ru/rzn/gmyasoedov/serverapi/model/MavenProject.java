@@ -19,10 +19,9 @@ public class MavenProject extends MavenId {
     private final File parentFile;
     private final String basedir;
     private final MavenArtifact parentArtifact;
-    private final List<MavenArtifact> artifacts;
     private final List<MavenPlugin> plugins;
     private final List<String> annotationProcessorPaths;
-    private final List<DependencyTreeNode> dependencyTreeNodes;
+    private final List<DependencyTreeNode> dependencyTree;
     private final List<String> modulesDir;
     private final List<String> sourceRoots;
     private final List<String> testSourceRoots;

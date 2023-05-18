@@ -14,9 +14,12 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.externalSystem.model.project.ModuleData;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil;
+import com.intellij.openapi.externalSystem.service.project.IdeModelsProviderImpl;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.progress.impl.CoreProgressManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
@@ -46,8 +49,6 @@ import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectsManager;
 import ru.rzn.gmyasoedov.serverapi.model.MavenId;
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -335,12 +336,8 @@ public class MavenUtils {
     }
 
     @Nullable
-    public static MavenPlugin findPlugin(@NotNull MavenProject project,
-                                         @NotNull String groupId,
-                                         @NotNull String artifactId) {
-        return project.getPlugins().stream()
-                .filter(p -> groupId.equals(p.getGroupId()) && artifactId.equals(p.getArtifactId()))
-                .findFirst().orElse(null);
+    public static Module findIdeModule(@NotNull Project project, @NotNull ModuleData moduleData) {
+        return new IdeModelsProviderImpl(project).findIdeModule(moduleData);
     }
 
     @Nullable
@@ -383,8 +380,7 @@ public class MavenUtils {
             if ((home = fromMacSystemJavaTools()) != null) {
                 return home;
             }
-        }
-        else if (SystemInfo.isLinux) {
+        } else if (SystemInfo.isLinux) {
             File home = new File("/usr/share/maven");
             if (isValidMavenHome(home)) {
                 return home;
