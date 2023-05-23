@@ -6,6 +6,10 @@ import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ExternalProjectInfo
 import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.project.ModuleData
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListenerAdapter
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskType
+import com.intellij.openapi.externalSystem.service.notification.ExternalSystemProgressNotificationManager
 import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.externalSystem.util.ExternalSystemBundle
@@ -27,7 +31,15 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
         SoftReference(null)
 
     override fun whenDataChanged(listener: () -> Unit, parentDisposable: Disposable) {
-        moduleMapByProject = SoftReference(null)
+        val progressManager = ExternalSystemProgressNotificationManager.getInstance()
+        progressManager.addNotificationListener(object : ExternalSystemTaskNotificationListenerAdapter() {
+            override fun onEnd(id: ExternalSystemTaskId) {
+                if (id.type != ExternalSystemTaskType.RESOLVE_PROJECT) return
+                if (id.projectSystemId != GMavenConstants.SYSTEM_ID) return
+                moduleMapByProject = SoftReference(null)
+                listener()
+            }
+        }, parentDisposable)
     }
 
     override fun getProjects(): List<DependencyAnalyzerProject> {

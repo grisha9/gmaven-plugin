@@ -17,6 +17,4 @@ class MavenDependencyAnalyzerOpenConfigAction : DependencyAnalyzerOpenConfigActi
     val buildFile = data.getUserData(BUILD_FILE) ?: return null
     return LocalFileSystem.getInstance().findFileByPath(buildFile)
   }
-
-
 }
