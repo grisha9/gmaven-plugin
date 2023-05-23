@@ -81,6 +81,11 @@
             <add-to-group group-id="ExternalSystem.DependencyAnalyzer.DependencyTreeGroup"/>
             <add-to-group group-id="ExternalSystem.DependencyAnalyzer.UsagesTreeGroup"/>
         </action>
+        <action id="GMaven.DependencyAnalyzer.OpenConfig" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerOpenConfigAction">
+            <add-to-group group-id="ExternalSystem.DependencyAnalyzer.DependencyListGroup"/>
+            <add-to-group group-id="ExternalSystem.DependencyAnalyzer.DependencyTreeGroup"/>
+            <add-to-group group-id="ExternalSystem.DependencyAnalyzer.UsagesTreeGroup"/>
+        </action>
         <action id="GMaven.ViewDependencyAnalyzer" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ViewDependencyAnalyzerAction"/>
         <action id="GMaven.ToolbarDependencyAnalyzer" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ToolbarDependencyAnalyzerAction"/>
 

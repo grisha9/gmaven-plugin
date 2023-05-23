@@ -33,6 +33,7 @@ public final class GMavenConstants {
     public static final String SCOPE_IMPORT = "import";
     public static final String M2 = ".m2";
     public static final String TASK_LIFECYCLE = "Lifecycle";
+    public static final String MODULE_PROP_BUILD_FILE = "buildFile";
     public static final List<String> BASIC_PHASES =
             List.of("clean", "validate", "compile", "test", "package", "verify", "install", "deploy", "site");
 

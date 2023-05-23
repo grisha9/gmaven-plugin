@@ -19,6 +19,7 @@ import com.intellij.openapi.util.io.FileUtil
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.util.containers.ContainerUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_BUILD_FILE
 import ru.rzn.gmyasoedov.gmaven.project.importing.AnnotationProcessingData
 import ru.rzn.gmyasoedov.gmaven.project.importing.DependencyGraphData
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
@@ -31,6 +32,7 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import java.io.File
 import java.nio.file.Path
+import java.util.*
 
 class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSettings> {
     override fun cancelTask(taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener) = false
@@ -120,7 +122,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         ideProjectPath = ideProjectPath ?: projectPath
         val context = ProjectResolverContext(absolutePath, ideProjectPath, mavenResult)
 
-        val moduleDataByArtifactId = HashMap<String, DataNode<ModuleData>>()
+        val moduleDataByArtifactId = TreeMap<String, DataNode<ModuleData>>()
         val moduleNode = createModuleData(container, projectDataNode, context, moduleDataByArtifactId)
 
         for (childContainer in container.modules) {
@@ -183,6 +185,8 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         moduleData.setCompileOutputPath(ExternalSystemSourceType.SOURCE, project.outputDirectory)
         moduleData.setCompileOutputPath(ExternalSystemSourceType.TEST, project.testOutputDirectory)
         moduleData.useExternalCompilerOutput(false)
+
+        moduleData.setProperty(MODULE_PROP_BUILD_FILE, project.file.absolutePath)
 
         val moduleDataNode = parentDataNode.createChild(ProjectKeys.MODULE, moduleData)
         moduleDataByArtifactId.put(project.id, moduleDataNode)
