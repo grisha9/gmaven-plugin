@@ -52,7 +52,7 @@
         <toolWindow id="GMaven" anchor="right" icon="GMavenIcons.ToolWindowMaven"
                     factoryClass="ru.rzn.gmyasoedov.gmaven.ui.MavenToolWindowFactory"/>
         <consoleFilterProvider implementation="ru.rzn.gmyasoedov.gmaven.project.filter.MavenConsoleFilterProvider" order="first"/>
-        <!--<externalSystemViewContributor id="GMaven" implementation="ru.rzn.gmyasoedov.gmaven.ui.MavenViewContributor"/>-->
+        <externalSystemViewContributor id="GMaven" implementation="ru.rzn.gmyasoedov.gmaven.ui.MavenViewContributor"/>
 
         <registryKey key="gmaven.server.debug" defaultValue="false"
                      description="Debug maven server"/>

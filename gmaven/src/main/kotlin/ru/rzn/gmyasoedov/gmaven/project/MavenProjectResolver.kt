@@ -7,6 +7,7 @@ import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.project.*
+import com.intellij.openapi.externalSystem.model.project.dependencies.ProjectDependenciesImpl
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
@@ -120,7 +121,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
 
         var ideProjectPath = settings.ideProjectPath
         ideProjectPath = ideProjectPath ?: projectPath
-        val context = ProjectResolverContext(absolutePath, ideProjectPath, mavenResult)
+        val context = ProjectResolverContext(absolutePath, ideProjectPath, mavenResult, languageLevel)
 
         val moduleDataByArtifactId = TreeMap<String, DataNode<ModuleData>>()
         val moduleNode = createModuleData(container, projectDataNode, context, moduleDataByArtifactId)
@@ -148,13 +149,18 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     private fun addDependencies(project: MavenProject,  projectNode: DataNode<ProjectData>,
                                 moduleDataByArtifactId: Map<String, DataNode<ModuleData>>) {
         val moduleByMavenProject = moduleDataByArtifactId[project.id]!!
+        var hasLibrary = false;
         for (artifact in project.resolvedArtifacts) {
             val moduleDataNodeByMavenArtifact = moduleDataByArtifactId[artifact.id]
             if (moduleDataNodeByMavenArtifact == null) {
                 addLibrary(moduleByMavenProject, projectNode, artifact)
+                if (!hasLibrary) hasLibrary = true
             } else {
                 addModuleDependency(moduleByMavenProject, moduleDataNodeByMavenArtifact.data)
             }
+        }
+        if (hasLibrary) {
+            moduleByMavenProject.createChild(ProjectKeys.DEPENDENCIES_GRAPH, ProjectDependenciesImpl())
         }
     }
 
@@ -197,7 +203,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         storePath(project.testSourceRoots, contentRootData, ExternalSystemSourceType.TEST)
         storePath(project.testResourceRoots, contentRootData, ExternalSystemSourceType.TEST_RESOURCE)
         contentRootData.storePath(ExternalSystemSourceType.EXCLUDED, project.buildDirectory)
-        val compilerData = getCompilerData(project, context.mavenResult)
+        val compilerData = getCompilerData(project, context.mavenResult, context.projectLanguageLevel)
         val sourceLanguageLevel: LanguageLevel = compilerData.sourceLevel
         val targetBytecodeLevel: LanguageLevel = compilerData.targetLevel
         moduleDataNode.createChild(ModuleSdkData.KEY, ModuleSdkData(null))
@@ -281,7 +287,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     }
 
     private fun createLibrary(artifact: MavenArtifact): LibraryData {
-        val library = LibraryData(GMavenConstants.SYSTEM_ID, artifact.id)
+        val library = LibraryData(GMavenConstants.SYSTEM_ID, artifact.id, !artifact.isResolved)
         library.artifactId = artifact.artifactId
         library.setGroup(artifact.groupId)
         library.version = artifact.version
@@ -324,6 +330,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     private class ProjectResolverContext(
         val rootProjectPath: String,
         val ideaProjectPath: String,
-        val mavenResult: MavenResult
+        val mavenResult: MavenResult,
+        val projectLanguageLevel: LanguageLevel
     )
 }

@@ -102,6 +102,6 @@ public class DependencyTreeNodeConverter {
                 artifact.getScope(),
                 artifact.isOptional(),
                 artifact.getFile(),
-                artifact.isResolvedArtifact());
+                artifact.isResolved());
     }
 }

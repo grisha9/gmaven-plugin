@@ -67,7 +67,7 @@ public class MavenArtifact extends MavenId {
     return optional;
   }
 
-  public boolean isResolvedArtifact() {
+  public boolean isResolved() {
     return resolved;
   }
 
