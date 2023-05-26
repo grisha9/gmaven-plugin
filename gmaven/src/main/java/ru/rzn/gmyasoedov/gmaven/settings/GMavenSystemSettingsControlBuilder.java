@@ -18,9 +18,6 @@ package ru.rzn.gmyasoedov.gmaven.settings;
 import com.intellij.openapi.externalSystem.util.PaintAwarePanel;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author Vladislav.Soroka
- */
 public interface GMavenSystemSettingsControlBuilder {
   void fillUi(@NotNull PaintAwarePanel canvas, int indentLevel);
 

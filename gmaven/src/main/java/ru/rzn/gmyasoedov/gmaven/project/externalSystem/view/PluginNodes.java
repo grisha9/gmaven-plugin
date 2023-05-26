@@ -1,4 +1,3 @@
-// Copyright 2000-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package ru.rzn.gmyasoedov.gmaven.project.externalSystem.view;
 
 import com.intellij.openapi.externalSystem.model.DataNode;
@@ -9,9 +8,6 @@ import com.intellij.openapi.externalSystem.view.TasksNode;
 
 import java.util.Collection;
 
-/**
- * @author Vladislav.Soroka
- */
 @Order(ExternalSystemNode.BUILTIN_TASKS_DATA_NODE_ORDER)
 public class PluginNodes extends TasksNode {
 

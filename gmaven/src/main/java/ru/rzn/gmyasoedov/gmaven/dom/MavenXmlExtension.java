@@ -28,9 +28,6 @@ import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.dom.model.MavenDomConfiguration;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenDomUtil;
 
-/**
- * @author Vladislav.Soroka
- */
 public class MavenXmlExtension extends DefaultXmlExtension {
   @Override
   public boolean isAvailable(PsiFile file) {

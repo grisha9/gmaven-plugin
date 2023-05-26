@@ -1,4 +1,3 @@
-// Copyright 2000-2021 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package ru.rzn.gmyasoedov.gmaven.wizard
 
 import com.intellij.ide.JavaUiBundle
@@ -17,7 +16,7 @@ import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
 import com.intellij.ui.dsl.builder.Panel
 import com.intellij.ui.dsl.builder.columns
-import com.intellij.ui.layout.*
+import com.intellij.ui.layout.ValidationInfoBuilder
 import icons.OpenapiIcons
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectsManager
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
