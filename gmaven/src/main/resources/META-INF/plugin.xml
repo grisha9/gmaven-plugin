@@ -88,6 +88,7 @@
         </action>
         <action id="GMaven.ViewDependencyAnalyzer" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ViewDependencyAnalyzerAction"/>
         <action id="GMaven.ToolbarDependencyAnalyzer" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ToolbarDependencyAnalyzerAction"/>
+        <action id="GMaven.ExternalSystem.ChangeProfile" class="ru.rzn.gmyasoedov.gmaven.project.action.ChangeProfileStateAction"/>
 
         <group id="GMaven.View.ActionsToolbar.CenterPanel">
             <separator/>

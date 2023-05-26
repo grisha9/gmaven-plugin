@@ -5,9 +5,7 @@ import com.intellij.openapi.externalSystem.model.DataNode;
 import com.intellij.openapi.externalSystem.util.Order;
 import com.intellij.openapi.externalSystem.view.ExternalProjectsView;
 import com.intellij.openapi.externalSystem.view.ExternalSystemNode;
-import com.intellij.openapi.externalSystem.view.TaskNode;
 import com.intellij.openapi.externalSystem.view.TasksNode;
-import com.intellij.util.containers.MultiMap;
 
 import java.util.Collection;
 
@@ -16,8 +14,6 @@ import java.util.Collection;
  */
 @Order(ExternalSystemNode.BUILTIN_TASKS_DATA_NODE_ORDER)
 public class PluginNodes extends TasksNode {
-
-    private final MultiMap<String, TaskNode> myTasksMap = new MultiMap<>();
 
     @SuppressWarnings("unchecked")
     public PluginNodes(ExternalProjectsView externalProjectsView, final Collection<? extends DataNode<?>> dataNodes) {

@@ -121,7 +121,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
 
         var ideProjectPath = settings.ideProjectPath
         ideProjectPath = ideProjectPath ?: projectPath
-        val context = ProjectResolverContext(absolutePath, ideProjectPath, mavenResult, languageLevel)
+        val context = ProjectResolverContext(absolutePath, ideProjectPath, mavenResult, languageLevel, settings)
 
         val moduleDataByArtifactId = TreeMap<String, DataNode<ModuleData>>()
         val moduleNode = createModuleData(container, projectDataNode, context, moduleDataByArtifactId)
@@ -130,8 +130,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             createModuleData(childContainer, moduleNode, context, moduleDataByArtifactId)
         }
         addDependencies(container, projectDataNode, moduleDataByArtifactId)
-        /*projectDataNode.createChild(MavenRepositoryData.KEY, todo repo!!!
-            MavenRepositoryData(GMavenConstants.SYSTEM_ID, "MavenRepo", "https://repo.maven.apache.org/maven2/"))*/
+        //populateRemoteRepository(projectDataNode, mavenResult.settings)
         return projectDataNode
     }
 
@@ -221,6 +220,8 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             for (childContainer in container.modules) {
                 createModuleData(childContainer, moduleDataNode, context, moduleDataByArtifactId)
             }
+        } else {
+            populateProfiles(moduleDataNode, context.mavenResult.settings, context.settings)
         }
         return moduleDataNode
     }
@@ -331,6 +332,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val rootProjectPath: String,
         val ideaProjectPath: String,
         val mavenResult: MavenResult,
-        val projectLanguageLevel: LanguageLevel
+        val projectLanguageLevel: LanguageLevel,
+        val settings: MavenExecutionSettings
     )
 }

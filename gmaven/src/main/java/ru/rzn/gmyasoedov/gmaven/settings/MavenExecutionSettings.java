@@ -15,7 +15,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     private static final long serialVersionUID = 1L;
 
-    /*@NotNull private final GradleExecutionWorkspace myExecutionWorkspace = new GradleExecutionWorkspace();*/
+    @NotNull private final MavenExecutionWorkspace executionWorkspace = new MavenExecutionWorkspace();
 
     @NotNull
     private final DistributionSettings distributionSettings;
@@ -109,6 +109,11 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     public void setUseQualifiedModuleNames(boolean useQualifiedModuleNames) {
         this.useQualifiedModuleNames = useQualifiedModuleNames;
+    }
+
+    @NotNull
+    public MavenExecutionWorkspace getExecutionWorkspace() {
+        return executionWorkspace;
     }
 
     @Override

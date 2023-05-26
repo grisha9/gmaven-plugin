@@ -12,19 +12,28 @@ import com.intellij.util.containers.MultiMap
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.LifecycleData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginData
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.LifecycleNodes
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.PluginNodes
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.ProfileNodes
 
 class MavenViewContributor : ExternalSystemViewContributor() {
     override fun getSystemId() = GMavenConstants.SYSTEM_ID
 
-    override fun getKeys(): List<Key<*>> = listOf(LifecycleData.KEY, PluginData.KEY)
+    override fun getKeys(): List<Key<*>> = listOf(LifecycleData.KEY, PluginData.KEY, ProfileData.KEY)
 
     override fun createNodes(
         externalProjectsView: ExternalProjectsView,
         dataNodes: MultiMap<Key<*>?, DataNode<*>?>
     ): List<ExternalSystemNode<*>> {
         val result: MutableList<ExternalSystemNode<*>> = SmartList()
+
+        // add profiles
+        val profilesNodes = dataNodes[ProfileData.KEY]
+        if (!profilesNodes.isEmpty()) {
+            result.add(ProfileNodes(externalProjectsView, profilesNodes))
+        }
+
         // add base lifecycle tasks
         val tasksNodes = dataNodes[LifecycleData.KEY]
         if (!tasksNodes.isEmpty()) {
@@ -51,5 +60,10 @@ class MavenViewContributor : ExternalSystemViewContributor() {
         val taskData = TaskData(GMavenConstants.SYSTEM_ID, data.name, data.linkedExternalProjectPath, data.description)
         taskData.group = data.group
         return DataNode(ProjectKeys.TASK, taskData, dataNode.parent)
+    }
+
+    override fun getDisplayName(node: DataNode<*>): String? {
+        val profileData = node.data as? ProfileData ?: return null
+        return profileData.name
     }
 }

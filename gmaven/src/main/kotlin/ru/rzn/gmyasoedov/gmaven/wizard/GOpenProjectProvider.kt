@@ -71,11 +71,7 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
     }
 
     private fun attachProjectAndRefresh(settings: MavenProjectSettings, project: Project) {
-        //val javaHome = ExternalSystemJdkUtil.getJavaHome()
-        //val internalJdk = JavaAwareProjectJdkTableImpl.getInstanceEx().getInternalJdk()
-        //setupMavenJvm(project, settings)
         val externalProjectPath = settings.externalProjectPath
-
 
         ExternalSystemApiUtil.getSettings(project, SYSTEM_ID).linkProject(settings)
         if (Registry.`is`("external.system.auto.import.disabled")) return

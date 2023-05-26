@@ -12,4 +12,6 @@ public class MavenSettings implements Serializable {
     public final String settingsPath;
     @NonNull
     public final Collection<MavenProfile> profiles;
+    @NonNull
+    public final Collection<MavenRemoteRepository> remoteRepositories;
 }

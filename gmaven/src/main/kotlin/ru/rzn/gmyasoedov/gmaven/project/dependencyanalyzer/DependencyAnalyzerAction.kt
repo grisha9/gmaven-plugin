@@ -38,13 +38,6 @@ class ViewDependencyAnalyzerAction : AbstractDependencyAnalyzerAction<ExternalSy
         return MavenUtils.findIdeModule(project, findNode)
     }
 
-    /*override fun getExternalProjectPath(e: AnActionEvent, selectedData: ExternalSystemNode<*>): String? {
-        return selectedData.findNode(ModuleNode::class.java)
-            ?.data?.linkedExternalProjectPath
-            ?: selectedData.findNode(ProjectNode::class.java)
-                ?.data?.linkedExternalProjectPath
-    }*/
-
     override fun getDependencyData(e: AnActionEvent, selectedData: ExternalSystemNode<*>) = null
 
     override fun getDependencyScope(e: AnActionEvent, selectedData: ExternalSystemNode<*>) = null

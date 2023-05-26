@@ -19,10 +19,7 @@ import java.util.List;
 
 import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID;
 
-/**
- * @author Vladislav.Soroka
- */
-@Order(ExternalSystemNode.BUILTIN_TASKS_DATA_NODE_ORDER)
+@Order(ExternalSystemNode.BUILTIN_TASKS_DATA_NODE_ORDER - 1)
 public class LifecycleNodes extends ExternalSystemNode<Object> {
 
   private final List<TaskNode> tasks;
