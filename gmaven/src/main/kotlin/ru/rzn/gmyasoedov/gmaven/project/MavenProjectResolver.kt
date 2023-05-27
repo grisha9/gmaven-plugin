@@ -21,6 +21,7 @@ import com.intellij.pom.java.LanguageLevel
 import com.intellij.util.containers.ContainerUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_BUILD_FILE
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.DependencyAnalyzerData
 import ru.rzn.gmyasoedov.gmaven.project.importing.AnnotationProcessingData
 import ru.rzn.gmyasoedov.gmaven.project.importing.DependencyGraphData
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
@@ -145,8 +146,10 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         }
     }
 
-    private fun addDependencies(project: MavenProject,  projectNode: DataNode<ProjectData>,
-                                moduleDataByArtifactId: Map<String, DataNode<ModuleData>>) {
+    private fun addDependencies(
+        project: MavenProject, projectNode: DataNode<ProjectData>,
+        moduleDataByArtifactId: Map<String, DataNode<ModuleData>>
+    ) {
         val moduleByMavenProject = moduleDataByArtifactId[project.id]!!
         var hasLibrary = false;
         for (artifact in project.resolvedArtifacts) {
@@ -221,7 +224,12 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
                 createModuleData(childContainer, moduleDataNode, context, moduleDataByArtifactId)
             }
         } else {
-            populateProfiles(moduleDataNode, context.mavenResult.settings, context.settings)
+            populateProfiles(moduleDataNode, context.mavenResult.settings)
+        }
+        if (container.modules.isEmpty()) {
+            moduleDataNode.createChild(
+                DependencyAnalyzerData.KEY, DependencyAnalyzerData(GMavenConstants.SYSTEM_ID, project.artifactId)
+            )
         }
         return moduleDataNode
     }
@@ -271,8 +279,10 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         }
     }
 
-    private fun addLibrary(parentNode: DataNode<ModuleData>, projectNode: DataNode<ProjectData>,
-                           artifact: MavenArtifact) {
+    private fun addLibrary(
+        parentNode: DataNode<ModuleData>, projectNode: DataNode<ProjectData>,
+        artifact: MavenArtifact
+    ) {
         val createLibrary = createLibrary(artifact)
         val libraryDependencyData = LibraryDependencyData(parentNode.data, createLibrary, LibraryLevel.PROJECT)
         libraryDependencyData.scope = getScope(artifact)

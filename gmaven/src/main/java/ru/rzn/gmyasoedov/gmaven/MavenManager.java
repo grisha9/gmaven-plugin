@@ -4,15 +4,10 @@ import com.intellij.execution.configurations.SimpleJavaParameters;
 import com.intellij.openapi.externalSystem.ExternalSystemConfigurableAware;
 import com.intellij.openapi.externalSystem.ExternalSystemManager;
 import com.intellij.openapi.externalSystem.ExternalSystemUiAware;
-import com.intellij.openapi.externalSystem.model.DataNode;
-import com.intellij.openapi.externalSystem.model.ExternalProjectInfo;
-import com.intellij.openapi.externalSystem.model.ProjectKeys;
 import com.intellij.openapi.externalSystem.model.ProjectSystemId;
 import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExecutionSettings;
-import com.intellij.openapi.externalSystem.model.project.ModuleData;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil;
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver;
-import com.intellij.openapi.externalSystem.service.project.ProjectDataManager;
 import com.intellij.openapi.externalSystem.service.ui.DefaultExternalSystemUiAware;
 import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager;
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil;
@@ -35,16 +30,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.chooser.MavenPomFileChooserDescriptor;
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver;
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData;
 import ru.rzn.gmyasoedov.gmaven.project.task.MavenTaskManager;
 import ru.rzn.gmyasoedov.gmaven.settings.*;
 
 import javax.swing.*;
-import java.util.Collection;
 import java.util.List;
 
 import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_PROJECT_JDK;
-import static com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil.findAll;
 
 public final class MavenManager //manager
         implements ExternalSystemConfigurableAware,
@@ -82,7 +74,7 @@ public final class MavenManager //manager
             Project project = pair.first;
             String projectPath = pair.second;
             MavenSettings settings = MavenSettings.getInstance(project);
-            MavenProjectSettings projectSettings = getProjectSettings(projectPath, settings);
+            MavenProjectSettings projectSettings = settings.getLinkedProjectSettings(projectPath);
             String rootProjectPath = projectSettings != null ? projectSettings.getExternalProjectPath() : projectPath;
             DistributionSettings distributionSettings = projectSettings != null
                     ? projectSettings.getDistributionSettings() : DistributionSettings.getBundled();
@@ -116,37 +108,10 @@ public final class MavenManager //manager
                 result.setUseQualifiedModuleNames(projectSettings.isUseQualifiedModuleNames());
             }
 
-            addCurrentProfiles(project, rootProjectPath, result);
+            //addCurrentProfiles(project, result);
 
             return result;
         };
-    }
-
-    private static void addCurrentProfiles(Project project, String rootProjectPath, MavenExecutionSettings result) {
-        ExternalProjectInfo projectData = ProjectDataManager.getInstance()
-                .getExternalProjectData(project, GMavenConstants.SYSTEM_ID, rootProjectPath);
-
-        if (projectData == null || projectData.getExternalProjectStructure() == null) return;
-
-        Collection<DataNode<ModuleData>> moduleNodes = findAll(projectData.getExternalProjectStructure(), ProjectKeys.MODULE);
-        for (DataNode<ModuleData> moduleNode : moduleNodes) {
-            for (DataNode<ProfileData> profileDataNode : findAll(moduleNode, ProfileData.KEY)) {
-                result.getExecutionWorkspace().addProfile(profileDataNode.getData());
-            }
-        }
-    }
-
-    @Nullable
-    private static MavenProjectSettings getProjectSettings(String projectPath, MavenSettings settings) {
-        MavenProjectSettings projectSettings = settings.getLinkedProjectSettings(projectPath);
-        if (projectSettings == null) {
-            for (MavenProjectSettings setting : settings.getLinkedProjectsSettings()) {
-                if (projectPath.contains(setting.getExternalProjectPath())) {
-                    return setting;
-                }
-            }
-        }
-        return projectSettings;
     }
 
     @Override
@@ -232,7 +197,8 @@ public final class MavenManager //manager
         String projectPath = taskExecutionSettings.getExternalProjectPath();
         if (StringUtil.isEmpty(projectPath)) return null;
 
-        MavenProjectSettings projectSettings = getProjectSettings(projectPath, getSettingsProvider().fun(project));
+        MavenSettings settings = MavenSettings.getInstance(project);
+        MavenProjectSettings projectSettings = settings.getLinkedProjectSettings(projectPath);
         if (projectSettings == null) return null;
 
         if (!projectSettings.getResolveModulePerSourceSet()) {

@@ -44,6 +44,7 @@
         <externalSystemManager implementation="ru.rzn.gmyasoedov.gmaven.MavenManager"/>
         <projectService serviceImplementation="ru.rzn.gmyasoedov.gmaven.settings.MavenSettings"/>
         <projectService serviceImplementation="ru.rzn.gmyasoedov.gmaven.settings.MavenLocalSettings"/>
+        <projectService serviceImplementation="ru.rzn.gmyasoedov.gmaven.project.profile.ProjectProfilesStateService"/>
         <runConfigurationProducer implementation="ru.rzn.gmyasoedov.gmaven.execution.GMavenRuntimeConfigurationProducer"/>
         <configurationType implementation="ru.rzn.gmyasoedov.gmaven.execution.GMavenExternalTaskConfigurationType"/>
         <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.AnnotationProcessingDataService"/>

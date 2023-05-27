@@ -97,6 +97,19 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
         }
     }
 
+    @Override
+    public @Nullable MavenProjectSettings getLinkedProjectSettings(@NotNull String projectPath) {
+        MavenProjectSettings projectSettings = super.getLinkedProjectSettings(projectPath);
+        if (projectSettings == null) {
+            for (MavenProjectSettings setting : getLinkedProjectsSettings()) {
+                if (projectPath.contains(setting.getExternalProjectPath())) {
+                    return setting;
+                }
+            }
+        }
+        return projectSettings;
+    }
+
     public static class MyState implements State<MavenProjectSettings> {
         private final Set<MavenProjectSettings> myProjectSettings = new TreeSet<>();
         private boolean isOfflineMode = false;

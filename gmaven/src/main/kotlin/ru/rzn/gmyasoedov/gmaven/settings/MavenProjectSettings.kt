@@ -5,7 +5,6 @@ import com.intellij.openapi.externalSystem.settings.ExternalProjectSettings
 
 class MavenProjectSettings : ExternalProjectSettings() {
     var projectDirectory: String? = null
-   // var mavenHome: String? = null
     var distributionSettings: DistributionSettings = DistributionSettings.getBundled()
     var jdkName: String? = ExternalSystemJdkUtil.USE_PROJECT_JDK
     var vmOptions: String? = null
@@ -15,7 +14,6 @@ class MavenProjectSettings : ExternalProjectSettings() {
     override fun clone(): MavenProjectSettings {
         val result = MavenProjectSettings()
         copyTo(result)
-     //   result.mavenHome = mavenHome
         result.jdkName = jdkName
         result.resolveModulePerSourceSet = resolveModulePerSourceSet
         result.vmOptions = vmOptions
