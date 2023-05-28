@@ -7,7 +7,6 @@ import com.intellij.openapi.util.NlsSafe;
 import com.intellij.serialization.PropertyMapping;
 import com.intellij.util.xmlb.annotations.Transient;
 import org.jetbrains.annotations.NotNull;
-import ru.rzn.gmyasoedov.gmaven.project.profile.ProfileState;
 
 public class ProfileData extends AbstractExternalEntityData implements Comparable<ProfileData> {
     @NotNull public static final Key<ProfileData> KEY = Key.create(ProfileData.class, 90);
@@ -40,18 +39,6 @@ public class ProfileData extends AbstractExternalEntityData implements Comparabl
 
     public boolean isHasActivation() {
         return hasActivation;
-    }
-
-    @Transient
-    @NotNull
-    public static ProfileState defaultState(ProfileData data) {
-        ProfileState state = new ProfileState();
-        if (data.hasActivation) {
-            state.setActivationProfile(ProfileData.ActivationProfile.INDETERMINATE);
-        } else {
-            state.setSimpleProfile(SimpleProfile.INACTIVE);
-        }
-        return state;
     }
 
     @Transient

@@ -86,5 +86,10 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
         val clazz = Class.forName("ru.rzn.gmyasoedov.model.reader.DependencyCoordinate")
         modelRequest.gMavenPluginPath = PathUtil.getJarPathForClass(clazz)
     }
+    if (request.settings != null) {
+        modelRequest.profiles = request.settings.executionWorkspace.profilesData.asSequence()
+            .map { it.toRawName() }
+            .joinToString(separator = ",")
+    }
     return modelRequest;
 }

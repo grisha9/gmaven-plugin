@@ -53,6 +53,10 @@ public class GMavenServerImpl implements GMavenServer {
         } else {
             mvnArgs.add("ru.rzn.gmyasoedov:model-reader:1.0-SNAPSHOT:resolve");
         }
+        if (!StringUtilRt.isEmpty(request.profiles)) {
+            mvnArgs.add("-P");
+            mvnArgs.add(request.profiles);
+        }
         mvnArgs.add("-Daether.conflictResolver.verbose=true");
         mvnArgs.add("-Daether.dependencyManager.verbose=true");
         return mvnArgs.toArray(new String[0]);

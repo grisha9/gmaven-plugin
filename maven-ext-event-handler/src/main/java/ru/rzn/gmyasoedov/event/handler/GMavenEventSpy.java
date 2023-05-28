@@ -6,6 +6,7 @@ import org.apache.maven.execution.MavenExecutionResult;
 import org.apache.maven.plugin.PluginResolutionException;
 import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.settings.building.DefaultSettingsBuildingRequest;
+import org.apache.maven.settings.building.SettingsBuildingResult;
 import org.eclipse.aether.graph.DependencyNode;
 import ru.rzn.gmyasoedov.event.handler.converter.MavenProjectContainerConverter;
 import ru.rzn.gmyasoedov.event.handler.converter.MavenSettingsConverter;
@@ -26,6 +27,9 @@ public class GMavenEventSpy extends AbstractEventSpy {
     public void onEvent(Object event) {
         if (event instanceof DefaultSettingsBuildingRequest) {
             resultHolder = new EventSpyResultHolder();
+        } else if (event instanceof SettingsBuildingResult) {
+            resultHolder.settingsActiveProfiles = ((SettingsBuildingResult) event)
+                    .getEffectiveSettings().getActiveProfiles();
         } else if (event instanceof ExecutionEvent) {
             if (((ExecutionEvent) event).getType() == ExecutionEvent.Type.MojoSucceeded) {
                 resultHolder.session = ((ExecutionEvent) event).getSession();

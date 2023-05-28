@@ -9,6 +9,7 @@ public class GetModelRequest implements Serializable {
     public String alternativePom;
     public String gMavenPluginPath;
     public List<String> tasks;
+    public String profiles;
     public boolean offline;
     public boolean nonRecursion;
 }

@@ -12,4 +12,5 @@ public class EventSpyResultHolder {
     public Map<String, List<DependencyNode>> dependencyResult = new HashMap<>();
     public MavenSession session;
     public MavenExecutionResult executionResult;
+    public List<String> settingsActiveProfiles;
 }

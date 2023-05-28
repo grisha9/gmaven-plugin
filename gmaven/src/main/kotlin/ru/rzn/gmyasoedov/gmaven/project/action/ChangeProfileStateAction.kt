@@ -20,8 +20,7 @@ class ChangeProfileStateAction : ExternalSystemNodeAction<ProfileData>(ProfileDa
         e: AnActionEvent
     ) {
         val profilesStateService = ProjectProfilesStateService.getInstance(project)
-        val profileState = profilesStateService.state.mapping.get(externalData.stateKey)
-            ?: ProfileData.defaultState(externalData)
+        val profileState = profilesStateService.getProfileSate(externalData)
         nextState(project, profileState, externalData)
         ExternalSystemUtil.scheduleExternalViewStructureUpdate(project, projectSystemId)
     }

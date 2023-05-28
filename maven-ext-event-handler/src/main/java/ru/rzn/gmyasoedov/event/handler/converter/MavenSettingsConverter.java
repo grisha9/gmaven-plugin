@@ -24,7 +24,7 @@ public class MavenSettingsConverter {
         String localRepository = session.getRequest().getLocalRepository().getBasedir();
         File settingsFile = session.getRequest().getUserSettingsFile();
         String settingsFilePath = settingsFile == null ? null : settingsFile.getAbsolutePath();
-        Collection<String> activeProfiles = getActiveProfiles(session);
+        Collection<String> activeProfiles = source.settingsActiveProfiles;
         Collection<MavenRemoteRepository> repositories = getRemoteRepositories(session);
         return new MavenSettings(
                 localRepository, settingsFilePath, getMavenProfiles(session, activeProfiles), repositories
@@ -59,11 +59,5 @@ public class MavenSettingsConverter {
         return new MavenProfile(
                 profile.getId(), profile.getActivation() != null || activeProfiles.contains(profile.getId())
         );
-    }
-
-    private static Collection<String> getActiveProfiles(MavenSession session) {
-        List<String> activeProfiles = session.getRequest().getActiveProfiles();
-        if (activeProfiles.size() < 5) return activeProfiles;
-        return new HashSet<>(activeProfiles);
     }
 }

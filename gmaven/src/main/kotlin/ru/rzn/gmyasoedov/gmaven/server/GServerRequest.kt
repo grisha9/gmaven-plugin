@@ -3,6 +3,7 @@ package ru.rzn.gmyasoedov.gmaven.server
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
 import com.intellij.openapi.projectRoots.Sdk
+import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import java.nio.file.Path
 
 data class GServerRequest(
@@ -13,6 +14,7 @@ data class GServerRequest(
     val vmOptions: String = "",
     val nonRecursion: Boolean = false,
     val installGMavenPlugin: Boolean = false,
-    val listener: ExternalSystemTaskNotificationListener? = null
+    val listener: ExternalSystemTaskNotificationListener? = null,
+    val settings: MavenExecutionSettings? = null
 )
 

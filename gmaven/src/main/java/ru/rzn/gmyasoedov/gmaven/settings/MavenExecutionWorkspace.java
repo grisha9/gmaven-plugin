@@ -1,23 +1,25 @@
 package ru.rzn.gmyasoedov.gmaven.settings;
 
 import org.jetbrains.annotations.NotNull;
-import ru.rzn.gmyasoedov.gmaven.project.profile.ProfileState;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MavenExecutionWorkspace implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotNull
-    private Map<String, ProfileState> profilesState = Collections.emptyMap();
+    private final List<ProfileExecution> profilesData = new ArrayList<>();
 
-    public Map<String, ProfileState> getProfilesState() {
-        return Collections.unmodifiableMap(profilesState);
+    public void addProfile(@Nullable ProfileExecution data) {
+        if (data != null) {
+            profilesData.add(data);
+        }
     }
 
-    public void setProfilesState(@NotNull Map<String, ProfileState> profilesState) {
-        this.profilesState = profilesState;
+    public List<ProfileExecution> getProfilesData() {
+        return List.copyOf(profilesData);
     }
 }
