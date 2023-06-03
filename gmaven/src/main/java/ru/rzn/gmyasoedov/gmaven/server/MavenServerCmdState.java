@@ -22,6 +22,7 @@ import com.intellij.util.PathUtil;
 import com.intellij.util.net.NetUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
 import ru.rzn.gmyasoedov.serverapi.GMavenServer;
@@ -32,9 +33,9 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.lang.String.format;
 import static ru.rzn.gmyasoedov.serverapi.GMavenServer.*;
 
 public class MavenServerCmdState extends CommandLineState {
@@ -67,11 +68,20 @@ public class MavenServerCmdState extends CommandLineState {
     }
 
     private void setupGmavenPluginsProperty(SimpleJavaParameters params) {
-        String pluginsParam = MavenFullImportPlugin.EP_NAME.getExtensionList().stream()
-                .map(MavenFullImportPlugin::getKey)
-                .collect(Collectors.joining(";"));
-        if (!StringUtilRt.isEmpty(pluginsParam)) {
-            params.getVMParametersList().addProperty(GMAVEN_PLUGINS, pluginsParam);
+        List<MavenFullImportPlugin> extensionList = MavenFullImportPlugin.EP_NAME.getExtensionList();
+        List<String> pluginsForImport = new ArrayList<>(extensionList.size());
+        for (MavenFullImportPlugin plugin : extensionList) {
+            pluginsForImport.add(plugin.getKey());
+            String annotationPath = plugin instanceof MavenCompilerFullImportPlugin
+                    ? ((MavenCompilerFullImportPlugin) plugin).getAnnotationProcessorPath() : null;
+            if (StringUtilRt.isEmpty(annotationPath)) continue;
+
+            params.getVMParametersList()
+                    .addProperty(format(GMAVEN_PLUGIN_ANNOTATION_PROCESSOR, plugin.getArtifactId()), annotationPath);
+        }
+
+        if (!pluginsForImport.isEmpty()) {
+            params.getVMParametersList().addProperty(GMAVEN_PLUGINS, String.join(";", pluginsForImport));
         }
     }
 

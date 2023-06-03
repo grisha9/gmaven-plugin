@@ -10,7 +10,8 @@ public interface GMavenServer extends Remote {
     String SERVER_DEBUG_PROPERTY = "gmaven.server.debug";
     String MAVEN_EXT_CLASS_PATH_PROPERTY = "maven.ext.class.path";
     String GMAVEN_HOME = "gmaven.maven.home";
-    String GMAVEN_PLUGINS = "gmaveng.plugins";
+    String GMAVEN_PLUGINS = "gmaven.plugins";
+    String GMAVEN_PLUGIN_ANNOTATION_PROCESSOR = "gmaven.plugin.annotation.paths.%s";
 
     MavenResult getProjectModel(GetModelRequest request) throws RemoteException;
 }

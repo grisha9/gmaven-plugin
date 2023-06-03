@@ -55,18 +55,9 @@ public class MavenPluginConverter {
         return result;
     }
 
-    private static Map<String, Object> getConfiguration(Map<String, Object> map) {
-        if (map == null) return Collections.emptyMap();
+    private static String getConfiguration(Map<String, Object> map) {
+        if (map == null) return null;
         Object configuration = map.get("configuration");
-        if (configuration instanceof Map) {
-            Object conf = ((Map<String, Object>) configuration).get("configuration");
-            if (conf instanceof Map) {
-                return (Map<String, Object>) conf;
-            } else {
-                return (Map<String, Object>) configuration;
-            }
-        } else {
-            return Collections.emptyMap();
-        }
+        return configuration instanceof String ? (String) configuration : null;
     }
 }

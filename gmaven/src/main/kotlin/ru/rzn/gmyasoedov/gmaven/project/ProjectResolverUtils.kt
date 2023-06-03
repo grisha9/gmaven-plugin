@@ -42,7 +42,7 @@ fun getCompilerData(mavenProject: MavenProject, mavenResult: MavenResult, projec
 
     for (plugin in mavenProject.plugins) {
         if (compilerPlugin.isApplicable(plugin)) {
-            return compilerPlugin.getCompilerData(mavenProject, plugin, Path.of(localRepoPath))
+            return compilerPlugin.getCompilerData(mavenProject, plugin, Path.of(localRepoPath), HashMap())
         }
     }
     return CompilerData(projectLanguageLevel, Collections.emptyList())

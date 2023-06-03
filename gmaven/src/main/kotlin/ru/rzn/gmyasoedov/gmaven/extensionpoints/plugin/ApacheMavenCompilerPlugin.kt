@@ -1,7 +1,10 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
+import com.intellij.openapi.util.JDOMUtil
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.pom.java.LanguageLevel
+import com.jetbrains.rd.util.getOrCreate
+import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
@@ -15,8 +18,15 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
 
     override fun getArtifactId() = "maven-compiler-plugin"
 
-    override fun getCompilerData(project: MavenProject, plugin: MavenPlugin, localRepositoryPath: Path): CompilerData {
-        val compilerProp = getCompilerProp(plugin.body, project)
+    override fun getAnnotationProcessorPath() = "annotationProcessorPaths"
+
+    override fun getCompilerData(
+        project: MavenProject,
+        plugin: MavenPlugin,
+        localRepositoryPath: Path,
+        contextElementMap: MutableMap<String, Element>
+    ): CompilerData {
+        val compilerProp = getCompilerProp(plugin.body, project, contextElementMap)
         return toCompilerData(compilerProp, plugin, localRepositoryPath)
     }
 
@@ -61,9 +71,13 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         return CompilerData(source, target, testSource, testTarget, emptyList())
     }
 
-    private fun getCompilerProp(body: PluginBody, project: MavenProject): CompilerProp {
+    private fun getCompilerProp(
+        body: PluginBody, project: MavenProject,
+        contextElementMap: MutableMap<String, Element>
+    ): CompilerProp {
         val executions = body.executions.filter { it.phase.equals("compile") || it.phase.equals("test-compile") }
-        val compilerProp = if (executions.isEmpty()) getCompilerProp(body.configuration) else compilerProp(executions)
+        val compilerProp = if (executions.isEmpty()) getCompilerProp(body.configuration, contextElementMap)
+        else compilerProp(executions, contextElementMap)
         if (compilerProp.release == null) {
             compilerProp.release = getLanguageLevel(project.properties.get("maven.compiler.release"))
         }
@@ -85,8 +99,8 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         return compilerProp;
     }
 
-    private fun compilerProp(executions: List<PluginExecution>) =
-        executions.asSequence().map { getCompilerProp(it.configuration) }
+    private fun compilerProp(executions: List<PluginExecution>, contextElementMap: MutableMap<String, Element>) =
+        executions.asSequence().map { getCompilerProp(it.configuration, contextElementMap) }
             .reduce { acc, next -> sumCompilerProp(acc, next) }
 
     private fun sumCompilerProp(acc: CompilerProp, next: CompilerProp): CompilerProp {
@@ -105,19 +119,24 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         return if (first.isLessThan(second)) second else first
     }
 
-    private fun getCompilerProp(configuration: Map<String, Any>): CompilerProp {
+    private fun getCompilerProp(configuration: String, contextElementMap: MutableMap<String, Element>): CompilerProp {
+        val element = getElement(configuration, contextElementMap)
         return CompilerProp(
-            getLanguageLevel(configuration.get("release")),
-            getLanguageLevel(configuration.get("source")),
-            getLanguageLevel(configuration.get("target")),
-            getLanguageLevel(configuration.get("testRelease")),
-            getLanguageLevel(configuration.get("testSource")),
-            getLanguageLevel(configuration.get("testTarget")),
+            getLanguageLevel(element.getChildTextTrim("release")),
+            getLanguageLevel(element.getChildTextTrim("source")),
+            getLanguageLevel(element.getChildTextTrim("target")),
+            getLanguageLevel(element.getChildTextTrim("testRelease")),
+            getLanguageLevel(element.getChildTextTrim("testSource")),
+            getLanguageLevel(element.getChildTextTrim("testTarget")),
         )
     }
 
     private fun getLanguageLevel(value: Any?): LanguageLevel? {
         return if (value is String) LanguageLevel.parse(value) else null;
+    }
+
+    private fun getElement(body: String, contextElementMap: MutableMap<String, Element>): Element {
+        return contextElementMap.getOrCreate(body) { JDOMUtil.load(it) }
     }
 
 

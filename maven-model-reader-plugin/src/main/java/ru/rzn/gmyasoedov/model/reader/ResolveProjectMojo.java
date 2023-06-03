@@ -3,7 +3,10 @@ package ru.rzn.gmyasoedov.model.reader;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.artifact.resolver.ResolutionErrorHandler;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Build;
+import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
+import org.apache.maven.model.PluginExecution;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
@@ -14,15 +17,23 @@ import org.apache.maven.repository.RepositorySystem;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import static java.lang.String.format;
 import static org.apache.maven.plugins.annotations.LifecyclePhase.NONE;
 import static org.apache.maven.plugins.annotations.ResolutionScope.TEST;
-import static ru.rzn.gmyasoedov.model.reader.PluginConverter.resolvePluginBody;
 
 @Mojo(name = "resolve", defaultPhase = NONE, aggregator = true, requiresDependencyResolution = TEST)
 public class ResolveProjectMojo extends AbstractMojo {
     private static final String ANNOTATION_PROCESSOR_PATH = "annotationProcessorPath";
+    private static final String GMAVEN_PLUGINS = "gmaven.plugins";
+    private static final String GMAVEN_PLUGIN_ANNOTATION_PROCESSOR = "gmaven.plugin.annotation.paths.%s";
 
     @Component
     private RepositorySystem repositorySystem;
@@ -39,24 +50,85 @@ public class ResolveProjectMojo extends AbstractMojo {
         Set<String> gPluginSet = getPluginForBodyProcessing();
         getLog().info("!!!-----------------ResolveProjectMojo-----------------------!!!");
         for (MavenProject mavenProject : session.getAllProjects()) {
-            resolveAnnotationProcessor(mavenProject);
             resolvePluginBody(mavenProject, gPluginSet);
         }
     }
 
+    public void resolvePluginBody(MavenProject project, Set<String> gPlugins) throws MojoExecutionException {
+        Model mavenModel = project.getModel();
+        if (gPlugins.isEmpty() || mavenModel == null) return;
+
+        Build build = mavenModel.getBuild();
+        if (build != null) {
+            List<Plugin> plugins = build.getPlugins();
+            if (plugins != null) {
+                for (Plugin each : plugins) {
+                    processPlugin(each, gPlugins, project);
+                }
+            }
+        }
+    }
+
+    private void processPlugin(Plugin each, Set<String> gPlugins, MavenProject project)
+            throws MojoExecutionException {
+        String pluginKey = each.getGroupId() + ":" + each.getArtifactId();
+        if (!gPlugins.contains(pluginKey)) return;
+        Map<String, Object> pluginBody = convertPluginBody(project, each);
+        if (!pluginBody.isEmpty()) {
+            String key = "gPlugin" + pluginKey;
+            project.setContextValue(key, pluginBody);
+        }
+    }
+
+    private Map<String, Object> convertPluginBody(MavenProject project, Plugin plugin)
+            throws MojoExecutionException {
+        String annotationProcessorPaths = getPluginAnnotationProcessorPaths(plugin);
+        resolveAnnotationProcessor(project, plugin, annotationProcessorPaths);
+        List<Map<String, Object>> executions = new ArrayList<>(plugin.getExecutions().size());
+        for (PluginExecution each : plugin.getExecutions()) {
+            executions.add(convertExecution(each));
+        }
+        Map<String, Object> result = new HashMap<>(5);
+        result.put("executions", executions);
+        result.put("configuration", convertConfiguration(plugin.getConfiguration()));
+        return result;
+    }
+
+    private static Map<String, Object> convertExecution(PluginExecution execution) {
+        Map<String, Object> result = new HashMap<>(5);
+        result.put("id", execution.getId());
+        result.put("phase", execution.getPhase());
+        result.put("goals", execution.getGoals());
+        result.put("configuration", convertConfiguration(execution.getConfiguration()));
+        return result;
+    }
+
+    private static String convertConfiguration(Object config) {
+        if (config instanceof Xpp3Dom) {
+            return config.toString();
+        } else {
+            return null;
+        }
+    }
+
     private Set<String> getPluginForBodyProcessing() {
-        String gPlugins = System.getProperty("gmaveng.plugins", "");
-        if(gPlugins.isEmpty()) return Collections.emptySet();
+        String gPlugins = System.getProperty(GMAVEN_PLUGINS, "");
+        if (gPlugins.isEmpty()) return Collections.emptySet();
         String[] gPluginsArray = gPlugins.split(";");
-        HashSet<String> gPluginSet = new HashSet<>(gPluginsArray.length);
+        HashSet<String> gPluginSet = new HashSet<>(gPluginsArray.length * 2);
         Collections.addAll(gPluginSet, gPluginsArray);
         return gPluginSet;
     }
 
-    private void resolveAnnotationProcessor(MavenProject project) throws MojoExecutionException {
-        Plugin plugin = project.getPlugin("org.apache.maven.plugins:maven-compiler-plugin");
-        if (plugin == null || plugin.getConfiguration() == null) return;
-        List<DependencyCoordinate> dependencies = getDependencyCoordinates(plugin);
+    private static String getPluginAnnotationProcessorPaths(Plugin plugin) {
+        String path = System.getProperty(format(GMAVEN_PLUGIN_ANNOTATION_PROCESSOR, plugin.getArtifactId()), "");
+        return path.isEmpty() ? null : path;
+    }
+
+    private void resolveAnnotationProcessor(MavenProject project, Plugin plugin, String annotationProcessorPaths)
+            throws MojoExecutionException {
+        if (annotationProcessorPaths == null || plugin == null || plugin.getConfiguration() == null) return;
+        List<DependencyCoordinate> dependencies = getDependencyCoordinates(plugin, annotationProcessorPaths);
         List<String> paths = GUtils.resolveArtifacts(
                 dependencies, project,
                 repositorySystem, artifactHandlerManager,
@@ -71,11 +143,12 @@ public class ResolveProjectMojo extends AbstractMojo {
         project.setContextValue(ANNOTATION_PROCESSOR_PATH, paths);
     }
 
-    private List<DependencyCoordinate> getDependencyCoordinates(Plugin plugin) throws MojoExecutionException {
+    private List<DependencyCoordinate> getDependencyCoordinates(Plugin plugin, String annotationProcessorPaths)
+            throws MojoExecutionException {
         List<DependencyCoordinate> dependencies = new ArrayList<>();
         Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
         for (Xpp3Dom dom : configuration.getChildren()) {
-            if ("annotationProcessorPaths".equalsIgnoreCase(dom.getName())) {
+            if (annotationProcessorPaths.equalsIgnoreCase(dom.getName())) {
                 getLog().info("!!! annotationProcessorPaths=" + dom);
                 for (Xpp3Dom child : dom.getChildren()) {
                     DependencyCoordinate coordinate = getDependencyCoordinate(child);
