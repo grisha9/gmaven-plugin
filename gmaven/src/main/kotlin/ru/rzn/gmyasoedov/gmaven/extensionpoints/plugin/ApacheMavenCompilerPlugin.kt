@@ -119,8 +119,9 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         return if (first.isLessThan(second)) second else first
     }
 
-    private fun getCompilerProp(configuration: String, contextElementMap: MutableMap<String, Element>): CompilerProp {
-        val element = getElement(configuration, contextElementMap)
+    private fun getCompilerProp(configuration: String?, contextElementMap: MutableMap<String, Element>): CompilerProp {
+        val element = configuration?.let { getElement(it, contextElementMap) }
+            ?: return CompilerProp(null, null, null, null, null, null)
         return CompilerProp(
             getLanguageLevel(element.getChildTextTrim("release")),
             getLanguageLevel(element.getChildTextTrim("source")),
@@ -136,7 +137,16 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
     }
 
     private fun getElement(body: String, contextElementMap: MutableMap<String, Element>): Element {
-        return contextElementMap.getOrCreate(body) { JDOMUtil.load(it) }
+        return contextElementMap.getOrCreate(body) { parseConfiguration(it) }
+    }
+
+    private fun parseConfiguration(it: String): Element {
+        try {
+            return JDOMUtil.load(it)
+        } catch (e: Exception) {
+            MavenLog.LOG.error(e)
+            return Element("empty")
+        }
     }
 
 

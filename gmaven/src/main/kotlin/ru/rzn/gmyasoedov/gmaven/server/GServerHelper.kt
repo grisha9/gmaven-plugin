@@ -7,6 +7,7 @@ import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.util.PathUtil
 import com.intellij.util.io.isDirectory
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
+import ru.rzn.gmyasoedov.serverapi.model.DependencyTreeNode
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest
 
@@ -62,6 +63,28 @@ fun runTasks(request: GServerRequest, tasks: List<String>): MavenResult {
     val processSupport = GServerRemoteProcessSupport(request)
     try {
         return processSupport.acquire(request.taskId, "", EmptyProgressIndicator()).getProjectModel(modelRequest)
+    } catch (e: Exception) {
+        MavenLog.LOG.error(e)
+        throw RuntimeException(e)
+    } finally {
+        processSupport.stopAll()
+    }
+}
+
+fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<DependencyTreeNode> {
+    val request = GServerRequest(
+        gServerRequest.taskId,
+        gServerRequest.projectPath,
+        gServerRequest.mavenPath,
+        gServerRequest.sdk
+    )
+    val modelRequest = getModelRequest(request)
+    modelRequest.analyzerGA = artifactGA
+    val processSupport = GServerRemoteProcessSupport(request)
+    try {
+        val projectModel = processSupport.acquire(request.taskId, "", EmptyProgressIndicator())
+            .getProjectModel(modelRequest)
+        return projectModel?.projectContainer?.project?.dependencyTree ?: emptyList()
     } catch (e: Exception) {
         MavenLog.LOG.error(e)
         throw RuntimeException(e)

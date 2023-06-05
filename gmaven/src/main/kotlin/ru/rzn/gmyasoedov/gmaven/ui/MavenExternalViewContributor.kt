@@ -19,7 +19,7 @@ import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.LifecycleNodes
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.PluginNodes
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.ProfileNodes
 
-class MavenViewContributor : ExternalSystemViewContributor() {
+class MavenExternalViewContributor : ExternalSystemViewContributor() {
     override fun getSystemId() = GMavenConstants.SYSTEM_ID
 
     override fun getKeys(): List<Key<*>> = listOf(

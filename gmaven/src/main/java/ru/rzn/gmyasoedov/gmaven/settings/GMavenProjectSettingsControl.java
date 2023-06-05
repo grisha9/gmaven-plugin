@@ -8,9 +8,6 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author Denis Zhdanov
- */
 public class GMavenProjectSettingsControl extends AbstractExternalProjectSettingsControl<MavenProjectSettings> {
   private final ProjectSettingsControlBuilder myBuilder;
 

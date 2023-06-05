@@ -98,12 +98,12 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
             override fun onSuccess(externalProject: DataNode<ProjectData>?) {
                 if (externalProject == null) return
                 ProjectDataManager.getInstance().importData(externalProject, project, false)
-                updateMavenJvm(project, externalProjectPath)
+                updateMavenSettings(project, externalProjectPath)
             }
         }
     }
 
-    private fun updateMavenJvm(project: Project, externalProjectPath: String) {
+    private fun updateMavenSettings(project: Project, externalProjectPath: String) {
         val settings = MavenSettings.getInstance(project)
         val projectSettings = settings.getLinkedProjectSettings(externalProjectPath) ?: return
         val jdkName = projectSettings.jdkName ?: return

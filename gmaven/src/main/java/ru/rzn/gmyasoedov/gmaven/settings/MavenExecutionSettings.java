@@ -7,9 +7,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-/**
- * @author Denis Zhdanov
- */
 public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     private static final long serialVersionUID = 1L;

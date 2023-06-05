@@ -31,13 +31,15 @@ public class GMavenEventSpy extends AbstractEventSpy {
             resultHolder.settingsActiveProfiles = ((SettingsBuildingResult) event)
                     .getEffectiveSettings().getActiveProfiles();
         } else if (event instanceof ExecutionEvent) {
-            if (((ExecutionEvent) event).getType() == ExecutionEvent.Type.MojoSucceeded) {
+            if (((ExecutionEvent) event).getSession() != null) {
                 resultHolder.session = ((ExecutionEvent) event).getSession();
             }
         } else if (event instanceof DependencyResolutionResult) {
-            DependencyNode dependencyGraph = ((DependencyResolutionResult) event).getDependencyGraph();
-            String key = dependencyGraph.getArtifact().getArtifactId();
-            resultHolder.dependencyResult.put(key, dependencyGraph.getChildren());
+            if (isDependencyAnalyzer()) {
+                DependencyNode dependencyGraph = ((DependencyResolutionResult) event).getDependencyGraph();
+                String key = dependencyGraph.getArtifact().getArtifactId();
+                resultHolder.dependencyResult.put(key, dependencyGraph.getChildren());
+            }
         } else if (event instanceof MavenExecutionResult) {
             resultHolder.executionResult = (MavenExecutionResult) event;
             if (resultHolder.session != null) {
@@ -45,6 +47,12 @@ public class GMavenEventSpy extends AbstractEventSpy {
             }
             setResult();
         }
+    }
+
+    private static boolean isDependencyAnalyzer() {
+        if (resultHolder.session == null) return false;
+        return resultHolder.session.getSystemProperties().getProperty("aether.conflictResolver.verbose", "")
+                .equalsIgnoreCase("true");
     }
 
     private void setResult() {

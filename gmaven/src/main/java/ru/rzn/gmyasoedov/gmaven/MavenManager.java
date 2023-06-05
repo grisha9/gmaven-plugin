@@ -89,7 +89,7 @@ public final class MavenManager //manager
                     ? projectSettings.getDistributionSettings() : DistributionSettings.getBundled();
 
             MavenExecutionSettings result = new MavenExecutionSettings(distributionSettings,
-                    projectPath,
+                    projectSettings != null ? projectSettings.getProjectDirectory() : null,
                     projectSettings != null ? projectSettings.getVmOptions() : null,
                     projectSettings != null && projectSettings.getOffline());
 

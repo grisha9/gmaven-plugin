@@ -18,12 +18,11 @@ import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.pom.java.LanguageLevel
-import com.intellij.util.containers.ContainerUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_BUILD_FILE
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_HAS_DEPENDENCIES
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.DependencyAnalyzerData
 import ru.rzn.gmyasoedov.gmaven.project.importing.AnnotationProcessingData
-import ru.rzn.gmyasoedov.gmaven.project.importing.DependencyGraphData
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.firstRun
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
@@ -162,6 +161,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             }
         }
         if (hasLibrary) {
+            moduleByMavenProject.data.setProperty(MODULE_PROP_HAS_DEPENDENCIES, true.toString())
             moduleByMavenProject.createChild(ProjectKeys.DEPENDENCIES_GRAPH, ProjectDependenciesImpl())
         }
     }
@@ -181,7 +181,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val moduleData = ModuleData(
             id, GMavenConstants.SYSTEM_ID, getDefaultModuleTypeId(), project.artifactId,
             mainModuleFileDirectoryPath,
-            projectPath
+            projectPath//project.file.absolutePath todo !!! путь к пому должен быть? сравнить еще раз с гредлом
         )
         moduleData.internalName = getInternalModuleName(parentInternalName, project.artifactId)
         moduleData.group = project.groupId
@@ -217,7 +217,6 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             )
         )
         populateAnnotationProcessorData(project, moduleDataNode)
-        populateDependenciesTree(project, moduleDataNode)
         populateTasks(moduleDataNode, project, context.mavenResult.settings.localRepository?.let { Path.of(it) })
         if (parentDataNode.data is ModuleData) {
             for (childContainer in container.modules) {
@@ -240,15 +239,6 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             .create(annotationProcessorPaths, emptyList(), project.buildDirectory, project.basedir)
         moduleDataNode.createChild(AnnotationProcessingData.KEY, data)
 
-    }
-
-    //todo стоить переделать чтобы не хранить их в модели?
-    // а получать из запуска таска? по типу как в GradleDependencyAnalyzerContributor
-    private fun populateDependenciesTree(project: MavenProject, moduleDataNode: DataNode<ModuleData>) {
-        if (ContainerUtil.isEmpty(project.dependencyTree)) return
-        val data = DependencyGraphData
-            .create(project.dependencyTree, project.artifactId, project.groupId, project.version)
-        moduleDataNode.createChild(DependencyGraphData.KEY, data)
     }
 
     private fun getDefaultModuleTypeId(): String {
@@ -286,15 +276,15 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val createLibrary = createLibrary(artifact)
         val libraryDependencyData = LibraryDependencyData(parentNode.data, createLibrary, LibraryLevel.PROJECT)
         libraryDependencyData.scope = getScope(artifact)
-        libraryDependencyData.order = 2
+        libraryDependencyData.order = 20 + getScopeOrder(libraryDependencyData.scope)
         parentNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData)
         if (libraryDependencyData.scope == DependencyScope.RUNTIME) {
             val libraryDependencyDataTest = LibraryDependencyData(parentNode.data, createLibrary, LibraryLevel.PROJECT)
             libraryDependencyDataTest.scope = DependencyScope.TEST
-            libraryDependencyDataTest.order = 2
+            libraryDependencyDataTest.order = 20 + getScopeOrder(libraryDependencyDataTest.scope)
             parentNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyDataTest)
         }
-        projectNode.createChild(ProjectKeys.LIBRARY, createLibrary)
+        //projectNode.createChild(ProjectKeys.LIBRARY, createLibrary) - todo #c.i.o.e.s.p.m.LibraryDataService - Multiple project level libraries found with the same name 'GMaven: org.junit.platform:junit-platform-engine:1.7.1'
     }
 
     private fun createLibrary(artifact: MavenArtifact): LibraryData {
@@ -320,6 +310,15 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             GMavenConstants.SCOPE_RUNTIME == artifact.scope -> DependencyScope.RUNTIME
             GMavenConstants.SCOPE_PROVIDED == artifact.scope -> DependencyScope.PROVIDED
             else -> DependencyScope.COMPILE
+        }
+    }
+
+    private fun getScopeOrder(scope: DependencyScope): Int {
+        return when(scope) {
+            DependencyScope.TEST -> 3
+            DependencyScope.RUNTIME -> 2
+            DependencyScope.PROVIDED -> 1
+            else -> 0
         }
     }
 

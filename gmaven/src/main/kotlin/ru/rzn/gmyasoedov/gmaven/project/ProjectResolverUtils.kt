@@ -27,6 +27,7 @@ fun getMavenHome(distributionSettings: DistributionSettings): Path {
     if (distributionSettings.path != null) return distributionSettings.path
     if (distributionSettings.url != null) {
         val mavenHome = MavenWrapperDistribution.getOrDownload(distributionSettings.url)
+        distributionSettings.path = mavenHome.path
         return mavenHome.path
     }
     throw ExternalSystemException("maven home is empty")

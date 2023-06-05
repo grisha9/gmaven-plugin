@@ -57,8 +57,12 @@ public class GMavenServerImpl implements GMavenServer {
             mvnArgs.add("-P");
             mvnArgs.add(request.profiles);
         }
-        mvnArgs.add("-Daether.conflictResolver.verbose=true");
-        mvnArgs.add("-Daether.dependencyManager.verbose=true");
+        if (!StringUtilRt.isEmpty(request.analyzerGA)) {
+            mvnArgs.add("-pl");
+            mvnArgs.add(request.analyzerGA);
+            mvnArgs.add("-Daether.conflictResolver.verbose=true");
+            mvnArgs.add("-Daether.dependencyManager.verbose=true");
+        }
         return mvnArgs.toArray(new String[0]);
     }
 
