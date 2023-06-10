@@ -27,13 +27,15 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         contextElementMap: MutableMap<String, Element>
     ): CompilerData {
         val compilerProp = getCompilerProp(plugin.body, project, contextElementMap)
-        return toCompilerData(compilerProp, plugin, localRepositoryPath)
+        return toCompilerData(compilerProp, project, plugin, localRepositoryPath, contextElementMap)
     }
 
     private fun toCompilerData(
         compilerProp: CompilerProp,
+        mavenProject: MavenProject,
         plugin: MavenPlugin,
-        localRepositoryPath: Path
+        localRepositoryPath: Path,
+        contextElementMap: MutableMap<String, Element>
     ): CompilerData {
         val isReleaseEnabled = StringUtil.compareVersionNumbers(plugin.version, "3.6") >= 0
         var source: LanguageLevel? = null
@@ -68,7 +70,9 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         if (testTarget == null) {
             testTarget = compilerProp.testTarget ?: target
         }
-        return CompilerData(source, target, testSource, testTarget, emptyList())
+        val configurationElement = plugin.body.configuration?.let { getElement(it, contextElementMap) }
+        val compilerArgs = collectCompilerArgs(mavenProject, configurationElement)
+        return CompilerData(source, target, testSource, testTarget, compilerArgs)
     }
 
     private fun getCompilerProp(

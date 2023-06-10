@@ -217,7 +217,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
                 targetBytecodeLevel.toJavaVersion().toFeatureString()
             )
         )
-        populateAnnotationProcessorData(project, moduleDataNode)
+        populateAnnotationProcessorData(project, moduleDataNode, compilerData.arguments)
         populateTasks(moduleDataNode, project, context.mavenResult.settings.localRepository?.let { Path.of(it) })
         if (parentDataNode.data is ModuleData) {
             for (childContainer in container.modules) {
@@ -234,12 +234,15 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         return moduleDataNode
     }
 
-    private fun populateAnnotationProcessorData(project: MavenProject, moduleDataNode: DataNode<ModuleData>) {
+    private fun populateAnnotationProcessorData(
+        project: MavenProject,
+        moduleDataNode: DataNode<ModuleData>,
+        arguments: MutableCollection<String>
+    ) {
         val annotationProcessorPaths = project.annotationProcessorPaths ?: return
         val data = AnnotationProcessingData
-            .create(annotationProcessorPaths, emptyList(), project.buildDirectory, project.basedir)
+            .create(annotationProcessorPaths, arguments, project.buildDirectory, project.basedir)
         moduleDataNode.createChild(AnnotationProcessingData.KEY, data)
-
     }
 
     private fun getDefaultModuleTypeId(): String {

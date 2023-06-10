@@ -61,6 +61,7 @@ class AnnotationProcessingDataService : AbstractProjectDataService<AnnotationPro
             }
 
             config.configureAnnotationProcessing(ideModule, node.data, importedData)
+            config.setAdditionalOptions(ideModule, ArrayList(node.data.arguments))
 
             if (projectData != null) {
                 clearGeneratedSourceFolders(ideModule, node, modifiableModelsProvider)
@@ -248,9 +249,9 @@ class AnnotationProcessingDataService : AbstractProjectDataService<AnnotationPro
     private fun createProcessorConfigProfile(annotationProcessingData: AnnotationProcessingData): ProcessorConfigProfileImpl {
         val newProfile = ProcessorConfigProfileImpl(IMPORTED_PROFILE_NAME)
         newProfile.setProcessorPath(annotationProcessingData.path.joinToString(separator = File.pathSeparator))
-        annotationProcessingData.arguments
+        /*annotationProcessingData.arguments
             .map { it.removePrefix("-A").split('=', limit = 2) }
-            .forEach { newProfile.setOption(it[0], if (it.size > 1) it[1] else "") }
+            .forEach { newProfile.setOption(it[0], if (it.size > 1) it[1] else "") }*/
         return newProfile
     }
 

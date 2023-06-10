@@ -48,7 +48,7 @@ public class ResolveProjectMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException {
         Set<String> gPluginSet = getPluginForBodyProcessing();
-        getLog().info("!!!-----------------ResolveProjectMojo-----------------------!!!");
+        getLog().info("ResolveProjectMojo: " + gPluginSet);
         for (MavenProject mavenProject : session.getAllProjects()) {
             resolvePluginBody(mavenProject, gPluginSet);
         }
@@ -129,12 +129,14 @@ public class ResolveProjectMojo extends AbstractMojo {
             throws MojoExecutionException {
         if (annotationProcessorPaths == null || plugin == null || plugin.getConfiguration() == null) return;
         List<DependencyCoordinate> dependencies = getDependencyCoordinates(plugin, annotationProcessorPaths);
+        getLog().debug("Dependencies for resolve " + dependencies);
         List<String> paths = GUtils.resolveArtifacts(
                 dependencies, project,
                 repositorySystem, artifactHandlerManager,
                 resolutionErrorHandler, session
         );
         if (paths != null && !paths.isEmpty()) {
+            getLog().info("annotation processor paths " + paths);
             setPathToSession(project, paths);
         }
     }
@@ -149,10 +151,12 @@ public class ResolveProjectMojo extends AbstractMojo {
         Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
         for (Xpp3Dom dom : configuration.getChildren()) {
             if (annotationProcessorPaths.equalsIgnoreCase(dom.getName())) {
-                getLog().info("!!! annotationProcessorPaths=" + dom);
+                getLog().debug("!!! annotationProcessorPaths=" + dom);
                 for (Xpp3Dom child : dom.getChildren()) {
                     DependencyCoordinate coordinate = getDependencyCoordinate(child);
-                    if (coordinate != null) dependencies.add(coordinate);
+                    if (coordinate != null) {
+                        dependencies.add(coordinate);
+                    }
                 }
                 return dependencies;
             }
