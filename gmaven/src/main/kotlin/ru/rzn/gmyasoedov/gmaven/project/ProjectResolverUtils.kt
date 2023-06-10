@@ -5,7 +5,6 @@ import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.model.project.ProjectData
-import com.intellij.pom.java.LanguageLevel
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
@@ -18,7 +17,6 @@ import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
-import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import ru.rzn.gmyasoedov.serverapi.model.MavenSettings
 import java.nio.file.Path
 import java.util.*
@@ -33,9 +31,10 @@ fun getMavenHome(distributionSettings: DistributionSettings): Path {
     throw ExternalSystemException("maven home is empty")
 }
 
-fun getCompilerData(mavenProject: MavenProject, mavenResult: MavenResult, projectLanguageLevel: LanguageLevel):
+fun getCompilerData(mavenProject: MavenProject, context: MavenProjectResolver.ProjectResolverContext):
         CompilerData {
-    val localRepoPath = mavenResult.settings.localRepository
+    val projectLanguageLevel = context.projectLanguageLevel
+    val localRepoPath = context.mavenResult.settings.localRepository
         ?: return CompilerData(projectLanguageLevel, Collections.emptyList())
     val compilerPlugin = MavenFullImportPlugin.EP_NAME.extensionList
         .filterIsInstance<MavenCompilerFullImportPlugin>()
@@ -43,7 +42,8 @@ fun getCompilerData(mavenProject: MavenProject, mavenResult: MavenResult, projec
 
     for (plugin in mavenProject.plugins) {
         if (compilerPlugin.isApplicable(plugin)) {
-            return compilerPlugin.getCompilerData(mavenProject, plugin, Path.of(localRepoPath), HashMap())
+            return compilerPlugin
+                .getCompilerData(mavenProject, plugin, Path.of(localRepoPath), context.contextElementMap)
         }
     }
     return CompilerData(projectLanguageLevel, Collections.emptyList())

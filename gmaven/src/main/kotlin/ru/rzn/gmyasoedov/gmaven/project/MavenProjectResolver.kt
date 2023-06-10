@@ -18,6 +18,7 @@ import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.pom.java.LanguageLevel
+import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_BUILD_FILE
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_HAS_DEPENDENCIES
@@ -121,7 +122,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
 
         var ideProjectPath = settings.ideProjectPath
         ideProjectPath = ideProjectPath ?: projectPath
-        val context = ProjectResolverContext(absolutePath, ideProjectPath, mavenResult, languageLevel, settings)
+        val context = ProjectResolverContext(absolutePath, ideProjectPath, mavenResult, languageLevel)
 
         val moduleDataByArtifactId = TreeMap<String, DataNode<ModuleData>>()
         val moduleNode = createModuleData(container, projectDataNode, context, moduleDataByArtifactId)
@@ -205,7 +206,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         storePath(project.testSourceRoots, contentRootData, ExternalSystemSourceType.TEST)
         storePath(project.testResourceRoots, contentRootData, ExternalSystemSourceType.TEST_RESOURCE)
         contentRootData.storePath(ExternalSystemSourceType.EXCLUDED, project.buildDirectory)
-        val compilerData = getCompilerData(project, context.mavenResult, context.projectLanguageLevel)
+        val compilerData = getCompilerData(project, context)
         val sourceLanguageLevel: LanguageLevel = compilerData.sourceLevel
         val targetBytecodeLevel: LanguageLevel = compilerData.targetLevel
         moduleDataNode.createChild(ModuleSdkData.KEY, ModuleSdkData(null))
@@ -337,11 +338,11 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         return if (parentName == null) moduleName else "$parentName.$moduleName"
     }
 
-    private class ProjectResolverContext(
+    class ProjectResolverContext(
         val rootProjectPath: String,
         val ideaProjectPath: String,
         val mavenResult: MavenResult,
         val projectLanguageLevel: LanguageLevel,
-        val settings: MavenExecutionSettings
+        val contextElementMap: MutableMap<String, Element> = HashMap()
     )
 }
