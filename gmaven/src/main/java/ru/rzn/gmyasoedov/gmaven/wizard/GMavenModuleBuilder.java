@@ -1,12 +1,19 @@
 package ru.rzn.gmyasoedov.gmaven.wizard;
 
+import com.intellij.ide.highlighter.ModuleFileType;
 import com.intellij.ide.util.projectWizard.*;
 import com.intellij.openapi.externalSystem.ExternalSystemModulePropertyManager;
+import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder;
+import com.intellij.openapi.externalSystem.model.DataNode;
+import com.intellij.openapi.externalSystem.model.project.ProjectData;
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
+import com.intellij.openapi.externalSystem.service.project.ExternalProjectRefreshCallback;
+import com.intellij.openapi.externalSystem.service.project.ProjectDataManager;
 import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManagerImpl;
-import com.intellij.openapi.module.JavaModuleType;
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleType;
-import com.intellij.openapi.module.StdModuleTypes;
+import com.intellij.openapi.module.*;
+import com.intellij.openapi.module.impl.ModuleEx;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.DumbAwareRunnable;
 import com.intellij.openapi.project.Project;
@@ -17,24 +24,32 @@ import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle;
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 import ru.rzn.gmyasoedov.serverapi.model.MavenId;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
 import javax.swing.*;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static icons.OpenapiIcons.RepositoryLibraryLogo;
 import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.GMAVEN;
+import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID;
 
 public class GMavenModuleBuilder extends ModuleBuilder implements SourcePathsBuilder {
     private MavenProject myAggregatorProject;
@@ -44,41 +59,102 @@ public class GMavenModuleBuilder extends ModuleBuilder implements SourcePathsBui
     private boolean myInheritVersion;
     private MavenId myProjectId;
 
+    private VirtualFile pomFile;
+
     @Override
     protected void setupModule(Module module) throws ConfigurationException {
         super.setupModule(module);
-        ExternalSystemModulePropertyManager.getInstance(module).setMavenized(true);
+        ExternalSystemModulePropertyManager modulePropertyManager = ExternalSystemModulePropertyManager.getInstance(module);
+        modulePropertyManager.setExternalId(GMavenConstants.SYSTEM_ID);
+       // modulePropertyManager.setMavenized(true);
+        Project project = module.getProject();
+        String parentModuleName = (String) Optional.ofNullable(myParentProject)
+                .map(MavenProject::getProperties)
+                .map(p -> p.get("moduleInternalName"))
+                .filter(p -> p instanceof String)
+                .orElse(null);
+        try {
+            if (parentModuleName != null && module instanceof ModuleEx) {
+              //  String newName = parentModuleName + "." + getName();
+               // ((ModuleEx) module).rename(newName, true);
+            }
+        } catch (Exception e) {
+            System.out.println();
+        }
+        MavenUtils.runWhenInitialized(project, (DumbAwareRunnable)
+                () -> setupBuildScriptAndExternalProject(project, pomFile)
+        );
     }
 
     @Override
-    public void setupRootModel(@NotNull ModifiableRootModel rootModel) {
-        final Project project = rootModel.getProject();
-
+    public void setupRootModel(@NotNull ModifiableRootModel rootModel) throws ConfigurationException {
         final VirtualFile root = createAndGetContentEntry();
+        pomFile = createExternalProjectConfigFile(root.toNioPath());
         rootModel.addContentEntry(root);
 
-        // todo this should be moved to generic ModuleBuilder
         if (myJdk != null) {
             rootModel.setSdk(myJdk);
         } else {
             rootModel.inheritSdk();
         }
+    }
 
-        String modulePathString = root.toNioPath().toAbsolutePath().toString();
-        var settings = new MavenProjectSettings();
-       /* File mavenHome = MavenUtils.resolveMavenHome(); todo
-        if (mavenHome == null) throw new RuntimeException("no maven home");*/
-        settings.setExternalProjectPath(modulePathString);
-        settings.setProjectDirectory(modulePathString);
-        settings.setJdkName(myJdk.getName());
+    private void setupBuildScriptAndExternalProject(Project project, VirtualFile pomFile) {
+        MavenProjectSettings projectSettings = getMavenProjectSettings(pomFile, project);
+        new GMavenModuleBuilderHelper(
+                myProjectId, myParentProject,
+                myInheritGroupId, myInheritVersion, pomFile
+        ).setupBuildScript(project, false);
+        ExternalProjectsManagerImpl.getInstance(project).runWhenInitialized(() -> {
+            String projectPath = projectSettings.getExternalProjectPath();
+            ExternalSystemUtil.refreshProject(projectPath, new ImportSpecBuilder(project, SYSTEM_ID)
+                    .callback(new ExternalProjectRefreshCallback() {
+                        @Override
+                        public void onSuccess(@NotNull ExternalSystemTaskId externalTaskId,
+                                              @Nullable DataNode<ProjectData> externalProject) {
+                            if (externalProject != null) {
+                                ProjectDataManager.getInstance().importData(externalProject, project, false);
+                                if (myAggregatorProject == null) {
+                                    WizardUtilsKt.updateMavenSettings(project, projectPath);
+                                }
+                            }
+                        }
+                    }));
+        });
+    }
 
-        MavenUtils.runWhenInitialized(project, (DumbAwareRunnable)
-                () -> new GMavenModuleBuilderHelper(
-                        myProjectId, myAggregatorProject, myParentProject,
-                        myInheritGroupId, myInheritVersion, settings,
-                        GBundle.message("command.name.create.new.maven.module")
-                ).configure(project, root, false)
-        );
+    @NotNull
+    private MavenProjectSettings getMavenProjectSettings(VirtualFile pomFile,  Project project) {
+        MavenSettings settings = MavenSettings.getInstance(project);
+        String canonicalPath = pomFile.getParent().getPath();
+        var projectSettings = settings.getLinkedProjectSettings(canonicalPath);
+        if (projectSettings == null) {
+            projectSettings = WizardUtilsKt.createMavenProjectSettings(pomFile, project);
+            if (myJdk != null) {
+                projectSettings.setJdkName(myJdk.getName());
+            }
+            settings.linkProject(projectSettings);
+        }
+        return projectSettings;
+    }
+
+    @Override
+    public @Nullable Module commitModule(@NotNull Project project, @Nullable ModifiableModuleModel model) {
+        setMavenModuleFilePath(project, getName());
+        return super.commitModule(project, model);
+    }
+
+    private void setMavenModuleFilePath(@NotNull Project project, @NotNull String moduleName) {
+        if (myParentProject == null) return;
+        String parentModuleName = (String) Optional.of(myParentProject)
+                .map(MavenProject::getProperties)
+                .map(p -> p.get("moduleInternalName"))
+                .filter(p -> p instanceof String)
+                .orElse(null);
+        if (StringUtil.isNotEmpty(parentModuleName)) {
+            String moduleFilePath = project.getBasePath() + File.separator + parentModuleName + "." + moduleName + ModuleFileType.DOT_DEFAULT_EXTENSION;
+            setModuleFilePath(moduleFilePath);
+        }
     }
 
     //todo IDEA-85478 Maven compiler plugin testSource and testTarget  MY CHANGES!!!
@@ -232,5 +308,29 @@ public class GMavenModuleBuilder extends ModuleBuilder implements SourcePathsBui
             ExternalProjectsManagerImpl.setupCreatedProject(project);
         }
         return project;
+    }
+
+    private static @NotNull VirtualFile createExternalProjectConfigFile(@NotNull Path parent)
+            throws ConfigurationException {
+        Path file = parent.resolve(GMavenConstants.POM_XML);
+        try {
+            Files.deleteIfExists(file);
+            try {
+                Files.createFile(file);
+            } catch (FileAlreadyExistsException ignore) {
+            }
+
+            VirtualFile virtualFile = VfsUtil.findFile(file, true);
+            if (virtualFile == null) {
+                throw new ConfigurationException("Can not create configuration file " + file);
+            }
+            if (virtualFile.isDirectory()) {
+                throw new ConfigurationException("Configuration file is directory " + file);
+            }
+            VfsUtil.markDirtyAndRefresh(false, false, false, virtualFile);
+            return virtualFile;
+        } catch (IOException e) {
+            throw new ConfigurationException(e.getMessage(), e, "Error create build file");
+        }
     }
 }

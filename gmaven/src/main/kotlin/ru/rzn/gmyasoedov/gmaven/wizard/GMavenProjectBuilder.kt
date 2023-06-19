@@ -78,6 +78,7 @@ class GMavenProjectBuilder : ProjectImportBuilder<MavenProject>() {
                         ) {
                             externalProject?.also {
                                 ProjectDataManager.getInstance().importData(it, project, false)
+                                updateMavenSettings(project, basePath)
                             }
                         }
                     })

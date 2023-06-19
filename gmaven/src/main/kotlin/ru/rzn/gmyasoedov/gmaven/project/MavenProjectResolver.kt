@@ -182,7 +182,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val moduleData = ModuleData(
             id, GMavenConstants.SYSTEM_ID, getDefaultModuleTypeId(), project.artifactId,
             mainModuleFileDirectoryPath,
-            projectPath//project.file.absolutePath todo !!! путь к пому должен быть? сравнить еще раз с гредлом
+            projectPath
         )
         moduleData.internalName = getInternalModuleName(parentInternalName, project.artifactId)
         moduleData.group = project.groupId

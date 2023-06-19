@@ -20,7 +20,7 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants.GMAVEN
 import ru.rzn.gmyasoedov.serverapi.model.MavenId
 import java.nio.file.Path
 
-class GMavenJavaProjectWizard : BuildSystemJavaNewProjectWizard {
+class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
 
     override val name = GMAVEN
 
@@ -45,6 +45,20 @@ class GMavenJavaProjectWizard : BuildSystemJavaNewProjectWizard {
 
         override fun setupProject(project: Project) {
             super.setupProject(project)
+           /* val builder = MavenNewModuleBuilder().apply {
+                moduleJdk = sdk
+                name = parentStep.name
+                contentEntryPath = Path.of(parentStep.path, parentStep.name).toString()
+
+                isCreatingNewProject = context.isCreatingNewProject
+
+                myParentProject = parentData
+                myAggregatorProject = parentData
+                myProjectId = MavenId(groupId, artifactId, version)
+                myInheritGroupId = parentData?.groupId == groupId
+                myInheritVersion = parentData?.version == version
+            }*/
+
             val builder = GMavenModuleBuilder().apply {
                 moduleJdk = sdk
                 name = parentStep.name
@@ -57,9 +71,8 @@ class GMavenJavaProjectWizard : BuildSystemJavaNewProjectWizard {
                 isInheritVersion = parentData?.version == version
             }
 
-            ExternalProjectsManagerImpl.setupCreatedProject(project)
             project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, true)
-
+            ExternalProjectsManagerImpl.setupCreatedProject(project)
             builder.commit(project)
         }
     }

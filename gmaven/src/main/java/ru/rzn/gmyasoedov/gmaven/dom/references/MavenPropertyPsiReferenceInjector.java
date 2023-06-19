@@ -25,6 +25,7 @@ import com.intellij.util.xml.DomUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.rzn.gmyasoedov.gmaven.dom.MavenPropertyResolver;
 import ru.rzn.gmyasoedov.gmaven.dom.model.MavenDomProjectModel;
 
 public class MavenPropertyPsiReferenceInjector implements DomReferenceInjector {
@@ -32,11 +33,11 @@ public class MavenPropertyPsiReferenceInjector implements DomReferenceInjector {
   public @Nullable @NlsSafe String resolveString(@Nullable @NonNls String unresolvedText, @NotNull ConvertContext context) {
     if (StringUtil.isEmptyOrSpaces(unresolvedText)) return unresolvedText;
     MavenDomProjectModel model = (MavenDomProjectModel)DomUtil.getFileElement(context.getInvocationElement()).getRootElement();
-    return null;
+    return MavenPropertyResolver.resolve(unresolvedText, model);
   }
 
   @Override
   public PsiReference @NotNull [] inject(@Nullable String unresolvedText, @NotNull PsiElement element, @NotNull ConvertContext context) {
-    return new PsiReference[0];
+    return MavenPropertyPsiReferenceProvider.getReferences(element, true);
   }
 }

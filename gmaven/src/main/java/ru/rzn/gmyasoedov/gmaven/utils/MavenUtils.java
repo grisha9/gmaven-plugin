@@ -218,8 +218,10 @@ public class MavenUtils {
         if (interactive) {
             OpenFileDescriptor descriptor = new OpenFileDescriptor(project, file);
             Editor editor = FileEditorManager.getInstance(project).openTextEditor(descriptor, true);
-            editor.getDocument().setText("");
-            TemplateManager.getInstance(project).startTemplate(editor, template);
+            if (editor != null) {
+                editor.getDocument().setText("");
+                TemplateManager.getInstance(project).startTemplate(editor, template);
+            }
         } else {
             VfsUtil.saveText(file, template.getTemplateText());
 
