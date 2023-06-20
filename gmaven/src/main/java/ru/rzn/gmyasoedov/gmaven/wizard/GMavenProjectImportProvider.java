@@ -13,7 +13,7 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 public final class GMavenProjectImportProvider extends ProjectImportProvider {
     @Override
     protected ProjectImportBuilder<MavenProject> doGetBuilder() {
-        return ProjectImportBuilder.EXTENSIONS_POINT_NAME.findExtensionOrFail(GMavenProjectBuilder.class);
+        return null;
     }
 
     @Override

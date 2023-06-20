@@ -4,7 +4,6 @@ import com.intellij.lang.properties.IProperty;
 import com.intellij.lang.properties.psi.PropertiesFile;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.openapi.util.Pair;
@@ -26,7 +25,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.dom.MavenDomElement;
-import ru.rzn.gmyasoedov.gmaven.dom.model.*;
+import ru.rzn.gmyasoedov.gmaven.dom.model.MavenDomDependencies;
+import ru.rzn.gmyasoedov.gmaven.dom.model.MavenDomDependency;
+import ru.rzn.gmyasoedov.gmaven.dom.model.MavenDomProjectModel;
+import ru.rzn.gmyasoedov.gmaven.dom.model.MavenDomProperties;
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectsManager;
 import ru.rzn.gmyasoedov.serverapi.model.MavenId;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
@@ -122,31 +124,6 @@ public final class MavenDomUtil {
     return FileUtil.toSystemIndependentName(result);
   }
 
-  public static MavenDomParent updateMavenParent(MavenDomProjectModel mavenModel, MavenProject parentProject) {
-    MavenDomParent result = mavenModel.getMavenParent();
-
-    VirtualFile pomFile = DomUtil.getFile(mavenModel).getVirtualFile();
-    Project project = mavenModel.getManager().getProject();
-
-    MavenId parentId = parentProject;
-    result.getGroupId().setStringValue(parentId.getGroupId());
-    result.getArtifactId().setStringValue(parentId.getArtifactId());
-    result.getVersion().setStringValue(parentId.getVersion());
-
-    if (!Comparing.equal(pomFile.getParent().getParent(), parentProject.getParentFile())
-        || !FileUtil.namesEqual(GMavenConstants.POM_XML, parentProject.getFile().getName())) {
-      result.getRelativePath().setValue(PsiManager.getInstance(project)
-              .findFile(MavenUtils.getVFile(parentProject.getFile())));
-    }
-
-    return result;
-  }
-
-  public static <T> T getImmediateParent(ConvertContext context, Class<T> clazz) {
-    DomElement parentElement = context.getInvocationElement().getParent();
-    return clazz.isInstance(parentElement) ? (T)parentElement : null;
-  }
-
   @Nullable
   public static VirtualFile getVirtualFile(@NotNull DomElement element) {
     PsiFile psiFile = DomUtil.getFile(element);
@@ -195,13 +172,6 @@ public final class MavenDomUtil {
   @Nullable
   public static MavenDomProjectModel getMavenDomProjectModel(@NotNull Project project, @NotNull VirtualFile file) {
     return getMavenDomModel(project, file, MavenDomProjectModel.class);
-  }
-
-  @Nullable
-  public static MavenDomProfiles getMavenDomProfilesModel(@NotNull Project project, @NotNull VirtualFile file) {
-    MavenDomProfilesModel model = getMavenDomModel(project, file, MavenDomProfilesModel.class);
-    if (model != null) return model.getProfiles();
-    return getMavenDomModel(project, file, MavenDomProfiles.class); // try old-style model
   }
 
   @Nullable

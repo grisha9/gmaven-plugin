@@ -5,27 +5,41 @@ import com.intellij.openapi.GitSilentFileAdderProvider;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.JavaSdk;
+import com.intellij.openapi.projectRoots.JavaSdkVersion;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
-import com.intellij.psi.xml.XmlElement;
+import com.intellij.psi.xml.XmlFile;
+import com.intellij.psi.xml.XmlTag;
+import com.intellij.psi.xml.XmlText;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle;
-import ru.rzn.gmyasoedov.gmaven.dom.model.MavenDomModule;
-import ru.rzn.gmyasoedov.gmaven.dom.model.MavenDomProjectModel;
-import ru.rzn.gmyasoedov.gmaven.utils.MavenDomUtil;
+import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 import ru.rzn.gmyasoedov.serverapi.model.MavenId;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 public class GMavenModuleBuilderHelper {
     private final MavenId myProjectId;
@@ -34,23 +48,48 @@ public class GMavenModuleBuilderHelper {
 
     private final boolean myInheritGroupId;
     private final boolean myInheritVersion;
-    @NotNull
-    private final VirtualFile buildScriptFile;
 
     public GMavenModuleBuilderHelper(@NotNull MavenId projectId,
                                      MavenProject parentProject,
                                      boolean inheritGroupId,
-                                     boolean inheritVersion,
-                                     @NotNull VirtualFile buildScriptFile) {
+                                     boolean inheritVersion) {
         myProjectId = projectId;
         myParentProject = parentProject;
         myInheritGroupId = inheritGroupId;
         myInheritVersion = inheritVersion;
-        this.buildScriptFile = buildScriptFile;
     }
 
-    @NotNull
-    public void setupBuildScript(final Project project, final boolean isInteractive) {
+    public static @NotNull VirtualFile createExternalProjectConfigFile(@NotNull Path parent)
+            throws ConfigurationException {
+        Path file = parent.resolve(GMavenConstants.POM_XML);
+        try {
+            Files.deleteIfExists(file);
+            createDirectory(parent);
+            try {
+                Files.createFile(file);
+            } catch (FileAlreadyExistsException ignore) {
+            }
+            createDirectory(parent.resolve("src").resolve("main").resolve("java"));
+            createDirectory(parent.resolve("src").resolve("main").resolve("resources"));
+            createDirectory(parent.resolve("src").resolve("test").resolve("java"));
+            createDirectory(parent.resolve("src").resolve("test").resolve("resources"));
+
+            VirtualFile virtualFile = VfsUtil.findFile(file, true);
+            if (virtualFile == null) {
+                throw new ConfigurationException("Can not create configuration file " + file);
+            }
+            if (virtualFile.isDirectory()) {
+                throw new ConfigurationException("Configuration file is directory " + file);
+            }
+            VfsUtil.markDirtyAndRefresh(false, false, false, virtualFile);
+            return virtualFile;
+        } catch (IOException e) {
+            throw new ConfigurationException(e.getMessage(), e, "Error create build file");
+        }
+    }
+
+    public void setupBuildScript(final Project project, final Sdk sdk, final VirtualFile buildScriptFile) {
+        Properties templateProperties = getTemplateProperties(buildScriptFile, sdk);
         PsiFile[] psiFiles = myParentProject != null
                 ? new PsiFile[]{getPsiFile(project, MavenUtils.getVFile(myParentProject.getFile()))}
                 : PsiFile.EMPTY_ARRAY;
@@ -58,17 +97,17 @@ public class GMavenModuleBuilderHelper {
                 .writeCommandAction(project, psiFiles)
                 .withName(GBundle.message("command.name.create.new.maven.module"))
                 .compute(() -> {
-                    setupBuildPomFile(project, buildScriptFile, isInteractive);
+                    setupBuildPomFile(project, buildScriptFile, templateProperties);
                     return null;
                 });
     }
 
-    private void setupBuildPomFile(Project project, VirtualFile buildScriptFile, boolean isInteractive) {
+    private void setupBuildPomFile(Project project, VirtualFile buildScriptFile, Properties properties) {
         GitSilentFileAdder vcsFileAdder = GitSilentFileAdderProvider.create(project);
         try {
             try {
                 vcsFileAdder.markFileForAdding(buildScriptFile);
-                MavenUtils.runOrApplyMavenProjectFileTemplate(project, buildScriptFile, myProjectId, isInteractive);
+                MavenUtils.setupFileTemplate(project, buildScriptFile, properties);
             } catch (IOException e) {
                 showError(project, e);
             }
@@ -79,42 +118,53 @@ public class GMavenModuleBuilderHelper {
         }
 
         if (myParentProject != null) {
-            VirtualFile aggregatorProjectFile = MavenUtils.getVFile(myParentProject.getFile());
-            MavenDomProjectModel model = MavenDomUtil.getMavenDomProjectModel(project, aggregatorProjectFile);
-            if (model != null) {
-                model.getPackaging().setStringValue("pom");
-                MavenDomModule module = model.getModules().addModule();
-                module.setValue(getPsiFile(project, buildScriptFile));
-                unblockAndSaveDocuments(project, aggregatorProjectFile);
+            VirtualFile parentBuildFile = MavenUtils.getVFile(myParentProject.getFile());
+            if (!parentBuildFile.isValid()) return;
+            PsiFile psiFile = PsiManager.getInstance(project).findFile(parentBuildFile);
+            if (!(psiFile instanceof XmlFile)) {
+                return;
             }
+            XmlFile xmlFile = (XmlFile) psiFile;
+            XmlTag rootTag = xmlFile.getRootTag();
+            if (rootTag == null) return;
+            XmlTag modules = getOrCreateTag(rootTag, "modules", null);
+            XmlTag module = modules.createChildTag("module", null, myProjectId.getArtifactId(), true);
+            modules.addSubTag(module, false);
+
+            XmlTag packaging = getOrCreateTag(rootTag, "packaging", "pom");
+            XmlText xmlText = (XmlText) Arrays.stream(packaging.getChildren())
+                    .filter(p -> p instanceof XmlText)
+                    .findFirst()
+                    .orElse(null);
+            if (xmlText != null && !xmlText.textMatches("pom")) {
+                xmlText.setValue("pom");
+            }
+            CodeStyleManager.getInstance(project).reformat(getPsiFile(project, parentBuildFile));
+            unblockAndSaveDocuments(project, parentBuildFile);
         }
+    }
+
+    private XmlTag getOrCreateTag(@NotNull XmlTag rootTag, @NotNull String tagName, @Nullable String value) {
+        XmlTag xmlTag = rootTag.findFirstSubTag(tagName);
+        if (xmlTag != null) {
+            return xmlTag;
+        }
+        xmlTag = rootTag.createChildTag(tagName, null, value, false);
+        rootTag.addSubTag(xmlTag, false);
+        xmlTag = rootTag.findFirstSubTag(tagName);
+        assert xmlTag != null;
+        return xmlTag;
     }
 
     private void updateProjectPom(final Project project, final VirtualFile pom) {
-        if (myParentProject == null) return;
+        if (myParentProject == null) {
+            PsiDocumentManager.getInstance(project).commitAllDocuments();
+            unblockAndSaveDocuments(project, pom);
+            CodeStyleManager.getInstance(project).reformat(getPsiFile(project, pom));
+            return;
+        }
 
-        WriteCommandAction
-                .writeCommandAction(project)
-                .withName(GBundle.message("command.name.create.new.maven.module"))
-                .run(() -> applySettingsToModulePomFile(project, pom));
-    }
-
-    private void applySettingsToModulePomFile(Project project, VirtualFile pom) {
         PsiDocumentManager.getInstance(project).commitAllDocuments();
-
-        MavenDomProjectModel model = MavenDomUtil.getMavenDomProjectModel(project, pom);
-        if (model == null) return;
-
-        MavenDomUtil.updateMavenParent(model, myParentProject);
-
-        if (myInheritGroupId) {
-            XmlElement el = model.getGroupId().getXmlElement();
-            if (el != null) el.delete();
-        }
-        if (myInheritVersion) {
-            XmlElement el = model.getVersion().getXmlElement();
-            if (el != null) el.delete();
-        }
 
         CodeStyleManager.getInstance(project).reformat(getPsiFile(project, pom));
 
@@ -145,6 +195,63 @@ public class GMavenModuleBuilderHelper {
 
     private static void showError(Project project, Throwable e) {
         MavenUtils.showError(project, GBundle.message("notification.title.failed.to.create.maven.project"), e);
+    }
+
+    private Properties getTemplateProperties(@NotNull VirtualFile file, @Nullable Sdk sdk
+    ) {
+        Properties properties = new Properties();
+        properties.setProperty("GROUP_ID", myProjectId.getGroupId());
+        properties.setProperty("ARTIFACT_ID", myProjectId.getArtifactId());
+        properties.setProperty("VERSION", myProjectId.getVersion());
+        properties.setProperty("HAS_GROUP_ID", Boolean.TRUE.toString());
+        properties.setProperty("HAS_VERSION", Boolean.TRUE.toString());
+
+        if (myParentProject != null) {
+            properties.setProperty("HAS_PARENT", "true");
+            properties.setProperty("PARENT_GROUP_ID", myParentProject.getGroupId());
+            properties.setProperty("PARENT_ARTIFACT_ID", myParentProject.getArtifactId());
+            properties.setProperty("PARENT_VERSION", myParentProject.getVersion());
+            if (myInheritGroupId) {
+                properties.remove("HAS_GROUP_ID");
+            }
+            if (myInheritVersion) {
+                properties.remove("HAS_VERSION");
+            }
+
+            VirtualFile parentBuildFile = MavenUtils.getVFile(myParentProject.getFile());
+            VirtualFile modulePath = file.getParent();
+            VirtualFile parentModulePath = parentBuildFile.getParent();
+
+            if (!Comparing.equal(modulePath.getParent(), parentModulePath) ||
+                    !FileUtil.namesEqual(GMavenConstants.POM_XML, parentBuildFile.getName())) {
+                String relativePath = VfsUtilCore.findRelativePath(file, parentModulePath, '/');
+                if (relativePath != null) {
+                    properties.setProperty("HAS_RELATIVE_PATH", "true");
+                    properties.setProperty("PARENT_RELATIVE_PATH", relativePath);
+                }
+            }
+        } else {
+            //set language level only for root pom
+            if (sdk != null && sdk.getSdkType() instanceof JavaSdk) {
+                JavaSdk javaSdk = (JavaSdk) sdk.getSdkType();
+                JavaSdkVersion version = javaSdk.getVersion(sdk);
+                String description = version == null ? null : version.getDescription();
+                boolean shouldSetLangLevel = version != null && version.isAtLeast(JavaSdkVersion.JDK_1_6);
+                properties.setProperty("SHOULD_SET_LANG_LEVEL", String.valueOf(shouldSetLangLevel));
+                properties.setProperty("COMPILER_LEVEL_SOURCE", description);
+                properties.setProperty("COMPILER_LEVEL_TARGET", description);
+            }
+        }
+        return properties;
+    }
+
+    private static void createDirectory(Path srcMainJavaPath) {
+        try {
+            srcMainJavaPath.toFile().mkdirs();
+            LocalFileSystem.getInstance().refreshAndFindFileByPath(srcMainJavaPath.toString());
+        } catch (Exception e) {
+            MavenLog.LOG.error(e);
+        }
     }
 
     /* todo show original file for good example run procces

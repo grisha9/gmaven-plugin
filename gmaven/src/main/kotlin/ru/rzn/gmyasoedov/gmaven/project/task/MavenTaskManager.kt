@@ -27,7 +27,8 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
             .jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) } ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
         val mavenHome = getMavenHome(settings.distributionSettings)
 
-        val request = GServerRequest(id, Path.of(projectPath), mavenHome, sdk, listener = listener)
+        val buildPath = Path.of(settings.projectBuildFile ?: projectPath)
+        val request = GServerRequest(id, buildPath, mavenHome, sdk, listener = listener)
         val mavenResult = runTasks(request, taskNames);
         if (!ContainerUtil.isEmpty(mavenResult.exceptions)) {
             throw ExternalSystemException()

@@ -102,9 +102,7 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
         MavenProjectSettings projectSettings = super.getLinkedProjectSettings(projectPath);
         if (projectSettings == null) {
             for (MavenProjectSettings setting : getLinkedProjectsSettings()) {
-                if (projectPath.contains(setting.getExternalProjectPath())
-                        || (setting.getProjectDirectory() != null
-                        && projectPath.contains(setting.getProjectDirectory()))) {
+                if (projectPath.contains(setting.getExternalProjectPath())) {
                     return setting;
                 }
             }

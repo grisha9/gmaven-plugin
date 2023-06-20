@@ -18,6 +18,7 @@ import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.pom.java.LanguageLevel
+import com.intellij.util.io.isDirectory
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_BUILD_FILE
@@ -35,6 +36,7 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import java.io.File
 import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.absolutePathString
 
 class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSettings> {
     override fun cancelTask(taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener) = false
@@ -55,7 +57,8 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
 
         sdk ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
         val mavenHome = getMavenHome(settings.distributionSettings)
-        val request = GServerRequest(id, Path.of(projectPath), mavenHome, sdk, listener = listener, settings = settings)
+        val buildPath = Path.of(settings.projectBuildFile ?: projectPath)
+        val request = GServerRequest(id, buildPath, mavenHome, sdk, listener = listener, settings = settings)
         val projectModel = getProjectModel(request)
         return getProjectDataNode(projectPath, projectModel, settings)
     }
@@ -69,9 +72,8 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     ): DataNode<ProjectData> {
         val projectDataNode = getPreviewProjectDataNode(projectPath, settings)
         if (sdk != null && settings.distributionSettings.path != null) {
-            val request = GServerRequest(
-                id, Path.of(projectPath), settings.distributionSettings.path!!, sdk, listener = listener
-            )
+            val buildPath = Path.of(settings.projectBuildFile ?: projectPath)
+            val request = GServerRequest(id, buildPath, settings.distributionSettings.path!!, sdk, listener = listener)
             firstRun(request)
         }
         return projectDataNode;
@@ -81,19 +83,20 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         projectPath: String,
         settings: MavenExecutionSettings
     ): DataNode<ProjectData> {
-        val projectName = File(projectPath).name
-        val projectData = ProjectData(GMavenConstants.SYSTEM_ID, projectName, projectPath, projectPath)
+        val projectDirectory = getProjectDirectory(projectPath).absolutePathString()
+        val projectName = File(projectDirectory).name
+        val projectData = ProjectData(GMavenConstants.SYSTEM_ID, projectName, projectDirectory, projectDirectory)
         val projectDataNode = DataNode(ProjectKeys.PROJECT, projectData, null)
         val ideProjectPath = settings.ideProjectPath
-        val mainModuleFileDirectoryPath = ideProjectPath ?: projectPath
+        val mainModuleFileDirectoryPath = ideProjectPath ?: projectDirectory
         projectDataNode
             .createChild(
                 ProjectKeys.MODULE, ModuleData(
                     projectName, GMavenConstants.SYSTEM_ID, getDefaultModuleTypeId(),
-                    projectName, mainModuleFileDirectoryPath, projectPath
+                    projectName, mainModuleFileDirectoryPath, projectDirectory
                 )
             )
-            .createChild(ProjectKeys.CONTENT_ROOT, ContentRootData(GMavenConstants.SYSTEM_ID, projectPath))
+            .createChild(ProjectKeys.CONTENT_ROOT, ContentRootData(GMavenConstants.SYSTEM_ID, projectDirectory))
         return projectDataNode
     }
 
@@ -234,6 +237,11 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         return moduleDataNode
     }
 
+    private fun getProjectDirectory(projectPath: String): Path {
+        val projectNioPath = Path.of(projectPath)
+        return if (projectNioPath.isDirectory()) projectNioPath else projectNioPath.parent
+    }
+
     private fun populateAnnotationProcessorData(
         project: MavenProject,
         moduleDataNode: DataNode<ModuleData>,
@@ -318,7 +326,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     }
 
     private fun getScopeOrder(scope: DependencyScope): Int {
-        return when(scope) {
+        return when (scope) {
             DependencyScope.TEST -> 3
             DependencyScope.RUNTIME -> 2
             DependencyScope.PROVIDED -> 1

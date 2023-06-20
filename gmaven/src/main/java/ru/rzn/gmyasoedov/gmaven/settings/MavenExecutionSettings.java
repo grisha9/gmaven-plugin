@@ -28,6 +28,8 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private String myIdeProjectPath;
     private boolean resolveModulePerSourceSet = false;
     private boolean useQualifiedModuleNames = false;
+    @Nullable
+    private String projectBuildFile;
 
     public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,
                                   @Nullable String serviceDirectory,
@@ -82,8 +84,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         return jdkName;
     }
 
-    @Nullable
-    public void setJdkName(String jdkName) {
+    public void setJdkName(@Nullable String jdkName) {
         this.jdkName = jdkName;
     }
 
@@ -112,6 +113,15 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         return executionWorkspace;
     }
 
+    @Nullable
+    public String getProjectBuildFile() {
+        return projectBuildFile;
+    }
+
+    public void setProjectBuildFile(@Nullable String projectBuildFile) {
+        this.projectBuildFile = projectBuildFile;
+    }
+
     @Override
     public int hashCode() {
         int result = super.hashCode();
@@ -119,6 +129,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         result = 31 * result + (serviceDirectory != null ? serviceDirectory.hashCode() : 0);
         result = 31 * result + (jdkName != null ? jdkName.hashCode() : 0);
         result = 31 * result + (javaHome != null ? javaHome.hashCode() : 0);
+        result = 31 * result + (projectBuildFile != null ? projectBuildFile.hashCode() : 0);
         return result;
     }
 
@@ -129,6 +140,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         if (!Objects.equals(distributionSettings, that.distributionSettings)) return false;
         if (!Objects.equals(jdkName, that.jdkName)) return false;
         if (!Objects.equals(javaHome, that.javaHome)) return false;
+        if (!Objects.equals(projectBuildFile, that.projectBuildFile)) return false;
         if (!Objects.equals(serviceDirectory, that.serviceDirectory)) return false;
         return true;
     }

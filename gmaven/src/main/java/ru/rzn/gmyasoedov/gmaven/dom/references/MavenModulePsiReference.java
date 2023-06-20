@@ -126,12 +126,12 @@ public class MavenModulePsiReference extends MavenPsiReference implements LocalQ
         String groupId = id.getGroupId() == null ? "groupId" : id.getGroupId();
         String artifactId = modulePom.getParent().getName();
         String version = id.getVersion() == null ? "version" : id.getVersion();
-        MavenUtils.runOrApplyMavenProjectFileTemplate(project,
+       /* MavenUtils.runOrApplyMavenProjectFileTemplate(project,
                                                      modulePom,
                                                      new MavenId(groupId, artifactId, version),
                                                      myWithParent ? id : null,
                                                      psiFile.getVirtualFile(),
-                                                     true);
+                                                     true);*/
       }
       catch (IOException e) {
         MavenUtils.showError(project, GBundle.message("notification.title.cannot.create.module"), e);

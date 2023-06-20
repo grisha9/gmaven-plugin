@@ -89,7 +89,7 @@ public final class MavenManager //manager
                     ? projectSettings.getDistributionSettings() : DistributionSettings.getBundled();
 
             MavenExecutionSettings result = new MavenExecutionSettings(distributionSettings,
-                    projectSettings != null ? projectSettings.getProjectDirectory() : null,
+                    projectSettings != null ? projectSettings.getExternalProjectPath() : null,
                     projectSettings != null ? projectSettings.getVmOptions() : null,
                     projectSettings != null && projectSettings.getOffline());
 
@@ -116,6 +116,7 @@ public final class MavenManager //manager
                 result.setResolveModulePerSourceSet(projectSettings.getResolveModulePerSourceSet());
                 result.setUseQualifiedModuleNames(projectSettings.isUseQualifiedModuleNames());
             }
+            result.setProjectBuildFile(projectSettings == null ? null : projectSettings.getProjectBuildFile());
 
             addCurrentProfiles(project, projectPath, result);
 

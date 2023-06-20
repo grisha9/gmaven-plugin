@@ -82,11 +82,11 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
     }
 
     private fun toProjectRequest(settings: MavenProjectSettings): GServerRequest? {
-        val projectPath = settings.externalProjectPath
         val mavenPath = settings.distributionSettings.path ?: return null
         val sdk = settings.jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) } ?: return null
         val id = ExternalSystemTaskId.create(GMavenConstants.SYSTEM_ID, ExternalSystemTaskType.EXECUTE_TASK, project)
-        return GServerRequest(id, Path.of(projectPath), mavenPath, sdk)
+        val buildPath = Path.of(settings.projectBuildFile ?: settings.externalProjectPath)
+        return GServerRequest(id, buildPath, mavenPath, sdk)
     }
 
     private fun getModuleMap(): Map<String, Pair<DAProject, ModuleData>> {

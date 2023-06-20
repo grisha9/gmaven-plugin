@@ -14,18 +14,13 @@ import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.projectImport.ProjectImportBuilder
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 
 class GOpenProjectProvider : AbstractOpenProjectProvider() {
-    override val systemId: ProjectSystemId = GMavenConstants.SYSTEM_ID
-
-    val builder: GMavenProjectBuilder
-        get() = ProjectImportBuilder.EXTENSIONS_POINT_NAME.findExtensionOrFail(GMavenProjectBuilder::class.java)
+    override val systemId: ProjectSystemId = SYSTEM_ID
 
     override fun isProjectFile(file: VirtualFile) = MavenUtils.isPomFile(null, file)
 
@@ -34,7 +29,6 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         mavenSettings.storeProjectFilesExternally = true
         val mavenProjectSettings = createMavenProjectSettings(projectFile, project)
         attachProjectAndRefresh(mavenProjectSettings, project)
-        //todo validate java home
     }
 
     private fun attachProjectAndRefresh(settings: MavenProjectSettings, project: Project) {

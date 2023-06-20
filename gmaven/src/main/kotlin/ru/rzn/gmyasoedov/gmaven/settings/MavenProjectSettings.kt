@@ -4,7 +4,7 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUt
 import com.intellij.openapi.externalSystem.settings.ExternalProjectSettings
 
 class MavenProjectSettings : ExternalProjectSettings() {
-    var projectDirectory: String? = null
+    var projectBuildFile: String? = null
     var distributionSettings: DistributionSettings = DistributionSettings.getBundled()
     var jdkName: String? = ExternalSystemJdkUtil.USE_PROJECT_JDK
     var vmOptions: String? = null
@@ -19,6 +19,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
         result.vmOptions = vmOptions
         result.offline = offline
         result.distributionSettings = distributionSettings
+        result.projectBuildFile = projectBuildFile;
         return result
     }
 }

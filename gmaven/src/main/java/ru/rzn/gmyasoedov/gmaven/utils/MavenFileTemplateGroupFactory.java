@@ -8,7 +8,7 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import static icons.OpenapiIcons.RepositoryLibraryLogo;
 
 public class MavenFileTemplateGroupFactory implements FileTemplateGroupDescriptorFactory {
-  public static final String MAVEN_PROJECT_XML_TEMPLATE = "Maven Project.xml";
+  public static final String MAVEN_PROJECT_XML_TEMPLATE = "GMavenProject.xml";
   /*public static final String MAVEN_PROFILES_XML_TEMPLATE = "Maven Profiles.xml";
   public static final String MAVEN_SETTINGS_XML_TEMPLATE = "Maven Settings.xml";*/
 

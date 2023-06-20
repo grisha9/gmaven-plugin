@@ -31,10 +31,8 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <newProjectWizard.java.buildSystem implementation="ru.rzn.gmyasoedov.gmaven.wizard.MavenNewProjectWizard"/>
-        <moduleBuilder builderClass="ru.rzn.gmyasoedov.gmaven.wizard.GMavenModuleBuilder"/>
         <projectOpenProcessor implementation="ru.rzn.gmyasoedov.gmaven.wizard.GProjectOpenProcessor"/>
         <projectImportProvider implementation="ru.rzn.gmyasoedov.gmaven.wizard.GMavenProjectImportProvider"/>
-        <projectImportBuilder implementation="ru.rzn.gmyasoedov.gmaven.wizard.GMavenProjectBuilder"/>
         <fileTemplateGroup implementation="ru.rzn.gmyasoedov.gmaven.utils.MavenFileTemplateGroupFactory"/>
 
         <projectConfigurable groupId="build.tools" groupWeight="200" id="reference.settingsdialog.project.gmaven"
@@ -73,8 +71,8 @@
         <!--        <annotator language="XML" implementationClass="ru.rzn.gmyasoedov.gmaven.dom.annotator.MavenDomGutterAnnotator"/>
         <backspaceHandlerDelegate implementation="ru.rzn.gmyasoedov.gmaven.dom.code.MavenBackspaceHandlerDelegate"/>
         <typedHandler implementation="ru.rzn.gmyasoedov.gmaven.dom.code.MavenTypedHandlerDelegate"/>-->
-        <xml.elementDescriptorProvider implementation="ru.rzn.gmyasoedov.gmaven.dom.MavenDomElementDescriptorProvider" order="first"/>
-        <dom.fileMetaData implementation="ru.rzn.gmyasoedov.gmaven.dom.MavenDomProjectModelDescription" rootTagName="project" order="first"/>
+        <!--<xml.elementDescriptorProvider implementation="ru.rzn.gmyasoedov.gmaven.dom.MavenDomElementDescriptorProvider" order="first"/>
+        <dom.fileMetaData implementation="ru.rzn.gmyasoedov.gmaven.dom.MavenDomProjectModelDescription" rootTagName="project" order="first"/>-->
     </extensions>
 
     <actions>

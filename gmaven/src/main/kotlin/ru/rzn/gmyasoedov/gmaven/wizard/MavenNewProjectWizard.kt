@@ -8,15 +8,25 @@ import com.intellij.ide.starters.local.StandardAssetsProvider
 import com.intellij.ide.wizard.NewProjectWizardBaseData.Companion.name
 import com.intellij.ide.wizard.NewProjectWizardBaseData.Companion.path
 import com.intellij.ide.wizard.chain
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.runWriteAction
+import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder
 import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys
+import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManagerImpl
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.observable.util.bindBooleanStorage
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.projectImport.ProjectOpenProcessor
 import com.intellij.ui.UIBundle
 import com.intellij.ui.dsl.builder.Panel
 import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.bindSelected
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.GMAVEN
+import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
+import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenId
 import java.nio.file.Path
 
@@ -45,35 +55,46 @@ class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
 
         override fun setupProject(project: Project) {
             super.setupProject(project)
-           /* val builder = MavenNewModuleBuilder().apply {
-                moduleJdk = sdk
-                name = parentStep.name
-                contentEntryPath = Path.of(parentStep.path, parentStep.name).toString()
+            project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, true)
+            project.putUserData(ExternalSystemDataKeys.NEWLY_IMPORTED_PROJECT, true)
+            ExternalProjectsManagerImpl.setupCreatedProject(project)
 
-                isCreatingNewProject = context.isCreatingNewProject
-
-                myParentProject = parentData
-                myAggregatorProject = parentData
-                myProjectId = MavenId(groupId, artifactId, version)
-                myInheritGroupId = parentData?.groupId == groupId
-                myInheritVersion = parentData?.version == version
-            }*/
-
-            val builder = GMavenModuleBuilder().apply {
-                moduleJdk = sdk
-                name = parentStep.name
-                contentEntryPath = Path.of(parentStep.path, parentStep.name).toString()
-
-                parentProject = parentData
-                aggregatorProject = parentData
-                projectId = MavenId(groupId, artifactId, version)
-                isInheritGroupId = parentData?.groupId == groupId
-                isInheritVersion = parentData?.version == version
+            var buildFile: VirtualFile? = null
+            runWriteAction {
+                val moduleDir = Path.of(parentStep.path, parentStep.name)
+                buildFile = GMavenModuleBuilderHelper.createExternalProjectConfigFile(moduleDir)
             }
 
-            project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, true)
-            ExternalProjectsManagerImpl.setupCreatedProject(project)
-            builder.commit(project)
+            MavenUtils.runWhenInitialized(project) {
+                setupProjectFiles(buildFile!!, project)
+            }
+        }
+
+
+        private fun setupProjectFiles(buildFile: VirtualFile, project: Project) {
+            ApplicationManager.getApplication().invokeLater {
+                GMavenModuleBuilderHelper(
+                    MavenId(groupId, artifactId, version), parentData,
+                    parentData?.groupId == groupId, parentData?.version == version
+                ).setupBuildScript(project, sdk, buildFile)
+
+                if (context.isCreatingNewProject) {
+                    val openProcessor = ProjectOpenProcessor.EXTENSION_POINT_NAME
+                        .findExtensionOrFail(GProjectOpenProcessor::class.java)
+                    openProcessor.importProjectAfterwards(project, buildFile)
+                } else {
+                    val modulePath = buildFile.parent.path
+                    val projectSettings = MavenSettings.getInstance(project)
+                        .getLinkedProjectSettings(modulePath)
+                        ?: throw ExternalSystemException("settings not found $modulePath")
+                    ExternalProjectsManagerImpl.getInstance(project).runWhenInitialized {
+                        ExternalSystemUtil.refreshProject(
+                            projectSettings.externalProjectPath,
+                            ImportSpecBuilder(project, GMavenConstants.SYSTEM_ID)
+                        )
+                    }
+                }
+            }
         }
     }
 

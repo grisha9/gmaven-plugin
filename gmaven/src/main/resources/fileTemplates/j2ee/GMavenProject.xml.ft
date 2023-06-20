@@ -9,16 +9,18 @@
         <groupId>${PARENT_GROUP_ID}</groupId>
         <artifactId>${PARENT_ARTIFACT_ID}</artifactId>
         <version>${PARENT_VERSION}</version>
-#if (${HAS_RELATIVE_PATH})
+    #if (${HAS_RELATIVE_PATH})
         <relativePath>${PARENT_RELATIVE_PATH}</relativePath>
-#end
+    #end
     </parent>
-
 #end
+    #if (${HAS_GROUP_ID})
     <groupId>${GROUP_ID}</groupId>
+    #end
     <artifactId>${ARTIFACT_ID}</artifactId>
+    #if (${HAS_VERSION})
     <version>${VERSION}</version>
-
+    #end
 #if (${SHOULD_SET_LANG_LEVEL})
     <properties>
         <maven.compiler.source>${COMPILER_LEVEL_SOURCE}</maven.compiler.source>

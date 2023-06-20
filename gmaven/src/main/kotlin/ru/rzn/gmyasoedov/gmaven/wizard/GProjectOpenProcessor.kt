@@ -3,14 +3,16 @@ package ru.rzn.gmyasoedov.gmaven.wizard
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.projectImport.ProjectOpenProcessor
+import icons.OpenapiIcons
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import javax.swing.Icon
 
 internal class GProjectOpenProcessor : ProjectOpenProcessor() {
   private val importProvider = GOpenProjectProvider()
 
-  override fun getName(): String = importProvider.builder.name
+  override fun getName(): String = GMavenConstants.GMAVEN
 
-  override fun getIcon(): Icon = importProvider.builder.icon
+  override fun getIcon(): Icon = OpenapiIcons.RepositoryLibraryLogo
 
   override fun canOpenProject(file: VirtualFile): Boolean = importProvider.canOpenProject(file)
 
