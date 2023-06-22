@@ -64,13 +64,13 @@ class AnnotationProcessingDataService : AbstractProjectDataService<AnnotationPro
             config.setAdditionalOptions(ideModule, ArrayList(node.data.arguments))
 
             if (projectData != null) {
-                clearGeneratedSourceFolders(ideModule, node, modifiableModelsProvider)
+               /* clearGeneratedSourceFolders(ideModule, node, modifiableModelsProvider)
                 addGeneratedSourceFolders(
                     ideModule,
                     node,
                     modifiableModelsProvider,
                     sourceFolderManager
-                )
+                )*/
             }
         }
     }
@@ -116,7 +116,7 @@ class AnnotationProcessingDataService : AbstractProjectDataService<AnnotationPro
         sourceFolderManager: SourceFolderManager
     ) {
         val buildDirectory = node.data.buildDirectory
-        val outputPath = MavenUtils.getGeneratedSourcesDirectory(buildDirectory, false).toString();
+        val outputPath = MavenUtils.getGeneratedSourcesDirectory(buildDirectory, false).toString()
         if (outputPath != null) {
             addGeneratedSourceFolder(ideModule, outputPath, false, modelsProvider, sourceFolderManager)
         }

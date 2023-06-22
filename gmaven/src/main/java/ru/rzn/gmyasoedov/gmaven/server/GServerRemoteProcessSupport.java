@@ -33,6 +33,7 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
     private final Sdk jdk;
     private final String vmOptions;
     private final Path mavenPath;
+    private final Path workingDirectory;
     private final ExternalSystemTaskNotificationListener systemTaskNotificationListener;
 
     @Nullable
@@ -44,6 +45,9 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
         this.jdk = request.getSdk();
         this.vmOptions = requireNonNullElse(getJvmConfig(request.getProjectPath()), "") + request.getVmOptions();
         this.mavenPath = request.getMavenPath();
+
+        this.workingDirectory = request.getProjectPath().toFile().isDirectory()
+                ? request.getProjectPath() : request.getProjectPath().getParent();
         this.systemTaskNotificationListener = request.getListener();
     }
 
@@ -117,6 +121,6 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
     protected RunProfileState getRunProfileState(@NotNull Object o,
                                                  @NotNull Object configuration,
                                                  @NotNull Executor executor) {
-        return new MavenServerCmdState(jdk, mavenPath, vmOptions);
+        return new MavenServerCmdState(jdk, mavenPath, vmOptions, workingDirectory);
     }
 }

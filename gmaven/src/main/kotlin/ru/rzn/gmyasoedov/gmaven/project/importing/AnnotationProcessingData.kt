@@ -4,7 +4,6 @@ import com.intellij.openapi.externalSystem.model.Key
 import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
 import com.intellij.serialization.PropertyMapping
 import com.intellij.util.containers.ContainerUtil
-import com.intellij.util.containers.Interner
 
 class AnnotationProcessingData @PropertyMapping("path", "arguments", "buildDirectory", "baseDirectory") private constructor(
     path: Collection<String>,
@@ -61,14 +60,13 @@ class AnnotationProcessingData @PropertyMapping("path", "arguments", "buildDirec
         val OUTPUT_KEY = Key.create(
             AnnotationProcessorOutput::class.java, ExternalSystemConstants.UNORDERED
         )
-        private val ourInterner: Interner<AnnotationProcessingData> = Interner.createWeakInterner()
         fun create(
             path: Collection<String>,
             arguments: Collection<String>,
             buildDirectory: String,
             baseDirectory: String
         ): AnnotationProcessingData {
-            return ourInterner.intern(AnnotationProcessingData(path, arguments, buildDirectory, baseDirectory))
+            return AnnotationProcessingData(path, arguments, buildDirectory, baseDirectory)
         }
     }
 
@@ -80,17 +78,12 @@ class AnnotationProcessingData @PropertyMapping("path", "arguments", "buildDirec
 
         if (path != other.path) return false
         if (arguments != other.arguments) return false
-        if (buildDirectory != other.buildDirectory) return false
-        if (baseDirectory != other.baseDirectory) return false
-
         return true
     }
 
     override fun hashCode(): Int {
         var result = path.hashCode()
         result = 31 * result + arguments.hashCode()
-        result = 31 * result + buildDirectory.hashCode()
-        result = 31 * result + baseDirectory.hashCode()
         return result
     }
 

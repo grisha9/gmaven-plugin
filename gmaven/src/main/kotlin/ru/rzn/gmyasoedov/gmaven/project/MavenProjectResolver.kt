@@ -29,6 +29,7 @@ import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.firstRun
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
+import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenArtifact
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
@@ -208,6 +209,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         storePath(project.resourceRoots, contentRootData, ExternalSystemSourceType.RESOURCE)
         storePath(project.testSourceRoots, contentRootData, ExternalSystemSourceType.TEST)
         storePath(project.testResourceRoots, contentRootData, ExternalSystemSourceType.TEST_RESOURCE)
+        addGeneratedSources(project, contentRootData)
         contentRootData.storePath(ExternalSystemSourceType.EXCLUDED, project.buildDirectory)
         val compilerData = getCompilerData(project, context)
         val sourceLanguageLevel: LanguageLevel = compilerData.sourceLevel
@@ -235,6 +237,32 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             )
         }
         return moduleDataNode
+    }
+
+    private fun addGeneratedSources(
+        project: MavenProject,
+        contentRootData: ContentRootData
+    ) {
+        if (project.packaging.equals("pom", true)) return;
+        val generatedSourcePath = MavenUtils.getGeneratedSourcesDirectory(project.buildDirectory, false)
+        val generatedTestSourcePath = MavenUtils.getGeneratedSourcesDirectory(project.buildDirectory, true)
+        storeGeneratedPaths(
+            generatedSourcePath.toFile().listFiles(), contentRootData, ExternalSystemSourceType.SOURCE_GENERATED
+        )
+        storeGeneratedPaths(
+            generatedTestSourcePath.toFile().listFiles(), contentRootData, ExternalSystemSourceType.TEST_GENERATED
+        )
+    }
+
+    private fun storeGeneratedPaths(
+        listFiles: Array<File>?,
+        contentRootData: ContentRootData,
+        sourceGenerated: ExternalSystemSourceType
+    ) {
+        if (listFiles != null) {
+            val paths = listFiles.filter { it.isDirectory }.map { it.absolutePath }
+            storePath(paths, contentRootData, sourceGenerated)
+        }
     }
 
     private fun getProjectDirectory(projectPath: String): Path {

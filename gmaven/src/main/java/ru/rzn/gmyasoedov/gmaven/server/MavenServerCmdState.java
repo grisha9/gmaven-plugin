@@ -11,7 +11,6 @@ import com.intellij.execution.configurations.SimpleJavaParameters;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ProgramRunner;
-import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.application.impl.ApplicationInfoImpl;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -43,13 +42,17 @@ public class MavenServerCmdState extends CommandLineState {
 
     private final Sdk jdk;
     private final Path mavenPath;
+    private final Path workingDirectory;
     private final String vmOptions;
     private final Integer debugPort;
 
-    public MavenServerCmdState(@NotNull Sdk jdk, @NotNull Path mavenPath, @Nullable String vmOptions) {
+    public MavenServerCmdState(@NotNull Sdk jdk, @NotNull Path mavenPath,
+                               @Nullable String vmOptions,
+                               @NotNull Path workingDirectory) {
         super(null);
         this.jdk = jdk;
         this.mavenPath = mavenPath;
+        this.workingDirectory = workingDirectory;
         this.vmOptions = vmOptions;
         this.debugPort = getDebugPort();
     }
@@ -57,7 +60,7 @@ public class MavenServerCmdState extends CommandLineState {
     protected SimpleJavaParameters createJavaParameters() {
         final SimpleJavaParameters params = new SimpleJavaParameters();
         params.setJdk(jdk);
-        params.setWorkingDirectory(getWorkingDirectory());
+        params.setWorkingDirectory(workingDirectory.toFile());
         setupMavenOpts(params);
         setupDebugParam(params);
         setupClasspath(params);
@@ -104,6 +107,7 @@ public class MavenServerCmdState extends CommandLineState {
 
         params.getVMParametersList().addProperty(MAVEN_EXT_CLASS_PATH_PROPERTY, mavenExtClassesJarPathString);
         params.getVMParametersList().addProperty(GMAVEN_HOME, mavenPath.toAbsolutePath().toString());
+        params.getVMParametersList().addProperty("skipTests", "true");
     }
 
     private void processVmOptions(String myVmOptions, SimpleJavaParameters params) {
@@ -182,10 +186,7 @@ public class MavenServerCmdState extends CommandLineState {
         params.getVMParametersList().defineProperty("GMAVEN", getIdeaVersionToPassToMavenProcess());
     }
 
-    @NotNull
-    protected String getWorkingDirectory() {
-        return PathManager.getBinPath();
-    }
+
 
     private Integer getDebugPort() {
         if (Registry.is("gmaven.server.debug")) {
