@@ -107,7 +107,6 @@ public class MavenServerCmdState extends CommandLineState {
 
         params.getVMParametersList().addProperty(MAVEN_EXT_CLASS_PATH_PROPERTY, mavenExtClassesJarPathString);
         params.getVMParametersList().addProperty(GMAVEN_HOME, mavenPath.toAbsolutePath().toString());
-        params.getVMParametersList().addProperty("skipTests", "true");
     }
 
     private void processVmOptions(String myVmOptions, SimpleJavaParameters params) {

@@ -23,8 +23,9 @@ import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_BUILD_FILE
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_HAS_DEPENDENCIES
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.DependencyAnalyzerData
-import ru.rzn.gmyasoedov.gmaven.project.importing.AnnotationProcessingData
+import ru.rzn.gmyasoedov.gmaven.project.importing.CompilerPluginData
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.firstRun
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
@@ -211,6 +212,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         storePath(project.testResourceRoots, contentRootData, ExternalSystemSourceType.TEST_RESOURCE)
         addGeneratedSources(project, contentRootData)
         contentRootData.storePath(ExternalSystemSourceType.EXCLUDED, project.buildDirectory)
+
         val compilerData = getCompilerData(project, context)
         val sourceLanguageLevel: LanguageLevel = compilerData.sourceLevel
         val targetBytecodeLevel: LanguageLevel = compilerData.targetLevel
@@ -222,7 +224,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
                 targetBytecodeLevel.toJavaVersion().toFeatureString()
             )
         )
-        populateAnnotationProcessorData(project, moduleDataNode, compilerData.arguments)
+        populateAnnotationProcessorData(project, moduleDataNode, compilerData)
         populateTasks(moduleDataNode, project, context.mavenResult.settings.localRepository?.let { Path.of(it) })
         if (parentDataNode.data is ModuleData) {
             for (childContainer in container.modules) {
@@ -273,12 +275,12 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     private fun populateAnnotationProcessorData(
         project: MavenProject,
         moduleDataNode: DataNode<ModuleData>,
-        arguments: MutableCollection<String>
+        compilerData: CompilerData
     ) {
-        val annotationProcessorPaths = project.annotationProcessorPaths ?: return
-        val data = AnnotationProcessingData
-            .create(annotationProcessorPaths, arguments, project.buildDirectory, project.basedir)
-        moduleDataNode.createChild(AnnotationProcessingData.KEY, data)
+        val annotationProcessorPaths = compilerData.annotationProcessorPaths
+        val data = CompilerPluginData
+            .create(annotationProcessorPaths, compilerData.arguments, project.buildDirectory, project.basedir)
+        moduleDataNode.createChild(CompilerPluginData.KEY, data)
     }
 
     private fun getDefaultModuleTypeId(): String {

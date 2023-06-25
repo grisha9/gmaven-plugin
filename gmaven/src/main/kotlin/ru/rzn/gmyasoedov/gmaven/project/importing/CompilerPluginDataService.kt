@@ -32,19 +32,19 @@ import java.io.File
 import java.nio.file.Path
 
 @Order(ExternalSystemConstants.UNORDERED)
-class AnnotationProcessingDataService : AbstractProjectDataService<AnnotationProcessingData, ProcessorConfigProfile>() {
+class CompilerPluginDataService : AbstractProjectDataService<CompilerPluginData, ProcessorConfigProfile>() {
 
-    override fun getTargetDataKey(): Key<AnnotationProcessingData> {
-        return AnnotationProcessingData.KEY
+    override fun getTargetDataKey(): Key<CompilerPluginData> {
+        return CompilerPluginData.KEY
     }
 
     override fun importData(
-        toImport: Collection<DataNode<AnnotationProcessingData>>,
+        toImport: Collection<DataNode<CompilerPluginData>>,
         projectData: ProjectData?,
         project: Project,
         modifiableModelsProvider: IdeModifiableModelsProvider
     ) {
-        val importedData = mutableSetOf<AnnotationProcessingData>()
+        val importedData = mutableSetOf<CompilerPluginData>()
         val config = CompilerConfiguration.getInstance(project) as CompilerConfigurationImpl
         val sourceFolderManager = SourceFolderManager.getInstance(project)
         for (node in toImport) {
@@ -77,10 +77,10 @@ class AnnotationProcessingDataService : AbstractProjectDataService<AnnotationPro
 
     private fun clearGeneratedSourceFolders(
         ideModule: Module,
-        node: DataNode<AnnotationProcessingData>,
+        node: DataNode<CompilerPluginData>,
         modelsProvider: IdeModifiableModelsProvider
     ) {
-        val moduleOutputs = ExternalSystemApiUtil.findAll(node, AnnotationProcessingData.OUTPUT_KEY)
+        val moduleOutputs = ExternalSystemApiUtil.findAll(node, CompilerPluginData.OUTPUT_KEY)
         val buildDirectory = node.data.buildDirectory
         val pathsToRemove =
             (moduleOutputs
@@ -111,7 +111,7 @@ class AnnotationProcessingDataService : AbstractProjectDataService<AnnotationPro
 
     private fun addGeneratedSourceFolders(
         ideModule: Module,
-        node: DataNode<AnnotationProcessingData>,
+        node: DataNode<CompilerPluginData>,
         modelsProvider: IdeModifiableModelsProvider,
         sourceFolderManager: SourceFolderManager
     ) {
@@ -172,21 +172,23 @@ class AnnotationProcessingDataService : AbstractProjectDataService<AnnotationPro
     }
 
     override fun computeOrphanData(
-        toImport: Collection<DataNode<AnnotationProcessingData>>,
+        toImport: Collection<DataNode<CompilerPluginData>>,
         projectData: ProjectData,
         project: Project,
         modelsProvider: IdeModifiableModelsProvider
     ): Computable<Collection<ProcessorConfigProfile>> =
         Computable {
-            val profiles =
-                ArrayList((CompilerConfiguration.getInstance(project) as CompilerConfigurationImpl).moduleProcessorProfiles)
+            val compilerConfiguration = CompilerConfiguration.getInstance(project)
+            val gProfiles =
+                ArrayList(( compilerConfiguration as CompilerConfigurationImpl).moduleProcessorProfiles)
+                    .filter { it.name.equals(IMPORTED_PROFILE_NAME) }
             val importedProcessingProfiles = ArrayList(toImport).asSequence()
                 .map { it.data }
                 .distinct()
                 .map { createProcessorConfigProfile(it) }
                 .toList()
 
-            val orphans = profiles
+            val orphans = gProfiles
                 .filter {
                     it.moduleNames.all { configuredModule -> isGMavenModule(configuredModule, modelsProvider) }
                             && importedProcessingProfiles.none { imported -> imported.matches(it) }
@@ -205,7 +207,7 @@ class AnnotationProcessingDataService : AbstractProjectDataService<AnnotationPro
 
     override fun removeData(
         toRemoveComputable: Computable<out Collection<ProcessorConfigProfile>>,
-        toIgnore: Collection<DataNode<AnnotationProcessingData>>,
+        toIgnore: Collection<DataNode<CompilerPluginData>>,
         projectData: ProjectData,
         project: Project,
         modelsProvider: IdeModifiableModelsProvider
@@ -221,10 +223,11 @@ class AnnotationProcessingDataService : AbstractProjectDataService<AnnotationPro
 
     private fun CompilerConfigurationImpl.configureAnnotationProcessing(
         ideModule: Module,
-        data: AnnotationProcessingData,
-        importedData: MutableSet<AnnotationProcessingData>
+        data: CompilerPluginData,
+        importedData: MutableSet<CompilerPluginData>
     ) {
-        val profile = findOrCreateProcessorConfigProfile(data)
+        if (data.path.isEmpty()) return
+        val profile = findOrCreateProcessorConfigProfile(data, ideModule) ?: return
         if (importedData.add(data)) {
             profile.clearModuleNames()
         }
@@ -239,16 +242,25 @@ class AnnotationProcessingDataService : AbstractProjectDataService<AnnotationPro
         }
     }
 
-    private fun CompilerConfigurationImpl.findOrCreateProcessorConfigProfile(data: AnnotationProcessingData): ProcessorConfigProfile {
+    private fun CompilerConfigurationImpl.findOrCreateProcessorConfigProfile(
+        data: CompilerPluginData,
+        ideModule: Module
+    ): ProcessorConfigProfile? {
+        val moduleExistInUserProfile = this.moduleProcessorProfiles.asSequence()
+            .filter { !it.name.equals(IMPORTED_PROFILE_NAME) }
+            .flatMap { it.moduleNames }
+            .find { it.equals(ideModule.name) }
+        if (moduleExistInUserProfile != null) return null;
+
         val newProfile = createProcessorConfigProfile(data)
         return ArrayList(this.moduleProcessorProfiles)
             .find { existing -> existing.matches(newProfile) }
             ?: newProfile.also { addModuleProcessorProfile(it) }
     }
 
-    private fun createProcessorConfigProfile(annotationProcessingData: AnnotationProcessingData): ProcessorConfigProfileImpl {
+    private fun createProcessorConfigProfile(compilerPluginData: CompilerPluginData): ProcessorConfigProfileImpl {
         val newProfile = ProcessorConfigProfileImpl(IMPORTED_PROFILE_NAME)
-        newProfile.setProcessorPath(annotationProcessingData.path.joinToString(separator = File.pathSeparator))
+        newProfile.setProcessorPath(compilerPluginData.path.joinToString(separator = File.pathSeparator))
         /*annotationProcessingData.arguments
             .map { it.removePrefix("-A").split('=', limit = 2) }
             .forEach { newProfile.setOption(it[0], if (it.size > 1) it[1] else "") }*/
@@ -261,7 +273,7 @@ class AnnotationProcessingDataService : AbstractProjectDataService<AnnotationPro
                 && this.processorOptions == other.processorOptions
     }
 
-    private fun getRelativePath(data: AnnotationProcessingData, isTest: Boolean): String? {
+    private fun getRelativePath(data: CompilerPluginData, isTest: Boolean): String? {
         val annotationProcessorDirectoryFile = MavenUtils.getGeneratedAnnotationsDirectory(data.buildDirectory, isTest)
         return try {
             Path.of(data.baseDirectory).relativize(annotationProcessorDirectoryFile).toString()
@@ -271,7 +283,7 @@ class AnnotationProcessingDataService : AbstractProjectDataService<AnnotationPro
     }
 
     companion object {
-        private val LOG = Logger.getInstance(AnnotationProcessingDataService::class.java)
+        private val LOG = Logger.getInstance(CompilerPluginDataService::class.java)
         const val IMPORTED_PROFILE_NAME = "GMaven Imported"
     }
 }

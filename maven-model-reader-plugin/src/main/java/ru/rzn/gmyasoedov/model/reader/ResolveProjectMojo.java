@@ -1,6 +1,7 @@
 package ru.rzn.gmyasoedov.model.reader;
 
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
+import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ResolutionErrorHandler;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Build;
@@ -43,14 +44,21 @@ public class ResolveProjectMojo extends AbstractMojo {
     private ResolutionErrorHandler resolutionErrorHandler;
     @Parameter(defaultValue = "${session}", readonly = true)
     private MavenSession session;
+
     private final Map<String, Field> dependencyCoordinateFieldMap = getDependencyCoordinateFieldMap();
+    private List<ArtifactResolutionException> resolveArtifactErrors;
 
     @Override
     public void execute() throws MojoExecutionException {
+        resolveArtifactErrors = new ArrayList<>();
         Set<String> gPluginSet = getPluginForBodyProcessing();
         getLog().info("ResolveProjectMojo: " + gPluginSet);
         for (MavenProject mavenProject : session.getAllProjects()) {
             resolvePluginBody(mavenProject, gPluginSet);
+        }
+        for (ArtifactResolutionException error : resolveArtifactErrors) {
+            getLog().warn("Resolution of annotationProcessorPath dependencies failed: "
+                    + error.getLocalizedMessage(), error);
         }
     }
 
@@ -83,7 +91,7 @@ public class ResolveProjectMojo extends AbstractMojo {
     private Map<String, Object> convertPluginBody(MavenProject project, Plugin plugin)
             throws MojoExecutionException {
         String annotationProcessorPaths = getPluginAnnotationProcessorPaths(plugin);
-        resolveAnnotationProcessor(project, plugin, annotationProcessorPaths);
+        List<String> resolvedPaths = resolveAnnotationProcessor(project, plugin, annotationProcessorPaths);
         List<Map<String, Object>> executions = new ArrayList<>(plugin.getExecutions().size());
         for (PluginExecution each : plugin.getExecutions()) {
             executions.add(convertExecution(each));
@@ -91,6 +99,7 @@ public class ResolveProjectMojo extends AbstractMojo {
         Map<String, Object> result = new HashMap<>(5);
         result.put("executions", executions);
         result.put("configuration", convertConfiguration(plugin.getConfiguration()));
+        result.put(ANNOTATION_PROCESSOR_PATH, resolvedPaths);
         return result;
     }
 
@@ -125,24 +134,23 @@ public class ResolveProjectMojo extends AbstractMojo {
         return path.isEmpty() ? null : path;
     }
 
-    private void resolveAnnotationProcessor(MavenProject project, Plugin plugin, String annotationProcessorPaths)
+    private List<String> resolveAnnotationProcessor(MavenProject project,
+                                                    Plugin plugin,
+                                                    String annotationProcessorPaths)
             throws MojoExecutionException {
-        if (annotationProcessorPaths == null || plugin == null || plugin.getConfiguration() == null) return;
+        if (annotationProcessorPaths == null || plugin == null || plugin.getConfiguration() == null) return null;
         List<DependencyCoordinate> dependencies = getDependencyCoordinates(plugin, annotationProcessorPaths);
         getLog().debug("Dependencies for resolve " + dependencies);
         List<String> paths = GUtils.resolveArtifacts(
                 dependencies, project,
                 repositorySystem, artifactHandlerManager,
-                resolutionErrorHandler, session
+                resolutionErrorHandler, session,
+                resolveArtifactErrors
         );
         if (paths != null && !paths.isEmpty()) {
             getLog().info("annotation processor paths " + paths);
-            setPathToSession(project, paths);
         }
-    }
-
-    private void setPathToSession(MavenProject project, List<String> paths) {
-        project.setContextValue(ANNOTATION_PROCESSOR_PATH, paths);
+        return paths;
     }
 
     private List<DependencyCoordinate> getDependencyCoordinates(Plugin plugin, String annotationProcessorPaths)

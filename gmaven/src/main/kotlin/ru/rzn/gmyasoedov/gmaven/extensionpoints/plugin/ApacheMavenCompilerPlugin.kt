@@ -72,7 +72,7 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         }
         val configurationElement = plugin.body.configuration?.let { getElement(it, contextElementMap) }
         val compilerArgs = collectCompilerArgs(mavenProject, configurationElement)
-        return CompilerData(source, target, testSource, testTarget, compilerArgs)
+        return CompilerData(source, target, testSource, testTarget, plugin.body.annotationProcessorPaths, compilerArgs)
     }
 
     private fun getCompilerProp(
@@ -158,11 +158,11 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         val descriptor = MavenArtifactUtil.readPluginDescriptor(localRepositoryPath, plugin);
         if (descriptor == null) {
             MavenLog.LOG.warn("null descriptor $plugin")
-            return CompilerData(LanguageLevel.HIGHEST, emptyList())
+            return CompilerData(LanguageLevel.HIGHEST, emptyList(), emptyList())
         }
         val source = LanguageLevel.parse(descriptor.myParams.get("source")) ?: LanguageLevel.HIGHEST
         val target = LanguageLevel.parse(descriptor.myParams.get("target")) ?: LanguageLevel.HIGHEST
-        return CompilerData(source, target, source, target, emptyList())
+        return CompilerData(source, target, source, target, emptyList(), emptyList())
     }
 
     private data class CompilerProp(

@@ -11,27 +11,27 @@ public class CompilerData {
     private final LanguageLevel targetLevel;
     private final LanguageLevel testSourceLevel;
     private final LanguageLevel testTargetLevel;
-    private final Collection<String> arguments;// todo main/test? split it
+    private final Collection<String> annotationProcessorPaths;
+    private final Collection<String> arguments;
 
     public CompilerData(@Nonnull LanguageLevel sourceLevel,
                         @Nonnull LanguageLevel targetLevel,
                         @Nonnull LanguageLevel testSourceLevel,
                         @Nonnull LanguageLevel testTargetLevel,
+                        @Nonnull Collection<String> annotationProcessorPaths,
                         @Nonnull Collection<String> arguments) {
         this.sourceLevel = Objects.requireNonNull(sourceLevel);
         this.targetLevel = Objects.requireNonNull(targetLevel);
         this.testSourceLevel = Objects.requireNonNull(testSourceLevel);
         this.testTargetLevel = Objects.requireNonNull(testTargetLevel);
+        this.annotationProcessorPaths = Objects.requireNonNull(annotationProcessorPaths);
         this.arguments = Objects.requireNonNull(arguments);
     }
 
     public CompilerData(@Nonnull LanguageLevel defaultLevel,
+                        @Nonnull Collection<String> annotationProcessorPaths,
                         @Nonnull Collection<String> arguments) {
-        this.sourceLevel = Objects.requireNonNull(defaultLevel);
-        this.targetLevel = Objects.requireNonNull(defaultLevel);
-        this.testSourceLevel = Objects.requireNonNull(defaultLevel);
-        this.testTargetLevel = Objects.requireNonNull(defaultLevel);
-        this.arguments = Objects.requireNonNull(arguments);
+        this(defaultLevel, defaultLevel, defaultLevel, defaultLevel, annotationProcessorPaths, arguments);
     }
 
     @Nonnull
@@ -55,6 +55,11 @@ public class CompilerData {
     }
 
     @Nonnull
+    public Collection<String> getAnnotationProcessorPaths() {
+        return annotationProcessorPaths;
+    }
+
+    @Nonnull
     public Collection<String> getArguments() {
         return arguments;
     }
@@ -68,14 +73,21 @@ public class CompilerData {
 
         if (sourceLevel != that.sourceLevel) return false;
         if (targetLevel != that.targetLevel) return false;
+        if (testSourceLevel != that.testSourceLevel) return false;
+        if (testTargetLevel != that.testTargetLevel) return false;
+        if (!Objects.equals(annotationProcessorPaths, that.annotationProcessorPaths))
+            return false;
         return Objects.equals(arguments, that.arguments);
     }
 
     @Override
     public int hashCode() {
-        int result = sourceLevel.hashCode();
-        result = 31 * result + targetLevel.hashCode();
-        result = 31 * result + arguments.hashCode();
+        int result = sourceLevel != null ? sourceLevel.hashCode() : 0;
+        result = 31 * result + (targetLevel != null ? targetLevel.hashCode() : 0);
+        result = 31 * result + (testSourceLevel != null ? testSourceLevel.hashCode() : 0);
+        result = 31 * result + (testTargetLevel != null ? testTargetLevel.hashCode() : 0);
+        result = 31 * result + (annotationProcessorPaths != null ? annotationProcessorPaths.hashCode() : 0);
+        result = 31 * result + (arguments != null ? arguments.hashCode() : 0);
         return result;
     }
 

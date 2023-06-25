@@ -27,10 +27,13 @@ public class MavenPluginConverter {
             try {
                 Map<String, Object> map = (Map<String, Object>) contextValue;
                 List<Map<String, Object>> executions = (List<Map<String, Object>>) map.get("executions");
-
+                Object processorPath = map.get("annotationProcessorPath");
+                List<String> annotationProcessorPaths = processorPath instanceof List
+                        ? (List<String>) processorPath : Collections.<String>emptyList();
                 return PluginBody.builder()
                         .configuration(getConfiguration(map))
                         .executions(mapToExecutions(executions))
+                        .annotationProcessorPaths(annotationProcessorPaths)
                         .build();
             } catch (Exception e) {
                 System.err.println(e);

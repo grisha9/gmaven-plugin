@@ -19,7 +19,6 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenSettings
 import java.nio.file.Path
-import java.util.*
 
 fun getMavenHome(distributionSettings: DistributionSettings): Path {
     if (distributionSettings.path != null) return distributionSettings.path
@@ -35,10 +34,10 @@ fun getCompilerData(mavenProject: MavenProject, context: MavenProjectResolver.Pr
         CompilerData {
     val projectLanguageLevel = context.projectLanguageLevel
     val localRepoPath = context.mavenResult.settings.localRepository
-        ?: return CompilerData(projectLanguageLevel, Collections.emptyList())
+        ?: return CompilerData(projectLanguageLevel, emptyList(), emptyList())
     val compilerPlugin = MavenFullImportPlugin.EP_NAME.extensionList
         .filterIsInstance<MavenCompilerFullImportPlugin>()
-        .firstOrNull() ?: return CompilerData(projectLanguageLevel, Collections.emptyList())
+        .firstOrNull() ?: return CompilerData(projectLanguageLevel, emptyList(), emptyList())
 
     for (plugin in mavenProject.plugins) {
         if (compilerPlugin.isApplicable(plugin)) {
@@ -46,7 +45,7 @@ fun getCompilerData(mavenProject: MavenProject, context: MavenProjectResolver.Pr
                 .getCompilerData(mavenProject, plugin, Path.of(localRepoPath), context.contextElementMap)
         }
     }
-    return CompilerData(projectLanguageLevel, Collections.emptyList())
+    return CompilerData(projectLanguageLevel, emptyList(), emptyList())
 }
 
 fun populateTasks(moduleDataNode: DataNode<ModuleData>, mavenProject: MavenProject, localRepo: Path?) {

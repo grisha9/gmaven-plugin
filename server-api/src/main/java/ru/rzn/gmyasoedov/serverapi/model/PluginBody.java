@@ -12,5 +12,7 @@ import java.util.List;
 public final class PluginBody implements Serializable {
     @NonNull
     private final List<PluginExecution> executions;
+    @NonNull
+    private final List<String> annotationProcessorPaths;
     private final String configuration;
 }

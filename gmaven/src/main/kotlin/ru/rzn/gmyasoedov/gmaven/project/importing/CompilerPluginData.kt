@@ -5,7 +5,7 @@ import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
 import com.intellij.serialization.PropertyMapping
 import com.intellij.util.containers.ContainerUtil
 
-class AnnotationProcessingData @PropertyMapping("path", "arguments", "buildDirectory", "baseDirectory") private constructor(
+class CompilerPluginData @PropertyMapping("path", "arguments", "buildDirectory", "baseDirectory") private constructor(
     path: Collection<String>,
     arguments: Collection<String>,
     buildDirectory: String,
@@ -54,7 +54,7 @@ class AnnotationProcessingData @PropertyMapping("path", "arguments", "buildDirec
 
     companion object {
         val KEY = Key.create(
-            AnnotationProcessingData::class.java,
+            CompilerPluginData::class.java,
             ExternalSystemConstants.UNORDERED
         )
         val OUTPUT_KEY = Key.create(
@@ -65,8 +65,8 @@ class AnnotationProcessingData @PropertyMapping("path", "arguments", "buildDirec
             arguments: Collection<String>,
             buildDirectory: String,
             baseDirectory: String
-        ): AnnotationProcessingData {
-            return AnnotationProcessingData(path, arguments, buildDirectory, baseDirectory)
+        ): CompilerPluginData {
+            return CompilerPluginData(path, arguments, buildDirectory, baseDirectory)
         }
     }
 
@@ -74,7 +74,7 @@ class AnnotationProcessingData @PropertyMapping("path", "arguments", "buildDirec
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as AnnotationProcessingData
+        other as CompilerPluginData
 
         if (path != other.path) return false
         if (arguments != other.arguments) return false
@@ -86,5 +86,10 @@ class AnnotationProcessingData @PropertyMapping("path", "arguments", "buildDirec
         result = 31 * result + arguments.hashCode()
         return result
     }
+
+    override fun toString(): String {
+        return "CompilerPluginData(baseDirectory='$baseDirectory', path=$path, arguments=$arguments)"
+    }
+
 
 }

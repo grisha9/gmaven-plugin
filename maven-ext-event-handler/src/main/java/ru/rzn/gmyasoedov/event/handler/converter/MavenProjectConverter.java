@@ -55,8 +55,6 @@ public class MavenProjectConverter {
                 .modulesDir(modulesDir)
                 .plugins(plugins)
                 .dependencyTree(dependencyTreeNodes)
-                .annotationProcessorPaths((List<String>) mavenProject
-                        .getContextValue("annotationProcessorPath"))
                 .sourceRoots(mavenProject.getCompileSourceRoots())
                 .testSourceRoots(mavenProject.getTestCompileSourceRoots())
                 .resourceRoots(convertResorce(mavenProject.getResources()))

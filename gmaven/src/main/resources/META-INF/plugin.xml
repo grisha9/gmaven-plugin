@@ -45,7 +45,7 @@
         <projectService serviceImplementation="ru.rzn.gmyasoedov.gmaven.project.profile.ProjectProfilesStateService"/>
         <runConfigurationProducer implementation="ru.rzn.gmyasoedov.gmaven.execution.GMavenRuntimeConfigurationProducer"/>
         <configurationType implementation="ru.rzn.gmyasoedov.gmaven.execution.GMavenExternalTaskConfigurationType"/>
-        <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.AnnotationProcessingDataService"/>
+        <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.CompilerPluginDataService"/>
         <externalSystemDependencyAnalyzer implementation="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerExtension"/>
 
         <toolWindow id="GMaven" anchor="right" icon="GMavenIcons.ToolWindowMaven"
