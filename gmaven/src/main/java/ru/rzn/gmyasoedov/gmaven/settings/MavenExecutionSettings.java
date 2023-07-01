@@ -11,7 +11,8 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     private static final long serialVersionUID = 1L;
 
-    @NotNull private final MavenExecutionWorkspace executionWorkspace = new MavenExecutionWorkspace();
+    @NotNull
+    private final MavenExecutionWorkspace executionWorkspace = new MavenExecutionWorkspace();
 
     @NotNull
     private final DistributionSettings distributionSettings;
@@ -30,6 +31,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private boolean useQualifiedModuleNames = false;
     @Nullable
     private String projectBuildFile;
+    private boolean skipTests;
 
     public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,
                                   @Nullable String serviceDirectory,
@@ -122,27 +124,52 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         this.projectBuildFile = projectBuildFile;
     }
 
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + distributionSettings.hashCode();
-        result = 31 * result + (serviceDirectory != null ? serviceDirectory.hashCode() : 0);
-        result = 31 * result + (jdkName != null ? jdkName.hashCode() : 0);
-        result = 31 * result + (javaHome != null ? javaHome.hashCode() : 0);
-        result = 31 * result + (projectBuildFile != null ? projectBuildFile.hashCode() : 0);
-        return result;
+    public boolean isSkipTests() {
+        return skipTests;
+    }
+
+    public void setSkipTests(boolean skipTests) {
+        this.skipTests = skipTests;
     }
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
+
         MavenExecutionSettings that = (MavenExecutionSettings) o;
-        if (!Objects.equals(distributionSettings, that.distributionSettings)) return false;
-        if (!Objects.equals(jdkName, that.jdkName)) return false;
+
+        if (offlineWork != that.offlineWork) return false;
+        if (resolveModulePerSourceSet != that.resolveModulePerSourceSet) return false;
+        if (useQualifiedModuleNames != that.useQualifiedModuleNames) return false;
+        if (skipTests != that.skipTests) return false;
+        if (!executionWorkspace.equals(that.executionWorkspace)) return false;
+        if (!distributionSettings.equals(that.distributionSettings)) return false;
+        if (!Objects.equals(serviceDirectory, that.serviceDirectory))
+            return false;
         if (!Objects.equals(javaHome, that.javaHome)) return false;
-        if (!Objects.equals(projectBuildFile, that.projectBuildFile)) return false;
-        if (!Objects.equals(serviceDirectory, that.serviceDirectory)) return false;
-        return true;
+        if (!Objects.equals(jdkName, that.jdkName)) return false;
+        if (!Objects.equals(myIdeProjectPath, that.myIdeProjectPath))
+            return false;
+        return Objects.equals(projectBuildFile, that.projectBuildFile);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + executionWorkspace.hashCode();
+        result = 31 * result + distributionSettings.hashCode();
+        result = 31 * result + (serviceDirectory != null ? serviceDirectory.hashCode() : 0);
+        result = 31 * result + (offlineWork ? 1 : 0);
+        result = 31 * result + (javaHome != null ? javaHome.hashCode() : 0);
+        result = 31 * result + (jdkName != null ? jdkName.hashCode() : 0);
+        result = 31 * result + (myIdeProjectPath != null ? myIdeProjectPath.hashCode() : 0);
+        result = 31 * result + (resolveModulePerSourceSet ? 1 : 0);
+        result = 31 * result + (useQualifiedModuleNames ? 1 : 0);
+        result = 31 * result + (projectBuildFile != null ? projectBuildFile.hashCode() : 0);
+        result = 31 * result + (skipTests ? 1 : 0);
+        return result;
     }
 
     @Override

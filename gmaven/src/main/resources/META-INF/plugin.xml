@@ -89,10 +89,14 @@
         <action id="GMaven.ViewDependencyAnalyzer" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ViewDependencyAnalyzerAction"/>
         <action id="GMaven.ToolbarDependencyAnalyzer" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ToolbarDependencyAnalyzerAction"/>
         <action id="GMaven.ExternalSystem.ChangeProfile" class="ru.rzn.gmyasoedov.gmaven.project.action.ChangeProfileStateAction"/>
+        <action id="GMaven.Toolbar.SkipTests" class="ru.rzn.gmyasoedov.gmaven.project.action.SkipTestsAction"/>
+        <action id="GMaven.Toolbar.Offline" class="ru.rzn.gmyasoedov.gmaven.project.action.OfflineModeAction"/>
 
         <group id="GMaven.View.ActionsToolbar.CenterPanel">
             <separator/>
             <reference id="GMaven.ToolbarDependencyAnalyzer"/>
+            <reference id="GMaven.Toolbar.Offline"/>
+            <reference id="GMaven.Toolbar.SkipTests"/>
             <separator/>
             <add-to-group group-id="ExternalSystemView.ActionsToolbar.CenterPanel" anchor="last"/>
         </group>

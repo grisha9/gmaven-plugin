@@ -22,7 +22,8 @@ import java.util.TreeSet;
 public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings, MavenProjectSettings, MavenSettingsListener>
         implements PersistentStateComponent<MavenSettings.MyState> {
 
-    private boolean isOfflineMode = false;
+    private boolean offlineMode = false;
+    private boolean skipTests = false;
 
     public MavenSettings(@NotNull Project project) {
         super(MavenSettingsListener.TOPIC, project);
@@ -54,23 +55,32 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
         MyState state = new MyState();
         fillState(state);
 
-        state.setOfflineMode(isOfflineWork());
-
+        state.setOfflineMode(isOfflineMode());
+        state.setSkipTests(isSkipTests());
         return state;
     }
 
     @Override
     public void loadState(@NotNull MyState state) {
         super.loadState(state);
-        setOfflineWork(state.isOfflineMode());
+        setOfflineMode(state.isOfflineMode());
+        setSkipTests(state.skipTests);
     }
 
-    public boolean isOfflineWork() {
-        return isOfflineMode;
+    public boolean isOfflineMode() {
+        return offlineMode;
     }
 
-    public void setOfflineWork(boolean isOfflineMode) {
-        this.isOfflineMode = isOfflineMode;
+    public void setOfflineMode(boolean offlineMode) {
+        this.offlineMode = offlineMode;
+    }
+
+    public boolean isSkipTests() {
+        return skipTests;
+    }
+
+    public void setSkipTests(boolean skipTests) {
+        this.skipTests = skipTests;
     }
 
     public boolean getStoreProjectFilesExternally() {
@@ -113,6 +123,8 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
     public static class MyState implements State<MavenProjectSettings> {
         private final Set<MavenProjectSettings> myProjectSettings = new TreeSet<>();
         private boolean isOfflineMode = false;
+        private boolean skipTests = false;
+
 
         @Override
         @XCollection(elementTypes = MavenProjectSettings.class)
@@ -133,6 +145,14 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
 
         public void setOfflineMode(boolean isOfflineMode) {
             this.isOfflineMode = isOfflineMode;
+        }
+
+        public boolean isSkipTests() {
+            return skipTests;
+        }
+
+        public void setSkipTests(boolean skipTests) {
+            this.skipTests = skipTests;
         }
     }
 }

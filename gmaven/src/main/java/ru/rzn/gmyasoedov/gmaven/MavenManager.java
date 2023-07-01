@@ -117,6 +117,7 @@ public final class MavenManager //manager
                 result.setUseQualifiedModuleNames(projectSettings.isUseQualifiedModuleNames());
             }
             result.setProjectBuildFile(projectSettings == null ? null : projectSettings.getProjectBuildFile());
+            result.setSkipTests(settings.isSkipTests());
 
             addCurrentProfiles(project, projectPath, result);
 

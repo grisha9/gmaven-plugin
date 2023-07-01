@@ -15,6 +15,7 @@ import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
 import ru.rzn.gmyasoedov.serverapi.GMavenServer;
 
@@ -35,6 +36,7 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
     private final Path mavenPath;
     private final Path workingDirectory;
     private final ExternalSystemTaskNotificationListener systemTaskNotificationListener;
+    private final MavenExecutionSettings executionSettings;
 
     @Nullable
     protected Consumer<ProcessEvent> onTerminate;
@@ -49,6 +51,7 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
         this.workingDirectory = request.getProjectPath().toFile().isDirectory()
                 ? request.getProjectPath() : request.getProjectPath().getParent();
         this.systemTaskNotificationListener = request.getListener();
+        this.executionSettings = request.getSettings();
     }
 
 
@@ -121,6 +124,7 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
     protected RunProfileState getRunProfileState(@NotNull Object o,
                                                  @NotNull Object configuration,
                                                  @NotNull Executor executor) {
-        return new MavenServerCmdState(jdk, mavenPath, vmOptions, workingDirectory);
+        return new MavenServerCmdState(jdk, mavenPath, vmOptions, workingDirectory,
+                executionSettings != null && executionSettings.isSkipTests());
     }
 }

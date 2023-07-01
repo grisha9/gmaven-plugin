@@ -45,15 +45,18 @@ public class MavenServerCmdState extends CommandLineState {
     private final Path workingDirectory;
     private final String vmOptions;
     private final Integer debugPort;
+    private final boolean skipTests;
 
     public MavenServerCmdState(@NotNull Sdk jdk, @NotNull Path mavenPath,
                                @Nullable String vmOptions,
-                               @NotNull Path workingDirectory) {
+                               @NotNull Path workingDirectory,
+                               boolean skipTests) {
         super(null);
         this.jdk = jdk;
         this.mavenPath = mavenPath;
         this.workingDirectory = workingDirectory;
         this.vmOptions = vmOptions;
+        this.skipTests = skipTests;
         this.debugPort = getDebugPort();
     }
 
@@ -107,6 +110,9 @@ public class MavenServerCmdState extends CommandLineState {
 
         params.getVMParametersList().addProperty(MAVEN_EXT_CLASS_PATH_PROPERTY, mavenExtClassesJarPathString);
         params.getVMParametersList().addProperty(GMAVEN_HOME, mavenPath.toAbsolutePath().toString());
+        if (skipTests) {
+            params.getVMParametersList().addProperty("skipTests", "true");
+        }
     }
 
     private void processVmOptions(String myVmOptions, SimpleJavaParameters params) {
