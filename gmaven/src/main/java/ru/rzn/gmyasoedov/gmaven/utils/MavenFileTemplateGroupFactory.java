@@ -9,17 +9,11 @@ import static icons.OpenapiIcons.RepositoryLibraryLogo;
 
 public class MavenFileTemplateGroupFactory implements FileTemplateGroupDescriptorFactory {
   public static final String MAVEN_PROJECT_XML_TEMPLATE = "GMavenProject.xml";
-  /*public static final String MAVEN_PROFILES_XML_TEMPLATE = "Maven Profiles.xml";
-  public static final String MAVEN_SETTINGS_XML_TEMPLATE = "Maven Settings.xml";*/
 
   @Override
   public FileTemplateGroupDescriptor getFileTemplatesDescriptor() {
-    FileTemplateGroupDescriptor group = new FileTemplateGroupDescriptor(GMavenConstants.GMAVEN, RepositoryLibraryLogo); //NON-NLS
-
+    FileTemplateGroupDescriptor group = new FileTemplateGroupDescriptor(GMavenConstants.GMAVEN, RepositoryLibraryLogo);
     group.addTemplate(new FileTemplateDescriptor(MAVEN_PROJECT_XML_TEMPLATE, RepositoryLibraryLogo));
-    /*group.addTemplate(new FileTemplateDescriptor(MAVEN_PROFILES_XML_TEMPLATE, RepositoryLibraryLogo));
-    group.addTemplate(new FileTemplateDescriptor(MAVEN_SETTINGS_XML_TEMPLATE, RepositoryLibraryLogo));*/
-
     return group;
   }
 }
