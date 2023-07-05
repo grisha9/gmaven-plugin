@@ -91,7 +91,7 @@ public final class MavenManager //manager
             MavenExecutionSettings result = new MavenExecutionSettings(distributionSettings,
                     projectSettings != null ? projectSettings.getExternalProjectPath() : null,
                     projectSettings != null ? projectSettings.getVmOptions() : null,
-                    projectSettings != null && projectSettings.getOffline());
+                    projectSettings != null && settings.isOfflineMode());
 
             //todo - сделать как в org.jetbrains.plugins.gradle.GradleManager#configureExecutionWorkspace
             String jdkName = projectSettings != null ? projectSettings.getJdkName() : null;
@@ -115,10 +115,13 @@ public final class MavenManager //manager
             if (projectSettings != null) {
                 result.setResolveModulePerSourceSet(projectSettings.getResolveModulePerSourceSet());
                 result.setUseQualifiedModuleNames(projectSettings.isUseQualifiedModuleNames());
+                result.setNonRecursive(projectSettings.getNonRecursive());
+                result.setUpdateSnapshots(projectSettings.getUpdateSnapshots());
+                result.setThreadCount(projectSettings.getThreadCount());
+                result.setOutputLevel(projectSettings.getOutputLevel());
             }
             result.setProjectBuildFile(projectSettings == null ? null : projectSettings.getProjectBuildFile());
             result.setSkipTests(settings.isSkipTests());
-
             addCurrentProfiles(project, projectPath, result);
 
             return result;

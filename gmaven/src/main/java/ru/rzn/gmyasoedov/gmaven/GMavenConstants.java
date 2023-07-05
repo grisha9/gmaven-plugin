@@ -13,7 +13,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNullElse;
 
 public final class GMavenConstants {
-    private static final String BUNDLED_MAVEN_VERSION = "3.9.1";
+    public static final String BUNDLED_MAVEN_VERSION = "3.9.1";
     private static final String BUNDLED_DISTRIBUTION_URL =
             "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/%s/apache-maven-%s-bin.zip";
 

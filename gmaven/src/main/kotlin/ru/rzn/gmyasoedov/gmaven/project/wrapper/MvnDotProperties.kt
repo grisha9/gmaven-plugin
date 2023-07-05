@@ -24,7 +24,7 @@ class MvnDotProperties {
         private fun getWrapperProperties(project: Project, wrapperProperties: VirtualFile): Properties {
             return CachedValuesManager.getManager(project)
                 .getCachedValue(project)
-                { -> CachedValueProvider.Result.create(getWrapperProperties(wrapperProperties), wrapperProperties) }
+                { CachedValueProvider.Result.create(getWrapperProperties(wrapperProperties), wrapperProperties) }
         }
 
         private fun getWrapperPropertiesVFile(projectPath: String): VirtualFile? {

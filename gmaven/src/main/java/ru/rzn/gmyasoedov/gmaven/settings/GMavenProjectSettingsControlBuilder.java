@@ -57,13 +57,10 @@ public interface GMavenProjectSettingsControlBuilder {
    */
   boolean isModified();
 
-  void reset(@Nullable Project project, MavenProjectSettings settings, boolean isDefaultModuleCreation);
-
   default void reset(@Nullable Project project,
                      MavenProjectSettings settings,
                      boolean isDefaultModuleCreation,
                      @Nullable WizardContext wizardContext) {
-    reset(project, settings, isDefaultModuleCreation);
   }
 
   void createAndFillControls(PaintAwarePanel content, int indentLevel);

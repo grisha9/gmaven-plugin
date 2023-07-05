@@ -25,15 +25,13 @@ public class GMavenSettingsControlProvider {
   }
 
   public GMavenSystemSettingsControlBuilder getSystemSettingsControlBuilder(@NotNull MavenSettings initialSettings) {
-    SystemSettingsControlBuilder result = new SystemSettingsControlBuilder(initialSettings);
-    if (initialSettings.getProject().isDefault()) result.dropStoreExternallyCheckBox();
-    return result;
+    return new SystemSettingsControlBuilder(initialSettings);
   }
 
   public ProjectSettingsControlBuilder getProjectSettingsControlBuilder(@NotNull MavenProjectSettings initialSettings) {
-    return new ProjectSettingsControlBuilder(initialSettings)
+    return new ProjectSettingsControlBuilder(initialSettings);
             // Hide bundled distribution option for a while
-            .dropUseBundledDistributionButton();
+            //.dropUseBundledDistributionButton(); todo???
   }
   @NotNull
   public static GMavenSettingsControlProvider get() {

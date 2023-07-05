@@ -7,31 +7,36 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
+import static ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.OutputLevelType.DEFAULT;
+
 public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     private static final long serialVersionUID = 1L;
 
     @NotNull
     private final MavenExecutionWorkspace executionWorkspace = new MavenExecutionWorkspace();
-
     @NotNull
     private final DistributionSettings distributionSettings;
-
     @Nullable
     private final String serviceDirectory;
-    private final boolean offlineWork;
-
     @Nullable
     private String javaHome;
     @Nullable
     private String jdkName;
     @Nullable
     private String myIdeProjectPath;
-    private boolean resolveModulePerSourceSet = false;
-    private boolean useQualifiedModuleNames = false;
     @Nullable
     private String projectBuildFile;
+    @Nullable
+    private String threadCount;
+    private final boolean offlineWork;
+    private boolean resolveModulePerSourceSet = false;
+    private boolean useQualifiedModuleNames = false;
     private boolean skipTests;
+    private boolean  nonRecursive  = false;
+    private boolean  updateSnapshots = false;
+    @NotNull
+    private ProjectSettingsControlBuilder.OutputLevelType outputLevel = DEFAULT;
 
     public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,
                                   @Nullable String serviceDirectory,
@@ -130,6 +135,40 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     public void setSkipTests(boolean skipTests) {
         this.skipTests = skipTests;
+    }
+
+    @Nullable
+    public String getThreadCount() {
+        return threadCount;
+    }
+
+    public void setThreadCount(@Nullable String threadCount) {
+        this.threadCount = threadCount;
+    }
+
+    public boolean isNonRecursive() {
+        return nonRecursive;
+    }
+
+    public void setNonRecursive(boolean nonRecursive) {
+        this.nonRecursive = nonRecursive;
+    }
+
+    public boolean isUpdateSnapshots() {
+        return updateSnapshots;
+    }
+
+    public void setUpdateSnapshots(boolean updateSnapshots) {
+        this.updateSnapshots = updateSnapshots;
+    }
+
+    @NotNull
+    public ProjectSettingsControlBuilder.OutputLevelType getOutputLevel() {
+        return outputLevel;
+    }
+
+    public void setOutputLevel(@NotNull ProjectSettingsControlBuilder.OutputLevelType outputLevel) {
+        this.outputLevel = outputLevel;
     }
 
     @Override
