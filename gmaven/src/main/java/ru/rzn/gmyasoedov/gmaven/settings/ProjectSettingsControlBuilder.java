@@ -216,6 +216,7 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
                     ? current : new DistributionSettings(CUSTOM, null, null);
             mavenHomeCombobox.addItem(new DistributionSettingsComboBoxItem(customDistribution));
             mavenHomeCombobox.setItem(new DistributionSettingsComboBoxItem(current));
+            setupMavenHomeHintAndCustom(current);
         }
         /*if (jdkComboBoxWrapper != null) {
             ProjectSdksModel sdksModel = new ProjectSdksModel();
@@ -345,6 +346,11 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     private void setupMavenHomeHintAndCustom(DistributionSettings value) {
         if (mavenCustomPathField != null && value != null) {
             mavenCustomPathField.setVisible(value.getType() == CUSTOM);
+            if (value.getType() == CUSTOM) {
+                mavenCustomPathField.setText(value.getPath().toString());
+            } else {
+                mavenCustomPathField.setText(null);
+            }
         }
         if (wrapperHintLabel != null && value != null) {
             wrapperHintLabel.setVisible(value.getType() != CUSTOM);

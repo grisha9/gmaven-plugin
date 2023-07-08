@@ -11,10 +11,8 @@ data class GServerRequest(
     val projectPath: Path,
     val mavenPath: Path,
     val sdk: Sdk,
-    val vmOptions: String = "",
-    val nonRecursion: Boolean = false,
+    val settings: MavenExecutionSettings,
     val installGMavenPlugin: Boolean = false,
     val listener: ExternalSystemTaskNotificationListener? = null,
-    val settings: MavenExecutionSettings? = null
 )
 

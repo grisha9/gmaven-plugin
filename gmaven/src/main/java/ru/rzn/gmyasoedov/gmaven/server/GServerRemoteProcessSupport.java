@@ -45,7 +45,8 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
         super(GMavenServer.class);
         this.id = request.getTaskId();
         this.jdk = request.getSdk();
-        this.vmOptions = requireNonNullElse(getJvmConfig(request.getProjectPath()), "") + request.getVmOptions();
+        this.vmOptions = requireNonNullElse(getJvmConfig(request.getProjectPath()), "") +
+                requireNonNullElse(request.getSettings().getVmOptions(), "");
         this.mavenPath = request.getMavenPath();
 
         this.workingDirectory = request.getProjectPath().toFile().isDirectory()

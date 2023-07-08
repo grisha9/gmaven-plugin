@@ -89,9 +89,9 @@ public final class MavenManager //manager
                     ? projectSettings.getDistributionSettings() : DistributionSettings.getBundled();
 
             MavenExecutionSettings result = new MavenExecutionSettings(distributionSettings,
-                    projectSettings != null ? projectSettings.getExternalProjectPath() : null,
                     projectSettings != null ? projectSettings.getVmOptions() : null,
-                    projectSettings != null && settings.isOfflineMode());
+                    projectSettings != null && projectSettings.getNonRecursive(),
+                    settings.isOfflineMode());
 
             //todo - сделать как в org.jetbrains.plugins.gradle.GradleManager#configureExecutionWorkspace
             String jdkName = projectSettings != null ? projectSettings.getJdkName() : null;

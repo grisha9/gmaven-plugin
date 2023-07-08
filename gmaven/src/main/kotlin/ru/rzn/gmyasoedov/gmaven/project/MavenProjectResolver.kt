@@ -75,7 +75,8 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val projectDataNode = getPreviewProjectDataNode(projectPath, settings)
         if (sdk != null && settings.distributionSettings.path != null) {
             val buildPath = Path.of(settings.projectBuildFile ?: projectPath)
-            val request = GServerRequest(id, buildPath, settings.distributionSettings.path!!, sdk, listener = listener)
+            val request =
+                GServerRequest(id, buildPath, settings.distributionSettings.path!!, sdk, settings, listener = listener)
             firstRun(request)
         }
         return projectDataNode;
@@ -145,22 +146,19 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         projectNode: DataNode<ProjectData>,
         moduleDataByArtifactId: Map<String, DataNode<ModuleData>>
     ) {
-        addDependencies(container.project, projectNode, moduleDataByArtifactId)
+        addDependencies(container.project, moduleDataByArtifactId)
         for (childContainer in container.modules) {
             addDependencies(childContainer, projectNode, moduleDataByArtifactId)
         }
     }
 
-    private fun addDependencies(
-        project: MavenProject, projectNode: DataNode<ProjectData>,
-        moduleDataByArtifactId: Map<String, DataNode<ModuleData>>
-    ) {
+    private fun addDependencies(project: MavenProject, moduleDataByArtifactId: Map<String, DataNode<ModuleData>>) {
         val moduleByMavenProject = moduleDataByArtifactId[project.id]!!
         var hasLibrary = false;
         for (artifact in project.resolvedArtifacts) {
             val moduleDataNodeByMavenArtifact = moduleDataByArtifactId[artifact.id]
             if (moduleDataNodeByMavenArtifact == null) {
-                addLibrary(moduleByMavenProject, projectNode, artifact)
+                addLibrary(moduleByMavenProject, artifact)
                 if (!hasLibrary) hasLibrary = true
             } else {
                 addModuleDependency(moduleByMavenProject, moduleDataNodeByMavenArtifact.data)
@@ -311,10 +309,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         }
     }
 
-    private fun addLibrary(
-        parentNode: DataNode<ModuleData>, projectNode: DataNode<ProjectData>,
-        artifact: MavenArtifact
-    ) {
+    private fun addLibrary(parentNode: DataNode<ModuleData>, artifact: MavenArtifact) {
         val createLibrary = createLibrary(artifact)
         val libraryDependencyData = LibraryDependencyData(parentNode.data, createLibrary, LibraryLevel.PROJECT)
         libraryDependencyData.scope = getScope(artifact)

@@ -18,7 +18,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     @NotNull
     private final DistributionSettings distributionSettings;
     @Nullable
-    private final String serviceDirectory;
+    private final String vmOptions;
     @Nullable
     private String javaHome;
     @Nullable
@@ -39,23 +39,23 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private ProjectSettingsControlBuilder.OutputLevelType outputLevel = DEFAULT;
 
     public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,
-                                  @Nullable String serviceDirectory,
                                   boolean isOfflineWork) {
         this.distributionSettings = Objects.requireNonNull(distributionSettings);
-        this.serviceDirectory = serviceDirectory;
         this.offlineWork = isOfflineWork;
+        this.vmOptions = null;
     }
 
     public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,
-                                  @Nullable String serviceDirectory,
-                                  @Nullable String daemonVmOptions,
-                                  boolean isOfflineWork) {
+                                  @Nullable String vmOptions,
+                                  boolean nonRecursive,
+                                  boolean offlineWork) {
         this.distributionSettings = Objects.requireNonNull(distributionSettings);
-        this.serviceDirectory = serviceDirectory;
-        if (daemonVmOptions != null) {
-            withVmOptions(ParametersListUtil.parse(daemonVmOptions));
+        this.vmOptions = vmOptions;
+        if (vmOptions != null) {
+            withVmOptions(ParametersListUtil.parse(vmOptions));
         }
-        offlineWork = isOfflineWork;
+        this.nonRecursive = nonRecursive;
+        this.offlineWork = offlineWork;
     }
 
     public void setIdeProjectPath(@Nullable String ideProjectPath) {
@@ -70,11 +70,6 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     @NotNull
     public DistributionSettings getDistributionSettings() {
         return distributionSettings;
-    }
-
-    @Nullable
-    public String getServiceDirectory() {
-        return serviceDirectory;
     }
 
     @Nullable
@@ -162,6 +157,10 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         this.updateSnapshots = updateSnapshots;
     }
 
+    public String getVmOptions() {
+        return vmOptions;
+    }
+
     @NotNull
     public ProjectSettingsControlBuilder.OutputLevelType getOutputLevel() {
         return outputLevel;
@@ -185,7 +184,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         if (skipTests != that.skipTests) return false;
         if (!executionWorkspace.equals(that.executionWorkspace)) return false;
         if (!distributionSettings.equals(that.distributionSettings)) return false;
-        if (!Objects.equals(serviceDirectory, that.serviceDirectory))
+        if (!Objects.equals(vmOptions, that.vmOptions))
             return false;
         if (!Objects.equals(javaHome, that.javaHome)) return false;
         if (!Objects.equals(jdkName, that.jdkName)) return false;
@@ -199,7 +198,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         int result = super.hashCode();
         result = 31 * result + executionWorkspace.hashCode();
         result = 31 * result + distributionSettings.hashCode();
-        result = 31 * result + (serviceDirectory != null ? serviceDirectory.hashCode() : 0);
+        result = 31 * result + (vmOptions != null ? vmOptions.hashCode() : 0);
         result = 31 * result + (offlineWork ? 1 : 0);
         result = 31 * result + (javaHome != null ? javaHome.hashCode() : 0);
         result = 31 * result + (jdkName != null ? jdkName.hashCode() : 0);

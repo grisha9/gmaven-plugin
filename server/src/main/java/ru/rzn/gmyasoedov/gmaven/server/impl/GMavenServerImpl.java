@@ -57,6 +57,19 @@ public class GMavenServerImpl implements GMavenServer {
             mvnArgs.add("-P");
             mvnArgs.add(request.profiles);
         }
+        if (!StringUtilRt.isEmpty(request.threadCount)) {
+            mvnArgs.add("-T");
+            mvnArgs.add(request.threadCount);
+        }
+        if (request.quiteLogs) {
+            mvnArgs.add("-q");
+        }
+        if (request.debugLog) {
+            mvnArgs.add("-X");
+        }
+        if (request.updateSnapshots) {
+            mvnArgs.add("-U");
+        }
         if (!StringUtilRt.isEmpty(request.analyzerGA)) {
             mvnArgs.add("-pl");
             mvnArgs.add(request.analyzerGA);

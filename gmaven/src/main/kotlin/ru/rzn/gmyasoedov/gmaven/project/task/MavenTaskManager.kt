@@ -28,7 +28,7 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         val mavenHome = getMavenHome(settings.distributionSettings)
 
         val buildPath = Path.of(settings.projectBuildFile ?: projectPath)
-        val request = GServerRequest(id, buildPath, mavenHome, sdk, listener = listener, settings = settings)
+        val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
         val mavenResult = runTasks(request, taskNames);
         if (!ContainerUtil.isEmpty(mavenResult.exceptions)) {
             throw ExternalSystemException()

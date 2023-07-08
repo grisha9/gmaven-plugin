@@ -21,6 +21,7 @@ import com.intellij.openapi.util.text.StringUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.getDependencyTree
+import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
@@ -86,7 +87,8 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
         val sdk = settings.jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) } ?: return null
         val id = ExternalSystemTaskId.create(GMavenConstants.SYSTEM_ID, ExternalSystemTaskType.EXECUTE_TASK, project)
         val buildPath = Path.of(settings.projectBuildFile ?: settings.externalProjectPath)
-        return GServerRequest(id, buildPath, mavenPath, sdk)
+        val executionSettings = MavenExecutionSettings(settings.distributionSettings, settings.vmOptions, false, true)
+        return GServerRequest(id, buildPath, mavenPath, sdk, executionSettings)
     }
 
     private fun getModuleMap(): Map<String, Pair<DAProject, ModuleData>> {

@@ -6,6 +6,7 @@ import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.util.PathUtil
 import com.intellij.util.io.isDirectory
+import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.serverapi.model.DependencyTreeNode
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
@@ -17,7 +18,7 @@ fun firstRun(gServerRequest: GServerRequest): MavenResult {
         gServerRequest.projectPath,
         gServerRequest.mavenPath,
         gServerRequest.sdk,
-        nonRecursion = true,
+        gServerRequest.settings,
         installGMavenPlugin = true
     )
     val modelRequest = getModelRequest(request)
@@ -76,7 +77,8 @@ fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<
         gServerRequest.taskId,
         gServerRequest.projectPath,
         gServerRequest.mavenPath,
-        gServerRequest.sdk
+        gServerRequest.sdk,
+        gServerRequest.settings
     )
     val modelRequest = getModelRequest(request)
     modelRequest.analyzerGA = artifactGA
@@ -104,15 +106,19 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
     val modelRequest = GetModelRequest()
     modelRequest.projectPath = projectDirectory.toString()
     modelRequest.alternativePom = if (directory) null else projectPath.toString()
-    modelRequest.nonRecursion = request.nonRecursion
+    modelRequest.nonRecursion = request.settings.isNonRecursive
+    modelRequest.updateSnapshots = request.settings.isUpdateSnapshots
+    modelRequest.offline = request.settings.isOfflineWork
+    modelRequest.threadCount = request.settings.threadCount
+    modelRequest.quiteLogs = request.settings.outputLevel == ProjectSettingsControlBuilder.OutputLevelType.QUITE
+    modelRequest.debugLog = request.settings.outputLevel == ProjectSettingsControlBuilder.OutputLevelType.DEBUG
     if (request.installGMavenPlugin) {
         val clazz = Class.forName("ru.rzn.gmyasoedov.model.reader.DependencyCoordinate")
         modelRequest.gMavenPluginPath = PathUtil.getJarPathForClass(clazz)
+        modelRequest.nonRecursion = true
     }
-    if (request.settings != null) {
-        modelRequest.profiles = request.settings.executionWorkspace.profilesData.asSequence()
-            .map { it.toRawName() }
-            .joinToString(separator = ",")
-    }
+    modelRequest.profiles = request.settings.executionWorkspace.profilesData.asSequence()
+        .map { it.toRawName() }
+        .joinToString(separator = ",")
     return modelRequest;
 }

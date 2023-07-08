@@ -94,10 +94,10 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
     @Override
     protected void checkSettings(@NotNull MavenProjectSettings old, @NotNull MavenProjectSettings current) {
         if (!Objects.equals(old.getDistributionSettings(), current.getDistributionSettings())) {
-            getPublisher().onMavenHomeChange(
+            /*getPublisher().onMavenHomeChange(
                     old.getDistributionSettings().getPath().toString(), //todo
                     current.getDistributionSettings().getPath().toString(),
-                    current.getExternalProjectPath());
+                    current.getExternalProjectPath());*/
         }
         /*if (old.getDistributionType() != current.getDistributionType()) {
             getPublisher().onGradleDistributionTypeChange(current.getDistributionType(), current.getExternalProjectPath());
