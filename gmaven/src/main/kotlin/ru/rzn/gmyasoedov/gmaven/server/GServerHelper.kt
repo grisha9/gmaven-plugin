@@ -46,7 +46,7 @@ fun getProjectModel(request: GServerRequest): MavenResult {
         return projectModel
     } catch (e: Exception) {
         MavenLog.LOG.error(e)
-        throw RuntimeException(e)
+        throw ExternalSystemException("Error on getting project model")
     } finally {
         processSupport.stopAll()
     }

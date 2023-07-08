@@ -26,6 +26,7 @@
     </extensionPoints>
     <extensions defaultExtensionNs="ru.rzn.gmyasoedov.gmaven">
         <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin"/>
+        <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.BuildHelperMavenPlugin"/>
     </extensions>
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->

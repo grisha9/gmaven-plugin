@@ -79,7 +79,7 @@ public class MavenServerCmdState extends CommandLineState {
         for (MavenFullImportPlugin plugin : extensionList) {
             pluginsForImport.add(plugin.getKey());
             String annotationPath = plugin instanceof MavenCompilerFullImportPlugin
-                    ? ((MavenCompilerFullImportPlugin) plugin).getAnnotationProcessorPath() : null;
+                    ? ((MavenCompilerFullImportPlugin) plugin).getAnnotationProcessorTagName() : null;
             if (StringUtilRt.isEmpty(annotationPath)) continue;
 
             params.getVMParametersList()

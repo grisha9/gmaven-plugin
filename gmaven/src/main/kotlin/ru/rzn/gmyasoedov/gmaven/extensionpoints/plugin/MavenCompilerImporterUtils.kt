@@ -20,6 +20,14 @@ fun collectCompilerArgs(mavenProject: MavenProject, pluginConfiguration: Element
 
     if (pluginConfiguration == null) return options;
 
+    val procElement = pluginConfiguration.getChild("proc")
+    procElement?.value?.also {
+        when (it) {
+            "none" -> options += "-proc:none"
+            "only" -> options += "-proc:only"
+        }
+    }
+
     val compilerArguments = pluginConfiguration.getChild("compilerArguments")
     if (compilerArguments != null) {
         val unresolvedArgs = mutableSetOf<String>()

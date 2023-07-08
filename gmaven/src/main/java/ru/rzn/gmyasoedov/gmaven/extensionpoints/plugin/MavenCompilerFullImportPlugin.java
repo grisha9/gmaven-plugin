@@ -18,6 +18,6 @@ public interface MavenCompilerFullImportPlugin extends MavenFullImportPlugin {
                                  @Nonnull Map<String, Element> contextElementMap);
 
     @Nullable
-    String getAnnotationProcessorPath();
+    String getAnnotationProcessorTagName();
 
 }

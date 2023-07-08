@@ -222,6 +222,8 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
                 targetBytecodeLevel.toJavaVersion().toFeatureString()
             )
         )
+
+        applyPlugins(project, moduleDataNode)
         populateAnnotationProcessorData(project, moduleDataNode, compilerData)
         populateTasks(moduleDataNode, project, context.mavenResult.settings.localRepository?.let { Path.of(it) })
         if (parentDataNode.data is ModuleData) {
@@ -301,12 +303,6 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         return if (data is ModuleData) {
             if (external) data.externalName else data.internalName
         } else null
-    }
-
-    private fun storePath(paths: List<String>, contentRootData: ContentRootData, type: ExternalSystemSourceType) {
-        for (path in paths) {
-            contentRootData.storePath(type, path)
-        }
     }
 
     private fun addLibrary(parentNode: DataNode<ModuleData>, artifact: MavenArtifact) {

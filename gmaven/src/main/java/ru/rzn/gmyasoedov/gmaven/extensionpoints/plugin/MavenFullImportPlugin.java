@@ -1,7 +1,11 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin;
 
 import com.intellij.openapi.extensions.ExtensionPointName;
+import com.intellij.openapi.externalSystem.model.DataNode;
+import com.intellij.openapi.externalSystem.model.project.ModuleData;
+import org.jetbrains.annotations.NotNull;
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
+import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
 import javax.annotation.Nonnull;
 
@@ -23,4 +27,8 @@ public interface MavenFullImportPlugin {
         return getArtifactId().equals(plugin.getArtifactId()) && getGroupId().equals(plugin.getGroupId());
     }
 
+    default void populateModuleData(@NotNull MavenProject project,
+                                    @NotNull MavenPlugin plugin,
+                                    @NotNull DataNode<ModuleData> dataNode) {
+    }
 }

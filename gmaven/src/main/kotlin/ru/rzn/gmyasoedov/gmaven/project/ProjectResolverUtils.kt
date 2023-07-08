@@ -3,6 +3,8 @@ package ru.rzn.gmyasoedov.gmaven.project
 import com.intellij.externalSystem.MavenRepositoryData
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
+import com.intellij.openapi.externalSystem.model.project.ContentRootData
+import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.model.project.ProjectData
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
@@ -46,6 +48,22 @@ fun getCompilerData(mavenProject: MavenProject, context: MavenProjectResolver.Pr
         }
     }
     return CompilerData(projectLanguageLevel, emptyList(), emptyList())
+}
+
+fun storePath(paths: List<String>, contentRootData: ContentRootData, type: ExternalSystemSourceType) {
+    for (path in paths) {
+        contentRootData.storePath(type, path)
+    }
+}
+
+fun applyPlugins(mavenProject: MavenProject, moduleData: DataNode<ModuleData>) {
+    for (plugin in mavenProject.plugins) {
+        for (pluginExtension in MavenFullImportPlugin.EP_NAME.extensionList) {
+            if (pluginExtension.isApplicable(plugin)) {
+                pluginExtension.populateModuleData(mavenProject, plugin, moduleData)
+            }
+        }
+    }
 }
 
 fun populateTasks(moduleDataNode: DataNode<ModuleData>, mavenProject: MavenProject, localRepo: Path?) {

@@ -1,5 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven.utils;
 
+import com.intellij.openapi.util.JDOMUtil;
 import org.jdom.Element;
 import org.jetbrains.annotations.Nullable;
 
@@ -8,6 +9,15 @@ import java.util.Collections;
 import java.util.List;
 
 public final class MavenJDOMUtil {
+
+    public static Element parseConfiguration(String it) {
+        try {
+            return JDOMUtil.load(it);
+        } catch (Exception e) {
+            MavenLog.LOG.error(e);
+            return new Element("empty");
+        }
+    }
 
     @Nullable
     public static Element findChildByPath(@Nullable Element element, String path) {

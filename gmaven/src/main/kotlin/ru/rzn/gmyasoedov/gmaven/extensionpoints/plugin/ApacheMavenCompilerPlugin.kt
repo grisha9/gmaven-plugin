@@ -1,11 +1,11 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
-import com.intellij.openapi.util.JDOMUtil
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.pom.java.LanguageLevel
 import com.jetbrains.rd.util.getOrCreate
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
+import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
@@ -18,7 +18,7 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
 
     override fun getArtifactId() = "maven-compiler-plugin"
 
-    override fun getAnnotationProcessorPath() = "annotationProcessorPaths"
+    override fun getAnnotationProcessorTagName() = "annotationProcessorPaths"
 
     override fun getCompilerData(
         project: MavenProject,
@@ -141,16 +141,7 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
     }
 
     private fun getElement(body: String, contextElementMap: MutableMap<String, Element>): Element {
-        return contextElementMap.getOrCreate(body) { parseConfiguration(it) }
-    }
-
-    private fun parseConfiguration(it: String): Element {
-        try {
-            return JDOMUtil.load(it)
-        } catch (e: Exception) {
-            MavenLog.LOG.error(e)
-            return Element("empty")
-        }
+        return contextElementMap.getOrCreate(body) { MavenJDOMUtil.parseConfiguration(it) }
     }
 
 
