@@ -34,7 +34,7 @@ fun setupMavenJvm(project: Project, projectSettings: MavenProjectSettings) {
              * This code allows to avoid some irregular conflicts
              * For example: strange duplications in SdkComboBox or unexpected modifications of gradleJvm
              */
-            val fakeSdk = sdk?.let(::findRegisteredSdk)
+          //  val fakeSdk = sdk?.let(::findRegisteredSdk)
             /*if (fakeSdk != null && projectSettings.jdkPath == null) {
                 projectSettings.jdkPath = fakeSdk.name
             }*/
@@ -47,7 +47,7 @@ fun setupMavenJvm(project: Project, projectSettings: MavenProjectSettings) {
         .executeLookup()
 }
 
-private fun findRegisteredSdk(sdk: Sdk): Sdk? = runReadAction {
+/*private fun findRegisteredSdk(sdk: Sdk): Sdk? = runReadAction {
     val projectJdkTable = ProjectJdkTable.getInstance()
     projectJdkTable.findJdk(sdk.name, sdk.sdkType.name)
-}
+}*/

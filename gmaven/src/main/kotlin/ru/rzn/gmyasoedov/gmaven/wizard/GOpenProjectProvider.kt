@@ -59,7 +59,7 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         return object : ExternalProjectRefreshCallback {
             override fun onSuccess(externalProject: DataNode<ProjectData>?) {
                 if (externalProject == null) return
-                ProjectDataManager.getInstance().importData(externalProject, project, false)
+                ProjectDataManager.getInstance().importData(externalProject, project)
                 updateMavenSettings(project, externalProjectPath)
             }
         }

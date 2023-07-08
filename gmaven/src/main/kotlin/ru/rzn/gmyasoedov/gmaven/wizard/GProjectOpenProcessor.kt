@@ -1,5 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven.wizard
 
+import com.intellij.ide.impl.runUnderModalProgressIfIsEdt
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.projectImport.ProjectOpenProcessor
@@ -10,15 +11,16 @@ import javax.swing.Icon
 internal class GProjectOpenProcessor : ProjectOpenProcessor() {
   private val importProvider = GOpenProjectProvider()
 
-  override fun getName(): String = GMavenConstants.GMAVEN
-
-  override fun getIcon(): Icon = OpenapiIcons.RepositoryLibraryLogo
 
   override fun canOpenProject(file: VirtualFile): Boolean = importProvider.canOpenProject(file)
 
   override fun doOpenProject(projectFile: VirtualFile, projectToClose: Project?, forceOpenInNewFrame: Boolean): Project? {
-    return importProvider.openProject(projectFile, projectToClose, forceOpenInNewFrame)
+    return runUnderModalProgressIfIsEdt {importProvider.openProject(projectFile, projectToClose, forceOpenInNewFrame)}
   }
+
+  override val name = GMavenConstants.GMAVEN
+
+  override val icon = OpenapiIcons.RepositoryLibraryLogo
 
   override fun canImportProjectAfterwards(): Boolean = true
 

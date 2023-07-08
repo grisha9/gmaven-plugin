@@ -9,12 +9,11 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 
 class MavenDependencyAnalyzerExtension : DependencyAnalyzerExtension {
 
-    override fun createContributor(
-        project: Project,
-        systemId: ProjectSystemId,
-        parentDisposable: Disposable
-    ): DependencyAnalyzerContributor? {
-        if (systemId != GMavenConstants.SYSTEM_ID) return null
+    override fun createContributor(project: Project, parentDisposable: Disposable): DependencyAnalyzerContributor {
         return GDependencyAnalyzerContributor(project)
+    }
+
+    override fun isApplicable(systemId: ProjectSystemId): Boolean {
+        return systemId == GMavenConstants.SYSTEM_ID
     }
 }
