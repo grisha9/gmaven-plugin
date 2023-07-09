@@ -14,8 +14,8 @@ internal class GProjectOpenProcessor : ProjectOpenProcessor() {
 
   override fun canOpenProject(file: VirtualFile): Boolean = importProvider.canOpenProject(file)
 
-  override fun doOpenProject(projectFile: VirtualFile, projectToClose: Project?, forceOpenInNewFrame: Boolean): Project? {
-    return runUnderModalProgressIfIsEdt {importProvider.openProject(projectFile, projectToClose, forceOpenInNewFrame)}
+  override fun doOpenProject(virtualFile: VirtualFile, projectToClose: Project?, forceOpenInNewFrame: Boolean): Project? {
+    return runUnderModalProgressIfIsEdt {importProvider.openProject(virtualFile, projectToClose, forceOpenInNewFrame)}
   }
 
   override val name = GMavenConstants.GMAVEN

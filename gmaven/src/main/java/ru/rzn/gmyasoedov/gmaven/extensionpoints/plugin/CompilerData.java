@@ -1,8 +1,8 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin;
 
 import com.intellij.pom.java.LanguageLevel;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -14,12 +14,12 @@ public class CompilerData {
     private final Collection<String> annotationProcessorPaths;
     private final Collection<String> arguments;
 
-    public CompilerData(@Nonnull LanguageLevel sourceLevel,
-                        @Nonnull LanguageLevel targetLevel,
-                        @Nonnull LanguageLevel testSourceLevel,
-                        @Nonnull LanguageLevel testTargetLevel,
-                        @Nonnull Collection<String> annotationProcessorPaths,
-                        @Nonnull Collection<String> arguments) {
+    public CompilerData(@NotNull LanguageLevel sourceLevel,
+                        @NotNull LanguageLevel targetLevel,
+                        @NotNull LanguageLevel testSourceLevel,
+                        @NotNull LanguageLevel testTargetLevel,
+                        @NotNull Collection<String> annotationProcessorPaths,
+                        @NotNull Collection<String> arguments) {
         this.sourceLevel = Objects.requireNonNull(sourceLevel);
         this.targetLevel = Objects.requireNonNull(targetLevel);
         this.testSourceLevel = Objects.requireNonNull(testSourceLevel);
@@ -28,38 +28,38 @@ public class CompilerData {
         this.arguments = Objects.requireNonNull(arguments);
     }
 
-    public CompilerData(@Nonnull LanguageLevel defaultLevel,
-                        @Nonnull Collection<String> annotationProcessorPaths,
-                        @Nonnull Collection<String> arguments) {
+    public CompilerData(@NotNull LanguageLevel defaultLevel,
+                        @NotNull Collection<String> annotationProcessorPaths,
+                        @NotNull Collection<String> arguments) {
         this(defaultLevel, defaultLevel, defaultLevel, defaultLevel, annotationProcessorPaths, arguments);
     }
 
-    @Nonnull
+    @NotNull
     public LanguageLevel getSourceLevel() {
         return sourceLevel;
     }
 
-    @Nonnull
+    @NotNull
     public LanguageLevel getTargetLevel() {
         return targetLevel;
     }
 
-    @Nonnull
+    @NotNull
     public LanguageLevel getTestSourceLevel() {
         return testSourceLevel;
     }
 
-    @Nonnull
+    @NotNull
     public LanguageLevel getTestTargetLevel() {
         return testTargetLevel;
     }
 
-    @Nonnull
+    @NotNull
     public Collection<String> getAnnotationProcessorPaths() {
         return annotationProcessorPaths;
     }
 
-    @Nonnull
+    @NotNull
     public Collection<String> getArguments() {
         return arguments;
     }

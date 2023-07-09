@@ -7,23 +7,21 @@ import org.jetbrains.annotations.NotNull;
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
-import javax.annotation.Nonnull;
-
 public interface MavenFullImportPlugin {
     ExtensionPointName<MavenFullImportPlugin> EP_NAME =
             ExtensionPointName.create("ru.rzn.gmyasoedov.gmaven.import.full.plugin");
 
-    @Nonnull
+    @NotNull
     String getGroupId();
 
-    @Nonnull
+    @NotNull
     String getArtifactId();
 
     default String getKey() {
         return getGroupId() + ":" + getArtifactId();
     }
 
-    default boolean isApplicable(@Nonnull MavenPlugin plugin) {
+    default boolean isApplicable(@NotNull MavenPlugin plugin) {
         return getArtifactId().equals(plugin.getArtifactId()) && getGroupId().equals(plugin.getGroupId());
     }
 

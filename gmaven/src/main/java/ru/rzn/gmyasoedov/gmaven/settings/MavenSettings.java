@@ -34,10 +34,6 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
         return project.getService(MavenSettings.class);
     }
 
-    @Override
-    public void subscribe(@NotNull ExternalSystemSettingsListener<MavenProjectSettings> listener) {
-        doSubscribe(new DelegatingMavenSettingsListenerAdapter(listener), getProject());
-    }
 
     @Override
     public void subscribe(@NotNull ExternalSystemSettingsListener<MavenProjectSettings> listener,
