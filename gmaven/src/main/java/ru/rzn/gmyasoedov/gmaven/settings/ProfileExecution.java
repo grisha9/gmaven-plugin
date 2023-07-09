@@ -3,9 +3,11 @@ package ru.rzn.gmyasoedov.gmaven.settings;
 import com.intellij.util.xmlb.annotations.Transient;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class ProfileExecution implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
     @NotNull
     private String name;

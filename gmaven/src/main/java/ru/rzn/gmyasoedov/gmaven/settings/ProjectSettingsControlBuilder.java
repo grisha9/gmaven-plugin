@@ -32,7 +32,11 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 import javax.swing.*;
 import java.awt.*;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.intellij.openapi.externalSystem.util.ExternalSystemUiUtil.getLabelConstraints;
@@ -54,6 +58,8 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     private JBCheckBox nonRecursiveCheckBox;
     @Nullable
     private JBCheckBox updateSnapshotsCheckBox;
+    @Nullable
+    private JBCheckBox useWholeProjectContextCheckBox;
     @Nullable
     private JTextField threadCountField;
     @Nullable
@@ -107,6 +113,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         if (updateSnapshotsCheckBox != null) {
             settings.setUpdateSnapshots(updateSnapshotsCheckBox.isSelected());
         }
+        if (useWholeProjectContextCheckBox != null) {
+            settings.setUseWholeProjectContext(useWholeProjectContextCheckBox.isSelected());
+        }
         if (threadCountField != null) {
             settings.setThreadCount(threadCountField.getText());
         }
@@ -133,6 +142,10 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         }
         if (updateSnapshotsCheckBox != null
                 && updateSnapshotsCheckBox.isSelected() != projectSettings.getUpdateSnapshots()) {
+            return true;
+        }
+        if (useWholeProjectContextCheckBox != null
+                && useWholeProjectContextCheckBox.isSelected() != projectSettings.getUseWholeProjectContext()) {
             return true;
         }
         if (threadCountField != null && !Objects.equals(
@@ -174,6 +187,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         }
         if (updateSnapshotsCheckBox != null) {
             updateSnapshotsCheckBox.setSelected(projectSettings.getUpdateSnapshots());
+        }
+        if (useWholeProjectContextCheckBox != null) {
+            useWholeProjectContextCheckBox.setSelected(projectSettings.getUseWholeProjectContext());
         }
         if (threadCountField != null) {
             threadCountField.setText(projectSettings.getThreadCount());
@@ -241,6 +257,10 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
 
         updateSnapshotsCheckBox = new JBCheckBox(message("gmaven.settings.project.update"));
         content.add(updateSnapshotsCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+
+        useWholeProjectContextCheckBox = new JBCheckBox(message("gmaven.settings.project.task.context"));
+        useWholeProjectContextCheckBox.setToolTipText(message("gmaven.settings.project.task.context.tooltip"));
+        content.add(useWholeProjectContextCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
 
         outPutLevelCombobox = setupOutputLevelComboBox();
         JBLabel outputLevelLabel = new JBLabel(message("gmaven.settings.project.output.level"));

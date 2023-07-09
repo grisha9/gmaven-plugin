@@ -75,7 +75,12 @@ public class GMavenServerImpl implements GMavenServer {
             mvnArgs.add(request.analyzerGA);
             mvnArgs.add("-Daether.conflictResolver.verbose=true");
             mvnArgs.add("-Daether.dependencyManager.verbose=true");
-            //mvnArgs.add("-amd"); mvnArgs.add( "-am");
+        }
+        if (!StringUtilRt.isEmpty(request.taskGA)) {
+            mvnArgs.add("-pl");
+            mvnArgs.add(request.taskGA);
+            mvnArgs.add( "-am");
+            mvnArgs.add( "-amd");
         }
         //[ru.rzn.gmyasoedov:model-reader:1.0-SNAPSHOT:resolve, -pl, org.example:untitled4, -Daether.conflictResolver.verbose=true, -Daether.dependencyManager.verbose=true, -amd, -am]
         return mvnArgs.toArray(new String[0]);

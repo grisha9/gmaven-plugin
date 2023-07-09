@@ -5,12 +5,14 @@ import com.intellij.util.execution.ParametersListUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Serial;
 import java.util.Objects;
 
 import static ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.OutputLevelType.DEFAULT;
 
 public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @NotNull
@@ -28,22 +30,17 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     @Nullable
     private String projectBuildFile;
     @Nullable
+    private String subProjectBuildFile;
+    @Nullable
     private String threadCount;
     private final boolean offlineWork;
     private boolean resolveModulePerSourceSet = false;
     private boolean useQualifiedModuleNames = false;
     private boolean skipTests;
-    private boolean  nonRecursive  = false;
-    private boolean  updateSnapshots = false;
+    private boolean nonRecursive = false;
+    private boolean updateSnapshots = false;
     @NotNull
     private ProjectSettingsControlBuilder.OutputLevelType outputLevel = DEFAULT;
-
-    public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,
-                                  boolean isOfflineWork) {
-        this.distributionSettings = Objects.requireNonNull(distributionSettings);
-        this.offlineWork = isOfflineWork;
-        this.vmOptions = null;
-    }
 
     public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,
                                   @Nullable String vmOptions,
@@ -157,6 +154,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         this.updateSnapshots = updateSnapshots;
     }
 
+    @Nullable
     public String getVmOptions() {
         return vmOptions;
     }
@@ -168,6 +166,15 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     public void setOutputLevel(@NotNull ProjectSettingsControlBuilder.OutputLevelType outputLevel) {
         this.outputLevel = outputLevel;
+    }
+
+    @Nullable
+    public String getSubProjectBuildFile() {
+        return subProjectBuildFile;
+    }
+
+    public void setSubProjectBuildFile(@Nullable String subProjectBuildFile) {
+        this.subProjectBuildFile = subProjectBuildFile;
     }
 
     @Override
@@ -188,8 +195,8 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
             return false;
         if (!Objects.equals(javaHome, that.javaHome)) return false;
         if (!Objects.equals(jdkName, that.jdkName)) return false;
-        if (!Objects.equals(myIdeProjectPath, that.myIdeProjectPath))
-            return false;
+        if (!Objects.equals(subProjectBuildFile, that.subProjectBuildFile)) return false;
+        if (!Objects.equals(myIdeProjectPath, that.myIdeProjectPath)) return false;
         return Objects.equals(projectBuildFile, that.projectBuildFile);
     }
 
@@ -206,6 +213,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         result = 31 * result + (resolveModulePerSourceSet ? 1 : 0);
         result = 31 * result + (useQualifiedModuleNames ? 1 : 0);
         result = 31 * result + (projectBuildFile != null ? projectBuildFile.hashCode() : 0);
+        result = 31 * result + (subProjectBuildFile != null ? subProjectBuildFile.hashCode() : 0);
         result = 31 * result + (skipTests ? 1 : 0);
         return result;
     }

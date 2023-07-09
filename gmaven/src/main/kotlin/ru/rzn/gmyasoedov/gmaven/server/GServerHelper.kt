@@ -52,7 +52,7 @@ fun getProjectModel(request: GServerRequest): MavenResult {
     }
 }
 
-fun runTasks(request: GServerRequest, tasks: List<String>): MavenResult {
+fun runTasks(request: GServerRequest, tasks: List<String>, artifactGA: String?): MavenResult {
     if (tasks.isEmpty()) {
         throw ExternalSystemException("tasks list is empty");
     }
@@ -61,6 +61,7 @@ fun runTasks(request: GServerRequest, tasks: List<String>): MavenResult {
     }
     val modelRequest = getModelRequest(request)
     modelRequest.tasks = tasks;
+    modelRequest.taskGA = artifactGA
     val processSupport = GServerRemoteProcessSupport(request)
     try {
         return processSupport.acquire(request.taskId, "", EmptyProgressIndicator()).getProjectModel(modelRequest)

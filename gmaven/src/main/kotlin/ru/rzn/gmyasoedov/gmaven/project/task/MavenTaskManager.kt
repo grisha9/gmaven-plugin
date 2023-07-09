@@ -24,14 +24,26 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         listener: ExternalSystemTaskNotificationListener
     ) {
         val sdk = (settings ?: throw ExternalSystemException("settings is empty"))
-            .jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) } ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
+            .jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) }
+            ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
         val mavenHome = getMavenHome(settings.distributionSettings)
 
-        val buildPath = Path.of(settings.projectBuildFile ?: projectPath)
-        val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
-        val mavenResult = runTasks(request, taskNames);
-        if (!ContainerUtil.isEmpty(mavenResult.exceptions)) {
-            throw ExternalSystemException()
+        val projectBuildFile = settings.projectBuildFile ?: throw ExternalSystemException("project build file is empty")
+        if (settings.subProjectBuildFile == null) {
+            val buildPath = Path.of(projectBuildFile)
+            val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
+            val mavenResult = runTasks(request, taskNames, null);
+            if (!ContainerUtil.isEmpty(mavenResult.exceptions)) {
+                throw ExternalSystemException()
+            }
+        } else {
+            val buildPath = if (settings.executionWorkspace.artifactGA == null)
+                Path.of(settings.subProjectBuildFile!!) else Path.of(projectBuildFile)
+            val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
+            val mavenResult = runTasks(request, taskNames, settings.executionWorkspace.artifactGA);
+            if (!ContainerUtil.isEmpty(mavenResult.exceptions)) {
+                throw ExternalSystemException()
+            }
         }
     }
 
