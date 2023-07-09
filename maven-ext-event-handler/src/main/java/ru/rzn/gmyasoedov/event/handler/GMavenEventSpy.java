@@ -21,6 +21,7 @@ import java.util.List;
 @Named
 public class GMavenEventSpy extends AbstractEventSpy {
     public static final String DEPENDENCY_RESULT_MAP = "dependencyResultMap";
+    public static final String AETHER_CONFLICT_RESOLVER_VERBOSE = "aether.conflictResolver.verbose";
     private static EventSpyResultHolder resultHolder;
 
     @Override
@@ -51,7 +52,9 @@ public class GMavenEventSpy extends AbstractEventSpy {
 
     private static boolean isDependencyAnalyzer() {
         if (resultHolder.session == null) return false;
-        return resultHolder.session.getSystemProperties().getProperty("aether.conflictResolver.verbose", "")
+        return resultHolder.session.getSystemProperties().getProperty(AETHER_CONFLICT_RESOLVER_VERBOSE, "")
+                .equalsIgnoreCase("true")
+                || resultHolder.session.getUserProperties().getProperty(AETHER_CONFLICT_RESOLVER_VERBOSE, "")
                 .equalsIgnoreCase("true");
     }
 
