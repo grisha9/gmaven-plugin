@@ -6,7 +6,6 @@ import com.intellij.openapi.externalSystem.ExternalSystemManager;
 import com.intellij.openapi.externalSystem.ExternalSystemUiAware;
 import com.intellij.openapi.externalSystem.model.DataNode;
 import com.intellij.openapi.externalSystem.model.ExternalProjectInfo;
-import com.intellij.openapi.externalSystem.model.ProjectKeys;
 import com.intellij.openapi.externalSystem.model.ProjectSystemId;
 import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExecutionSettings;
 import com.intellij.openapi.externalSystem.model.project.ModuleData;
@@ -38,14 +37,25 @@ import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver;
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData;
 import ru.rzn.gmyasoedov.gmaven.project.profile.ProjectProfilesStateService;
 import ru.rzn.gmyasoedov.gmaven.project.task.MavenTaskManager;
-import ru.rzn.gmyasoedov.gmaven.settings.*;
+import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings;
+import ru.rzn.gmyasoedov.gmaven.settings.GMavenConfigurable;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionWorkspace;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenLocalSettings;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenSettingsListener;
+import ru.rzn.gmyasoedov.gmaven.settings.ProfileExecution;
 
 import javax.swing.*;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
+import static com.intellij.openapi.externalSystem.model.ProjectKeys.MODULE;
 import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_PROJECT_JDK;
 import static com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil.findAll;
+import static com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil.findAllRecursively;
 
 public final class MavenManager //manager
         implements ExternalSystemConfigurableAware,
@@ -119,26 +129,42 @@ public final class MavenManager //manager
                 result.setUpdateSnapshots(projectSettings.getUpdateSnapshots());
                 result.setThreadCount(projectSettings.getThreadCount());
                 result.setOutputLevel(projectSettings.getOutputLevel());
+                fillExecutionWorkSpace(project, projectSettings, projectPath, result);
             }
-            result.setProjectBuildFile(projectSettings == null ? null : projectSettings.getProjectBuildFile());
             result.setSkipTests(settings.isSkipTests());
-            addCurrentProfiles(project, projectPath, result);
-
             return result;
         };
     }
 
-    private static void addCurrentProfiles(Project project, String rootProjectPath, MavenExecutionSettings result) {
+    private static void fillExecutionWorkSpace(Project project,
+                                               MavenProjectSettings projectSettings,
+                                               String projectPath,
+                                               MavenExecutionSettings result) {
         ExternalProjectInfo projectData = ProjectDataManager.getInstance()
-                .getExternalProjectData(project, GMavenConstants.SYSTEM_ID, rootProjectPath);
+                .getExternalProjectData(project, GMavenConstants.SYSTEM_ID, projectSettings.getExternalProjectPath());
 
         if (projectData == null || projectData.getExternalProjectStructure() == null) return;
         ProjectProfilesStateService profilesStateService = ProjectProfilesStateService.getInstance(project);
-        Collection<DataNode<ModuleData>> modules = findAll(projectData.getExternalProjectStructure(), ProjectKeys.MODULE);
+        Collection<DataNode<ModuleData>> modules = findAll(projectData.getExternalProjectStructure(), MODULE);
+        result.setProjectBuildFile(getProjectBuildFile(projectSettings, modules));
+        boolean isNotRootPath = !Objects.equals(projectSettings.getExternalProjectPath(), projectPath);
+        MavenExecutionWorkspace workspace = result.getExecutionWorkspace();
+        if (isNotRootPath) {
+            findAllRecursively(projectData.getExternalProjectStructure(), MODULE).stream()
+                    .map(DataNode::getData)
+                    .filter(m -> Objects.equals(m.getLinkedExternalProjectPath(), projectPath))
+                    .findFirst()
+                    .ifPresent(m -> {
+                        result.setSubProjectBuildFile(m.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE));
+                        if (projectSettings.getUseWholeProjectContext()) {
+                            workspace.setArtifactGA(m.getGroup() + ":" + m.getModuleName());
+                        }
+                    });
+        }
         for (DataNode<ModuleData> moduleNode : modules) {
             for (DataNode<ProfileData> profileDataNode : findAll(moduleNode, ProfileData.KEY)) {
                 ProfileExecution profileExecution = profilesStateService.getProfileExecution(profileDataNode.getData());
-                result.getExecutionWorkspace().addProfile(profileExecution);
+                workspace.addProfile(profileExecution);
             }
         }
     }
@@ -368,4 +394,15 @@ public final class MavenManager //manager
             }
         }
     }*/
+
+    @Nullable
+    private static String getProjectBuildFile(MavenProjectSettings projectSettings, Collection<DataNode<ModuleData>> modules) {
+        return modules.stream()
+                .map(DataNode::getData)
+                .filter(m -> m.getLinkedExternalProjectPath().equals(projectSettings.getExternalProjectPath()))
+                .filter(m -> m.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) != null)
+                .map(m -> m.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE))
+                .findFirst()
+                .orElse(null);
+    }
 }
