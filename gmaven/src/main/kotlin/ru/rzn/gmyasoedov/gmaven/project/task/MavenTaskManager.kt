@@ -29,7 +29,8 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         val mavenHome = getMavenHome(settings.distributionSettings)
 
         val projectBuildFile = settings.projectBuildFile ?: throw ExternalSystemException("project build file is empty")
-        if (settings.subProjectBuildFile == null) {
+        val subProjectBuildFile = settings.subProjectBuildFile
+        if (subProjectBuildFile == null) {
             val buildPath = Path.of(projectBuildFile)
             val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
             val mavenResult = runTasks(request, taskNames, null);
@@ -38,7 +39,7 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
             }
         } else {
             val buildPath = if (settings.executionWorkspace.artifactGA == null)
-                Path.of(settings.subProjectBuildFile!!) else Path.of(projectBuildFile)
+                Path.of(subProjectBuildFile) else Path.of(projectBuildFile)
             val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
             val mavenResult = runTasks(request, taskNames, settings.executionWorkspace.artifactGA);
             if (!ContainerUtil.isEmpty(mavenResult.exceptions)) {

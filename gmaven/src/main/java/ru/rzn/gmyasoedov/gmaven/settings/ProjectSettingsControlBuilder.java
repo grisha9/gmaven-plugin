@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MvnDotProperties;
+import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 
 import javax.swing.*;
@@ -233,6 +234,7 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
             mavenHomeCombobox.addItem(new DistributionSettingsComboBoxItem(customDistribution));
             mavenHomeCombobox.setItem(new DistributionSettingsComboBoxItem(current));
             setupMavenHomeHintAndCustom(current);
+            setPreferredComboboxSize();
         }
         /*if (jdkComboBoxWrapper != null) {
             ProjectSdksModel sdksModel = new ProjectSdksModel();
@@ -320,6 +322,11 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
         mavenCustomPathLabel.setLabelFor(mavenCustomPathField);
 
+        setPreferredComboboxSize();
+    }
+
+    private void setPreferredComboboxSize() {
+        if (mavenHomeCombobox == null) return;
         vmOptionsField.setPreferredSize(mavenHomeCombobox.getPreferredSize());
         threadCountField.setPreferredSize(mavenHomeCombobox.getPreferredSize());
         mavenCustomPathField.setPreferredSize(mavenHomeCombobox.getPreferredSize());
@@ -366,7 +373,7 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     private void setupMavenHomeHintAndCustom(DistributionSettings value) {
         if (mavenCustomPathField != null && value != null) {
             mavenCustomPathField.setVisible(value.getType() == CUSTOM);
-            if (value.getType() == CUSTOM) {
+            if (value.getType() == CUSTOM && value.getPath() != null) {
                 mavenCustomPathField.setText(value.getPath().toString());
             } else {
                 mavenCustomPathField.setText(null);
@@ -456,11 +463,32 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
             }
             if (settings.getType() == DistributionType.MVN) {
                 text = "Maven home(mvn)";
+                try {
+                    String mavenVersion = MavenUtils.getMavenVersion(settings.getPath().toFile());
+                    if (mavenVersion != null) {
+                        text += ": " + mavenVersion;
+                    }
+                } catch (Exception e) {
+                    MavenLog.LOG.error(e);
+                }
             }
             if (settings.getType() == DistributionType.WRAPPER) {
                 text = "Use Maven wrapper";
             }
             return text;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof DistributionSettingsComboBoxItem)) return false;
+            DistributionSettingsComboBoxItem item = (DistributionSettingsComboBoxItem) o;
+            return Objects.equals(value.getType(), item.value.getType());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(value.getType());
         }
     }
 
