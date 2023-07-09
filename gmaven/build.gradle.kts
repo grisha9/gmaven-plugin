@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ru.rzn.gmyasoedov"
-version = "1.0-SNAPSHOT"
+version = "222.1"
 
 repositories {
     mavenCentral()
@@ -39,8 +39,8 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("221")
-        untilBuild.set("223.*")
+        sinceBuild.set("222")
+        untilBuild.set("222.*")
     }
 
     signPlugin {
