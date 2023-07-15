@@ -27,6 +27,7 @@ import org.jetbrains.jps.model.java.JpsJavaExtensionService
 import org.jetbrains.jps.model.java.compiler.ProcessorConfigProfile
 import org.jetbrains.jps.model.java.impl.compiler.ProcessorConfigProfileImpl
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.PROC_NONE
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import java.io.File
 import java.nio.file.Path
@@ -124,9 +125,9 @@ class CompilerPluginDataService : AbstractProjectDataService<CompilerPluginData,
         if (importedData.add(data)) {
             profile.clearModuleNames()
         }
-
+        val profileEnabled = !data.arguments.contains(PROC_NONE)
         with(profile) {
-            isEnabled = true
+            isEnabled = profileEnabled
             isObtainProcessorsFromClasspath = false
             isOutputRelativeToContentRoot = true
             addModuleName(ideModule.name)
