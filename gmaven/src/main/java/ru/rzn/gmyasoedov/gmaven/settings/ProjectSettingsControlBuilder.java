@@ -1,13 +1,16 @@
 package ru.rzn.gmyasoedov.gmaven.settings;
 
 import com.intellij.ide.util.projectWizard.WizardContext;
+import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil;
 import com.intellij.openapi.externalSystem.util.ExternalSystemUiUtil;
 import com.intellij.openapi.externalSystem.util.PaintAwarePanel;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
+import com.intellij.openapi.roots.ui.configuration.ProjectStructureConfigurable;
 import com.intellij.openapi.roots.ui.configuration.SdkComboBox;
+import com.intellij.openapi.roots.ui.configuration.SdkListItem;
 import com.intellij.openapi.roots.ui.configuration.projectRoot.ProjectSdksModel;
 import com.intellij.openapi.roots.ui.util.CompositeAppearance;
 import com.intellij.openapi.ui.ComboBox;
@@ -35,11 +38,16 @@ import java.awt.*;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.JAVA_HOME;
+import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_JAVA_HOME;
+import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_PROJECT_JDK;
 import static com.intellij.openapi.externalSystem.util.ExternalSystemUiUtil.getLabelConstraints;
 import static com.intellij.openapi.fileChooser.FileChooserDescriptorFactory.createSingleFolderDescriptor;
 import static com.intellij.openapi.projectRoots.impl.SdkConfigurationUtil.createUniqueSdkName;
@@ -52,8 +60,6 @@ import static ru.rzn.gmyasoedov.gmaven.settings.DistributionType.CUSTOM;
 public class ProjectSettingsControlBuilder implements GMavenProjectSettingsControlBuilder {
     @NotNull
     private final MavenProjectSettings projectSettings;
-    @Nullable
-    private Project project;
 
     @Nullable
     private JBCheckBox nonRecursiveCheckBox;
@@ -126,6 +132,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         if (outPutLevelCombobox != null && outPutLevelCombobox.getItem() != null) {
             settings.setOutputLevel(outPutLevelCombobox.getItem().value);
         }
+        if (jdkComboBox != null && jdkComboBox.getSelectedItem() != null) {
+            settings.setJdkName(getJdkName(jdkComboBox.getSelectedItem()));
+        }
         if (mavenHomeCombobox != null && mavenCustomPathField != null && mavenHomeCombobox.getItem() != null) {
             var distributionSettings = mavenHomeCombobox.getItem().value;
             if (distributionSettings.getType() == CUSTOM) {
@@ -163,6 +172,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
                 && !Objects.equals(outPutLevelCombobox.getItem().value, projectSettings.getOutputLevel())) {
             return true;
         }
+        if (jdkComboBox != null && jdkComboBox.getModel().getSdksModel().isModified()) {
+            return true;
+        }
         if (mavenHomeCombobox != null && mavenCustomPathField != null && mavenHomeCombobox.getItem() != null) {
             var distributionSettings = mavenHomeCombobox.getItem().value;
             DistributionSettings current = projectSettings.getDistributionSettings();
@@ -181,8 +193,6 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
                       MavenProjectSettings settings,
                       boolean isDefaultModuleCreation,
                       @Nullable WizardContext wizardContext) {
-        this.project = project;
-
         if (nonRecursiveCheckBox != null) {
             nonRecursiveCheckBox.setSelected(projectSettings.getNonRecursive());
         }
@@ -234,22 +244,31 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
             mavenHomeCombobox.addItem(new DistributionSettingsComboBoxItem(customDistribution));
             mavenHomeCombobox.setItem(new DistributionSettingsComboBoxItem(current));
             setupMavenHomeHintAndCustom(current);
-            setPreferredComboboxSize();
         }
-        /*if (jdkComboBoxWrapper != null) {
-            ProjectSdksModel sdksModel = new ProjectSdksModel();
-            sdksModel.reset(project);
-            deduplicateSdkNames(sdksModel);
-            String jdkNameFromSettings = Objects.requireNonNullElse(projectSettings.getJdkName(), USE_PROJECT_JDK);
-            Sdk jdk = ExternalSystemJdkUtil.getJdk(project, jdkNameFromSettings);
-            sdksModel.setProjectSdk(jdk);
-            recreateJdkComboBox(project, sdksModel);
+        if (jdkComboBoxWrapper != null) {
+            Sdk projectSdk = wizardContext != null ? wizardContext.getProjectJdk() : null;
 
-            var projectSdk = sdksModel.getProjectSdk();
-            projectSdk = sdksModel.findSdk(projectSdk);
-            sdksModel.setProjectSdk(projectSdk);
+            ProjectStructureConfigurable structureConfigurable = ProjectStructureConfigurable.getInstance(project);
+            ProjectSdksModel sdksModel = structureConfigurable.getProjectJdksModel();
+
+            setupProjectSdksModel(sdksModel, project, projectSdk);
             recreateJdkComboBox(project, sdksModel);
-        }*/
+            setSelectedJdk(jdkComboBox, projectSettings.getJdkName());
+        }
+        setPreferredComboboxSize();
+    }
+
+    private void setSelectedJdk(@Nullable SdkComboBox jdkComboBox, @Nullable String jdkName) {
+        if (jdkComboBox == null) return;
+        if (Objects.equals(jdkName, USE_PROJECT_JDK)) {
+            jdkComboBox.setSelectedItem(jdkComboBox.showProjectSdkItem());
+        } else if (Objects.equals(jdkName, USE_JAVA_HOME)) {
+            jdkComboBox.setSelectedItem(jdkComboBox.showProjectSdkItem());
+        } else if (jdkName == null) {
+            jdkComboBox.setSelectedItem(jdkComboBox.showNoneSdkItem());
+        } else {
+            jdkComboBox.setSelectedSdk(jdkName);
+        }
     }
 
     @Override
@@ -288,13 +307,12 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         vmOptionsLabel.setLabelFor(vmOptionsField);
 
 
-        /* todo fix jdk combo box
         JBLabel jdkLabel = new JBLabel(message("gmaven.settings.project.jvm"));
         jdkComboBoxWrapper = new JPanel(new BorderLayout());
         jdkLabel.setLabelFor(jdkComboBoxWrapper);
         content.add(jdkLabel, getLabelConstraints(indentLevel));
         content.add(jdkComboBoxWrapper, getLabelConstraints(0));
-        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));*/
+        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
 
 
         JBLabel mavenHomeLabel = new JBLabel(message("gmaven.settings.project.maven.home"));
@@ -321,16 +339,22 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         content.add(mavenCustomPathField, getLabelConstraints(0));
         content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
         mavenCustomPathLabel.setLabelFor(mavenCustomPathField);
-
-        setPreferredComboboxSize();
     }
 
     private void setPreferredComboboxSize() {
-        if (mavenHomeCombobox == null) return;
-        vmOptionsField.setPreferredSize(mavenHomeCombobox.getPreferredSize());
-        threadCountField.setPreferredSize(mavenHomeCombobox.getPreferredSize());
-        mavenCustomPathField.setPreferredSize(mavenHomeCombobox.getPreferredSize());
-        outPutLevelCombobox.setPreferredSize(mavenHomeCombobox.getPreferredSize());
+        List<? extends JComponent> components = Arrays
+                .asList(
+                        vmOptionsField, threadCountField, mavenCustomPathField,
+                        outPutLevelCombobox, mavenHomeCombobox, jdkComboBox
+                );
+        JComponent maxWidthComponent = components.stream()
+                .filter(Objects::nonNull)
+                .max(Comparator.comparing(v1 -> v1.getPreferredSize().width))
+                .orElse(null);
+        if (maxWidthComponent == null) return;
+        components.stream()
+                .filter(Objects::nonNull)
+                .forEach(c -> c.setPreferredSize(maxWidthComponent.getPreferredSize()));
     }
 
     private void recreateJdkComboBox(@NotNull Project project, @NotNull ProjectSdksModel sdksModel) {
@@ -399,6 +423,20 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
 
     }
 
+    private static void setupProjectSdksModel(@NotNull ProjectSdksModel sdksModel, @NotNull Project project, @Nullable Sdk projectSdk) {
+        sdksModel.reset(project);
+        deduplicateSdkNames(sdksModel);
+        if (projectSdk == null) {
+            projectSdk = sdksModel.getProjectSdk();
+            projectSdk = sdksModel.findSdk(projectSdk);
+        }
+        if (projectSdk != null) {
+            projectSdk = ExternalSystemJdkUtil.resolveDependentJdk(projectSdk);
+            projectSdk = sdksModel.findSdk(projectSdk.getName());
+        }
+        sdksModel.setProjectSdk(projectSdk);
+    }
+
     private static void deduplicateSdkNames(@NotNull ProjectSdksModel projectSdksModel) {
         Set<String> processedNames = new HashSet<>();
         Collection<Sdk> editableSdks = projectSdksModel.getProjectSdks().values();
@@ -412,6 +450,29 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
             processedNames.add(sdk.getName());
         }
     }
+
+    private static String getJdkName(@Nullable SdkListItem item) {
+        if (item instanceof SdkListItem.ProjectSdkItem) {
+            return USE_PROJECT_JDK;
+        } else if (item instanceof SdkListItem.SdkItem) {
+            return ((SdkListItem.SdkItem) item).sdk.getName();
+        } else if (item instanceof SdkListItem.InvalidSdkItem) {
+            return ((SdkListItem.InvalidSdkItem) item).sdkName;
+        } else if (item instanceof SdkListItem.SdkReferenceItem) {
+            return getJdkReferenceName((SdkListItem.SdkReferenceItem) item);
+        } else {
+            return null;
+        }
+    }
+
+    private static String getJdkReferenceName(SdkListItem.SdkReferenceItem item) {
+        if (JAVA_HOME.equals(item.name)) {
+            return JAVA_HOME;
+        } else {
+            return item.name;
+        }
+    }
+
 
     public enum OutputLevelType {
         DEFAULT, QUITE, DEBUG
