@@ -8,6 +8,9 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 private const val propStartTag = "\${"
 private const val propEndTag = "}"
 
+const val PROC_NONE = "-proc:none"
+const val PROC_ONLY = "-proc:only"
+
 fun collectCompilerArgs(mavenProject: MavenProject, pluginConfiguration: Element?): List<String> {
     val options = mutableListOf<String>()
     val parameters = pluginConfiguration?.getChild("parameters")
@@ -18,13 +21,13 @@ fun collectCompilerArgs(mavenProject: MavenProject, pluginConfiguration: Element
         options += "-parameters"
     }
 
-    if (pluginConfiguration == null) return options;
+    if (pluginConfiguration == null) return options
 
     val procElement = pluginConfiguration.getChild("proc")
     procElement?.value?.also {
         when (it) {
-            "none" -> options += "-proc:none"
-            "only" -> options += "-proc:only"
+            "none" -> options += PROC_NONE
+            "only" -> options += PROC_ONLY
         }
     }
 
