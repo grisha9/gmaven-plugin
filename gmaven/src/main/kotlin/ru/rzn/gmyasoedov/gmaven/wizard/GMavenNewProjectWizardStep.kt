@@ -1,6 +1,8 @@
 package ru.rzn.gmyasoedov.gmaven.wizard
 
 import com.intellij.ide.JavaUiBundle
+import com.intellij.ide.projectWizard.NewProjectWizardCollector.BuildSystem.logSdkChanged
+import com.intellij.ide.projectWizard.NewProjectWizardCollector.BuildSystem.logSdkFinished
 import com.intellij.ide.wizard.NewProjectWizardBaseData
 import com.intellij.ide.wizard.NewProjectWizardStep
 import com.intellij.openapi.externalSystem.model.ProjectKeys
@@ -17,9 +19,7 @@ import com.intellij.openapi.projectRoots.SdkTypeId
 import com.intellij.openapi.projectRoots.impl.DependentSdkType
 import com.intellij.openapi.roots.ui.configuration.sdkComboBox
 import com.intellij.openapi.ui.ValidationInfo
-import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
-import com.intellij.ui.dsl.builder.Panel
-import com.intellij.ui.dsl.builder.columns
+import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.layout.ValidationInfoBuilder
 import icons.OpenapiIcons
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
@@ -28,25 +28,23 @@ import java.io.File
 import javax.swing.Icon
 
 abstract class GMavenNewProjectWizardStep<ParentStep>(parent: ParentStep) :
-    MavenizedNewProjectWizardStep<MavenProject, ParentStep>(parent)
+    MavenizedNewProjectWizardStep<MavenProject, ParentStep>(parent),
+    MavenNewProjectWizardData
         where ParentStep : NewProjectWizardStep,
               ParentStep : NewProjectWizardBaseData {
 
-    // used externally
-    @Suppress("MemberVisibilityCanBePrivate")
-    val sdkProperty = propertyGraph.property<Sdk?>(null)
+    final override val sdkProperty = propertyGraph.property<Sdk?>(null)
 
-    val sdk by sdkProperty
+    final override var sdk by sdkProperty
 
-    override fun setupSettingsUI(builder: Panel) {
-        with(builder) {
-            row(JavaUiBundle.message("label.project.wizard.new.project.jdk")) {
-                val sdkTypeFilter = { it: SdkTypeId -> it is JavaSdkType && it !is DependentSdkType }
-                sdkComboBox(context, sdkProperty, StdModuleTypes.JAVA.id, sdkTypeFilter)
-                    .columns(COLUMNS_MEDIUM)
-            }
-        }
-        super.setupSettingsUI(builder)
+    protected fun setupJavaSdkUI(builder: Panel) {
+        builder.row(JavaUiBundle.message("label.project.wizard.new.project.jdk")) {
+            val sdkTypeFilter = { it: SdkTypeId -> it is JavaSdkType && it !is DependentSdkType }
+            sdkComboBox(context, sdkProperty, StdModuleTypes.JAVA.id, sdkTypeFilter)
+                .columns(COLUMNS_MEDIUM)
+                .whenItemSelectedFromUi { logSdkChanged(sdk) }
+                .onApply { logSdkFinished(sdk) }
+        }.bottomGap(BottomGap.SMALL)
     }
 
     override fun createView(data: MavenProject) = MavenDataView(data)

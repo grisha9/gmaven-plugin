@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ru.rzn.gmyasoedov"
-version = "223.1"
+version = "231.1"
 
 repositories {
     mavenCentral()
@@ -23,7 +23,7 @@ dependencies {
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
-    version.set("2022.3")
+    version.set("2023.1")
     type.set("IC") // Target IDE Platform
     plugins.set(listOf("java", "properties"))
 }
@@ -39,8 +39,8 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("223")
-        untilBuild.set("223.*")
+        sinceBuild.set("231")
+        untilBuild.set("231.*")
     }
 
     signPlugin {
