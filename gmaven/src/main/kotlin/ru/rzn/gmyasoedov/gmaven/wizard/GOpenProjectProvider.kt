@@ -17,6 +17,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
+import ru.rzn.gmyasoedov.gmaven.util.updateMavenJdk
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 
 class GOpenProjectProvider : AbstractOpenProjectProvider() {
@@ -60,7 +61,7 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
             override fun onSuccess(externalProject: DataNode<ProjectData>?) {
                 if (externalProject == null) return
                 ProjectDataManager.getInstance().importData(externalProject, project, false)
-                updateMavenSettings(project, externalProjectPath)
+                updateMavenJdk(project, externalProjectPath)
             }
         }
     }
