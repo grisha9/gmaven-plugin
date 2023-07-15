@@ -5,13 +5,6 @@ import com.intellij.util.messages.Topic;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Defines callback for the gradle config structure change.
- * <p/>
- * Implementations of this interface are not obliged to be thread-safe.
- *
- * @author Denis Zhdanov
- */
 public interface MavenSettingsListener extends ExternalSystemSettingsListener<MavenProjectSettings> {
   Topic<MavenSettingsListener> TOPIC = new Topic<>(MavenSettingsListener.class, Topic.BroadcastDirection.NONE);
 
