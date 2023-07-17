@@ -8,7 +8,9 @@ import com.intellij.util.PathUtil
 import com.intellij.util.io.isDirectory
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
+import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import ru.rzn.gmyasoedov.serverapi.model.DependencyTreeNode
+import ru.rzn.gmyasoedov.serverapi.model.MavenException
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest
 
@@ -23,54 +25,31 @@ fun firstRun(gServerRequest: GServerRequest): MavenResult {
     )
     val modelRequest = getModelRequest(request)
     val processSupport = GServerRemoteProcessSupport(request)
-    try {
-        return processSupport.acquire(request.taskId, "", EmptyProgressIndicator()).getProjectModel(modelRequest)
-    } catch (e: Exception) {
-        MavenLog.LOG.error(e)
-        throw RuntimeException(e)
-    } finally {
-        processSupport.stopAll()
-    }
+    return runMavenTask(processSupport, modelRequest)
 }
 
 fun getProjectModel(request: GServerRequest): MavenResult {
-    val processSupport = GServerRemoteProcessSupport(request)
-    try {
-        val server = processSupport.acquire(request.taskId, "", EmptyProgressIndicator())
-        val modelRequest = getModelRequest(request)
-        val projectModel = server.getProjectModel(modelRequest)
-        if (tryInstallGMavenPlugin(request, projectModel)) {
-            firstRun(request)
-            return server.getProjectModel(getModelRequest(request))
-        }
-        return projectModel
-    } catch (e: Exception) {
-        MavenLog.LOG.error(e)
-        throw ExternalSystemException("Error on getting project model")
-    } finally {
-        processSupport.stopAll()
+    val modelRequest = getModelRequest(request)
+    val mavenResult = runMavenTask(GServerRemoteProcessSupport(request), modelRequest)
+    if (tryInstallGMavenPlugin(request, mavenResult)) {
+        firstRun(request)
+        return runMavenTask(GServerRemoteProcessSupport(request), modelRequest)
     }
+    return mavenResult;
 }
 
 fun runTasks(request: GServerRequest, tasks: List<String>, artifactGA: String?): MavenResult {
     if (tasks.isEmpty()) {
-        throw ExternalSystemException("tasks list is empty");
+        throw ExternalSystemException("tasks list is empty")
     }
     if (request.installGMavenPlugin) {
-        throw ExternalSystemException("no need install gmaven read model plugin on task execution");
+        throw ExternalSystemException("no need install gmaven read model plugin on task execution")
     }
     val modelRequest = getModelRequest(request)
-    modelRequest.tasks = tasks;
+    modelRequest.tasks = tasks
     modelRequest.taskGA = artifactGA
     val processSupport = GServerRemoteProcessSupport(request)
-    try {
-        return processSupport.acquire(request.taskId, "", EmptyProgressIndicator()).getProjectModel(modelRequest)
-    } catch (e: Exception) {
-        MavenLog.LOG.error(e)
-        throw RuntimeException(e)
-    } finally {
-        processSupport.stopAll()
-    }
+    return runMavenTask(processSupport, modelRequest)
 }
 
 fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<DependencyTreeNode> {
@@ -84,16 +63,8 @@ fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<
     val modelRequest = getModelRequest(request)
     modelRequest.analyzerGA = artifactGA
     val processSupport = GServerRemoteProcessSupport(request)
-    try {
-        val projectModel = processSupport.acquire(request.taskId, "", EmptyProgressIndicator())
-            .getProjectModel(modelRequest)
-        return projectModel?.projectContainer?.project?.dependencyTree ?: emptyList()
-    } catch (e: Exception) {
-        MavenLog.LOG.error(e)
-        throw RuntimeException(e)
-    } finally {
-        processSupport.stopAll()
-    }
+    val mavenResult = runMavenTask(processSupport, modelRequest)
+    return mavenResult.projectContainer?.project?.dependencyTree ?: emptyList()
 }
 
 private fun tryInstallGMavenPlugin(request: GServerRequest, mavenResult: MavenResult) =
@@ -121,5 +92,33 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
     modelRequest.profiles = request.settings.executionWorkspace.profilesData.asSequence()
         .map { it.toRawName() }
         .joinToString(separator = ",")
-    return modelRequest;
+    return modelRequest
+}
+
+private fun runMavenTask(processSupport: GServerRemoteProcessSupport, modelRequest: GetModelRequest): MavenResult {
+    val mavenResult = runMavenTaskInner(processSupport, modelRequest)
+    processExceptions(mavenResult.exceptions)
+    return mavenResult
+}
+
+private fun runMavenTaskInner(
+    processSupport: GServerRemoteProcessSupport,
+    modelRequest: GetModelRequest
+): MavenResult {
+    try {
+        val projectModel = processSupport.acquire(processSupport.id, "", EmptyProgressIndicator())
+            .getProjectModel(modelRequest)
+        return GServerUtils.toResult(projectModel)
+    } catch (e: Exception) {
+        MavenLog.LOG.error(e)
+        return GServerUtils.toResult(e)
+    } finally {
+        processSupport.stopAll()
+    }
+}
+
+private fun processExceptions(exceptions: MutableList<MavenException>) {
+    if (exceptions.isEmpty()) return
+    val errorString = exceptions.joinToString(System.lineSeparator()) { it.message }
+    throw ExternalSystemException(errorString)
 }

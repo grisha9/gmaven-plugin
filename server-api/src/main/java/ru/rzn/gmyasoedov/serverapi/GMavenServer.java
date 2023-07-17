@@ -7,6 +7,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface GMavenServer extends Remote {
+    String SERVER_ERROR_MESSAGE = "Error on getting project model. See maven log";
     String SERVER_DEBUG_PROPERTY = "gmaven.server.debug";
     String MAVEN_EXT_CLASS_PATH_PROPERTY = "maven.ext.class.path";
     String GMAVEN_HOME = "gmaven.maven.home";
