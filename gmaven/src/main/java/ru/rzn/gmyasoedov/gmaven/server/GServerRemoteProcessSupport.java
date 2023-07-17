@@ -65,6 +65,10 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
         return "GServerRemoteProcessSupport";
     }
 
+    public ExternalSystemTaskId getId() {
+        return id;
+    }
+
     @SuppressWarnings("IOResourceOpenedButNotSafelyClosed")
     @Override
     protected void sendDataAfterStart(ProcessHandler handler) {

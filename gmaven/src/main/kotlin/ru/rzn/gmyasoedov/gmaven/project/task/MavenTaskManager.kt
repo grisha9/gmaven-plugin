@@ -6,7 +6,6 @@ import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotifica
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundException
 import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager
-import com.intellij.util.containers.ContainerUtil
 import ru.rzn.gmyasoedov.gmaven.project.getMavenHome
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.runTasks
@@ -33,18 +32,12 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         if (subProjectBuildFile == null) {
             val buildPath = Path.of(projectBuildFile)
             val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
-            val mavenResult = runTasks(request, taskNames, null);
-            if (!ContainerUtil.isEmpty(mavenResult.exceptions)) {
-                throw ExternalSystemException()
-            }
+            runTasks(request, taskNames, null);
         } else {
             val buildPath = if (settings.executionWorkspace.artifactGA == null)
                 Path.of(subProjectBuildFile) else Path.of(projectBuildFile)
             val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
-            val mavenResult = runTasks(request, taskNames, settings.executionWorkspace.artifactGA);
-            if (!ContainerUtil.isEmpty(mavenResult.exceptions)) {
-                throw ExternalSystemException()
-            }
+            runTasks(request, taskNames, settings.executionWorkspace.artifactGA);
         }
     }
 

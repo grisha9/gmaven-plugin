@@ -3,20 +3,18 @@ package ru.rzn.gmyasoedov.event.handler;
 import org.apache.maven.eventspy.AbstractEventSpy;
 import org.apache.maven.execution.ExecutionEvent;
 import org.apache.maven.execution.MavenExecutionResult;
-import org.apache.maven.plugin.PluginResolutionException;
 import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.settings.building.DefaultSettingsBuildingRequest;
 import org.apache.maven.settings.building.SettingsBuildingResult;
 import org.eclipse.aether.graph.DependencyNode;
+import ru.rzn.gmyasoedov.event.handler.converter.MavenErrorConverter;
 import ru.rzn.gmyasoedov.event.handler.converter.MavenProjectContainerConverter;
 import ru.rzn.gmyasoedov.event.handler.converter.MavenSettingsConverter;
 import ru.rzn.gmyasoedov.gmaven.server.result.ResultHolder;
-import ru.rzn.gmyasoedov.serverapi.model.MavenException;
+import ru.rzn.gmyasoedov.serverapi.model.BuildErrors;
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult;
 
 import javax.inject.Named;
-import java.util.Collections;
-import java.util.List;
 
 @Named
 public class GMavenEventSpy extends AbstractEventSpy {
@@ -59,27 +57,12 @@ public class GMavenEventSpy extends AbstractEventSpy {
     }
 
     private void setResult() {
-        boolean pluginResolutionError = isGPluginResolutionError(resultHolder.executionResult);
+        BuildErrors buildErrors = MavenErrorConverter.convert(resultHolder.executionResult);
         ResultHolder.result = new MavenResult(
-                pluginResolutionError,
+                buildErrors.pluginNotResolved,
                 MavenSettingsConverter.convert(resultHolder),
                 MavenProjectContainerConverter.convert(resultHolder),
-                Collections.<MavenException>emptyList()
+                buildErrors.exceptions
         );
-    }
-
-    private boolean isGPluginResolutionError(MavenExecutionResult result) {
-        List<Throwable> exceptions = result.getExceptions();
-        if (exceptions == null) return false;
-        for (Throwable exception : exceptions) {
-            if (exception instanceof PluginResolutionException) {
-                PluginResolutionException e = (PluginResolutionException) exception;
-                if (e.getPlugin() != null && "ru.rzn.gmyasoedov".equalsIgnoreCase(e.getPlugin().getGroupId())
-                        && "model-reader".equalsIgnoreCase(e.getPlugin().getArtifactId())) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 }

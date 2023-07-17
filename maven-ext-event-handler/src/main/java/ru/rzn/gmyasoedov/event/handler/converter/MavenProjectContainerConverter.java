@@ -10,6 +10,7 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,13 +20,19 @@ public class MavenProjectContainerConverter {
 
     public static MavenProjectContainer convert(EventSpyResultHolder source) {
         MavenExecutionResult executionResult = source.executionResult;
-        Map<File, MavenProject> projectByDirectoryMap = getMapForProjects(executionResult);
         List<MavenProject> sortedProjects = executionResult.getTopologicallySortedProjects();
+        if (sortedProjects == null) {
+            sortedProjects = Collections.emptyList();
+        }
+        Map<File, MavenProject> projectByDirectoryMap = getMapForProjects(sortedProjects);
         for (MavenProject sortedProject : sortedProjects) {
             projectByDirectoryMap.put(sortedProject.getBasedir(), sortedProject);
         }
 
         MavenProject topLevelProject = executionResult.getProject();
+        if (topLevelProject == null) {
+            return null;
+        }
         MavenProjectContainer container = new MavenProjectContainer(MavenProjectConverter
                 .convert(topLevelProject, source.session));
         fillContainer(container, projectByDirectoryMap, source.session);
@@ -33,11 +40,11 @@ public class MavenProjectContainerConverter {
         return container;
     }
 
-    private static Map<File, MavenProject> getMapForProjects(MavenExecutionResult executionResult) {
-        if (executionResult.getTopologicallySortedProjects().size() > 128) {
+    private static Map<File, MavenProject> getMapForProjects(List<MavenProject> projects) {
+        if (projects.size() > 128) {
             return new TreeMap<>();
         } else {
-            return new HashMap<>(executionResult.getTopologicallySortedProjects().size() + 1);
+            return new HashMap<>(projects.size() + 1);
         }
     }
 

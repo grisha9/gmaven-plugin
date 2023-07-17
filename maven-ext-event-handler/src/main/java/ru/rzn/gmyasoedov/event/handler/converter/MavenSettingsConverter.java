@@ -10,7 +10,12 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenRemoteRepository;
 import ru.rzn.gmyasoedov.serverapi.model.MavenSettings;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class MavenSettingsConverter {
 
@@ -47,9 +52,11 @@ public class MavenSettingsConverter {
         for (Profile profile : session.getRequest().getProfiles()) {
             profiles.add(createMavenProfile(profile, activeProfiles));
         }
-        for (MavenProject project : session.getProjects()) {
-            for (Profile profile : project.getModel().getProfiles()) {
-                profiles.add(createMavenProfile(profile, activeProfiles));
+        if (session.getProjects() != null) {
+            for (MavenProject project : session.getProjects()) {
+                for (Profile profile : project.getModel().getProfiles()) {
+                    profiles.add(createMavenProfile(profile, activeProfiles));
+                }
             }
         }
         return profiles;

@@ -1,14 +1,15 @@
 package ru.rzn.gmyasoedov.serverapi.model;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 public class MavenException implements Serializable {
     public final String message;
     public final MavenId artifactId;
+    public final String projectFilePath;
 
-    public MavenException(String message, MavenId artifactId) {
-        this.message = Objects.requireNonNull(message);
-        this.artifactId = Objects.requireNonNull(artifactId);
+    public MavenException(String message, MavenId artifactId, String projectFilePath) {
+        this.message = message;
+        this.artifactId = artifactId;
+        this.projectFilePath = projectFilePath;
     }
 }
