@@ -13,7 +13,7 @@ repositories {
 
 
 dependencies {
-    compileOnly("com.jetbrains.intellij.platform:util-rt:221.4013")
+    compileOnly("com.jetbrains.intellij.platform", "util-rt", providers.gradleProperty("pluginSinceBuild").get())
     compileOnly("org.jetbrains:annotations-java5:20.1.0")
     compileOnly("org.codehaus.plexus:plexus-classworlds:2.6.0")
     implementation(project(":server-api"))

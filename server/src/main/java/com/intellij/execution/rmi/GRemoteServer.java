@@ -103,7 +103,7 @@ public class GRemoteServer {
   }
 
   private static void spinUntilWatchdogAlive(IdeaWatchdog watchdog) throws Exception {
-    long waitTime = IdeaWatchdog.WAIT_TIMEOUT;
+    long waitTime = watchdog.getWaitTimeoutMillis();
     Object lock = new Object();
     while (true) {
       //noinspection SynchronizationOnLocalVariableOrMethodParameter
