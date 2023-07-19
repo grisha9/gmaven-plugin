@@ -1,3 +1,5 @@
+@file:JvmName("ProjectResolverUtils")
+
 package ru.rzn.gmyasoedov.gmaven.project
 
 import com.intellij.externalSystem.MavenRepositoryData
@@ -7,17 +9,20 @@ import com.intellij.openapi.externalSystem.model.project.ContentRootData
 import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.model.project.ProjectData
+import com.intellij.openapi.module.ModuleTypeManager
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.CompilerPluginData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.LifecycleData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
+import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenSettings
 import java.nio.file.Path
@@ -52,15 +57,29 @@ fun getCompilerData(mavenProject: MavenProject, context: MavenProjectResolver.Pr
 
 fun storePath(paths: List<String>, contentRootData: ContentRootData, type: ExternalSystemSourceType) {
     for (path in paths) {
-        contentRootData.storePath(type, path)
+        storePath(contentRootData, type, path)
     }
 }
 
-fun applyPlugins(mavenProject: MavenProject, moduleData: DataNode<ModuleData>) {
+fun storePath(
+    contentRootData: ContentRootData,
+    type: ExternalSystemSourceType,
+    path: String,
+) {
+    if (path.isNotEmpty()) {
+        try {
+            contentRootData.storePath(type, path)
+        } catch (e: Exception) {
+            MavenLog.LOG.error("error on adding path to content root $path", e)
+        }
+    }
+}
+
+fun applyPlugins(mavenProject: MavenProject, moduleData: ModuleData, contentRootData: ContentRootData) {
     for (plugin in mavenProject.plugins) {
         for (pluginExtension in MavenFullImportPlugin.EP_NAME.extensionList) {
             if (pluginExtension.isApplicable(plugin)) {
-                pluginExtension.populateModuleData(mavenProject, plugin, moduleData)
+                pluginExtension.populateModuleData(mavenProject, plugin, moduleData, contentRootData)
             }
         }
     }
@@ -96,4 +115,19 @@ fun populateProfiles(dataNode: DataNode<ModuleData>, mavenSettings: MavenSetting
             ProfileData.KEY, ProfileData(SYSTEM_ID, dataNode.data.moduleName, profile.name, profile.isActivation)
         )
     }
+}
+
+fun populateAnnotationProcessorData(
+    project: MavenProject,
+    moduleDataNode: DataNode<ModuleData>,
+    compilerData: CompilerData
+) {
+    val annotationProcessorPaths = compilerData.annotationProcessorPaths
+    val data = CompilerPluginData
+        .create(annotationProcessorPaths, compilerData.arguments, project.buildDirectory, project.basedir)
+    moduleDataNode.createChild(CompilerPluginData.KEY, data)
+}
+
+fun getDefaultModuleTypeId(): String {
+    return ModuleTypeManager.getInstance().defaultModuleType.id
 }
