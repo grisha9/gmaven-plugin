@@ -46,12 +46,21 @@ import com.intellij.util.xml.NanoXmlUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData;
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectsManager;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
+import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -59,7 +68,11 @@ import java.util.regex.Pattern;
 
 import static com.intellij.openapi.util.io.JarUtil.getJarAttribute;
 import static com.intellij.openapi.util.io.JarUtil.loadProperties;
-import static com.intellij.openapi.util.text.StringUtil.*;
+import static com.intellij.openapi.util.text.StringUtil.compareVersionNumbers;
+import static com.intellij.openapi.util.text.StringUtil.contains;
+import static com.intellij.openapi.util.text.StringUtil.isEmptyOrSpaces;
+import static com.intellij.openapi.util.text.StringUtil.nullize;
+import static com.intellij.openapi.util.text.StringUtil.toUpperCase;
 import static com.intellij.util.xml.NanoXmlBuilder.stop;
 import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.M2;
 
@@ -418,5 +431,19 @@ public class MavenUtils {
     @NotNull
     public static Path resolveM2() {
         return Path.of(SystemProperties.getUserHome(), M2);
+    }
+
+    public static boolean isPerSourceSet(
+            @NotNull MavenExecutionSettings settings,
+            @NotNull MavenProject project,
+            @NotNull CompilerData compilerData) {
+        if (!settings.isResolveModulePerSourceSet()) return false;
+        if (isPomProject(project)) return false;
+        return !Objects.equals(compilerData.getSourceLevel(), compilerData.getTestSourceLevel())
+                || !Objects.equals(compilerData.getTargetLevel(), compilerData.getTestTargetLevel());
+    }
+
+    public static boolean isPomProject(@NotNull MavenProject project) {
+        return "pom".equals(project.getPackaging());
     }
 }

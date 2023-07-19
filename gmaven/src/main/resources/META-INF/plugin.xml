@@ -35,6 +35,7 @@
         <projectOpenProcessor implementation="ru.rzn.gmyasoedov.gmaven.wizard.GProjectOpenProcessor"/>
         <projectImportProvider implementation="ru.rzn.gmyasoedov.gmaven.wizard.GMavenProjectImportProvider"/>
         <fileTemplateGroup implementation="ru.rzn.gmyasoedov.gmaven.utils.MavenFileTemplateGroupFactory"/>
+        <treeStructureProvider implementation="ru.rzn.gmyasoedov.gmaven.projectView.GMavenTreeStructureProvider" order="last"/>
 
         <projectConfigurable groupId="build.tools" groupWeight="200" id="reference.settingsdialog.project.gmaven"
                              instance="ru.rzn.gmyasoedov.gmaven.settings.GMavenConfigurable"
@@ -47,6 +48,7 @@
         <runConfigurationProducer implementation="ru.rzn.gmyasoedov.gmaven.execution.GMavenRuntimeConfigurationProducer"/>
         <configurationType implementation="ru.rzn.gmyasoedov.gmaven.execution.GMavenExternalTaskConfigurationType"/>
         <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.CompilerPluginDataService"/>
+        <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.SourceSetDataService"/>
         <externalSystemDependencyAnalyzer implementation="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerExtension"/>
 
         <toolWindow id="GMaven" anchor="right" icon="GMavenIcons.ToolWindowMaven"

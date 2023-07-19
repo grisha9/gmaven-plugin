@@ -46,8 +46,10 @@ import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings;
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings;
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettingsListener;
 import ru.rzn.gmyasoedov.gmaven.settings.ProfileExecution;
+import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
 
 import javax.swing.*;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -397,6 +399,13 @@ public final class MavenManager //manager
 
     @Nullable
     private static String getProjectBuildFile(MavenProjectSettings projectSettings, Collection<DataNode<ModuleData>> modules) {
+        MavenLog.LOG.warn("GMaven path test1 " + projectSettings.getExternalProjectPath());
+        ArrayList<DataNode<ModuleData>> dataNodes = new ArrayList<>(modules);
+        for (int i = 0; i < dataNodes.size(); i++) {
+            ModuleData data = dataNodes.get(0).getData();
+            MavenLog.LOG.warn("GMaven path testl" + i + " " + data.getLinkedExternalProjectPath());
+            MavenLog.LOG.warn("GMaven path testp" + i + " " + data.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE));
+        }
         return modules.stream()
                 .map(DataNode::getData)
                 .filter(m -> m.getLinkedExternalProjectPath().equals(projectSettings.getExternalProjectPath()))

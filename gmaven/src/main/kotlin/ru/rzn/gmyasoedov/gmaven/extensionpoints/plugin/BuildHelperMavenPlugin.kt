@@ -1,6 +1,5 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
-import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.project.ContentRootData
 import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
 import com.intellij.openapi.externalSystem.model.project.ModuleData
@@ -15,26 +14,27 @@ class BuildHelperMavenPlugin : MavenFullImportPlugin {
 
     override fun getArtifactId() = "build-helper-maven-plugin"
 
-    override fun populateModuleData(project: MavenProject, plugin: MavenPlugin, data: DataNode<ModuleData>) {
+    override fun populateModuleData(
+        project: MavenProject, plugin: MavenPlugin, moduleData: ModuleData, contentRootData: ContentRootData
+    ) {
         val executions = plugin.body?.executions ?: emptyList()
-        val contentRootData = data.children
-            .filter { it.data is ContentRootData }
-            .map { it.data as ContentRootData }
-            .firstOrNull() ?: return
         for (execution in executions) {
             when {
                 execution.goals.contains("add-source") -> {
                     val paths = getPathList(execution, "sources")
                     storePath(paths, contentRootData, ExternalSystemSourceType.SOURCE)
                 }
+
                 execution.goals.contains("add-test-source") -> {
                     val paths = getPathList(execution, "sources")
                     storePath(paths, contentRootData, ExternalSystemSourceType.TEST)
                 }
+
                 execution.goals.contains("add-resource") -> {
                     val paths = getPathList(execution, "resources")
                     storePath(paths, contentRootData, ExternalSystemSourceType.RESOURCE)
                 }
+
                 execution.goals.contains("add-test-resource") -> {
                     val paths = getPathList(execution, "resources")
                     storePath(paths, contentRootData, ExternalSystemSourceType.TEST_RESOURCE)

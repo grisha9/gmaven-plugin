@@ -1,4 +1,4 @@
-package ru.rzn.gmyasoedov.gmaven.project.importing
+package ru.rzn.gmyasoedov.gmaven.project.externalSystem.model
 
 import com.intellij.openapi.externalSystem.model.Key
 import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
