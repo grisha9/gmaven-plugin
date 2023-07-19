@@ -68,6 +68,8 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     @Nullable
     private JBCheckBox useWholeProjectContextCheckBox;
     @Nullable
+    private JBCheckBox resolveModulePerSourceSetCheckBox;
+    @Nullable
     private JTextField threadCountField;
     @Nullable
     private JTextField vmOptionsField;
@@ -123,6 +125,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         if (useWholeProjectContextCheckBox != null) {
             settings.setUseWholeProjectContext(useWholeProjectContextCheckBox.isSelected());
         }
+        if (resolveModulePerSourceSetCheckBox != null) {
+            settings.setResolveModulePerSourceSet(resolveModulePerSourceSetCheckBox.isSelected());
+        }
         if (threadCountField != null) {
             settings.setThreadCount(threadCountField.getText());
         }
@@ -156,6 +161,10 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         }
         if (useWholeProjectContextCheckBox != null
                 && useWholeProjectContextCheckBox.isSelected() != projectSettings.getUseWholeProjectContext()) {
+            return true;
+        }
+        if (resolveModulePerSourceSetCheckBox != null
+                && resolveModulePerSourceSetCheckBox.isSelected() != projectSettings.getResolveModulePerSourceSet()) {
             return true;
         }
         if (threadCountField != null && !Objects.equals(
@@ -201,6 +210,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         }
         if (useWholeProjectContextCheckBox != null) {
             useWholeProjectContextCheckBox.setSelected(projectSettings.getUseWholeProjectContext());
+        }
+        if (resolveModulePerSourceSetCheckBox != null) {
+            resolveModulePerSourceSetCheckBox.setSelected(projectSettings.getResolveModulePerSourceSet());
         }
         if (threadCountField != null) {
             threadCountField.setText(projectSettings.getThreadCount());
@@ -282,6 +294,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         useWholeProjectContextCheckBox = new JBCheckBox(message("gmaven.settings.project.task.context"));
         useWholeProjectContextCheckBox.setToolTipText(message("gmaven.settings.project.task.context.tooltip"));
         content.add(useWholeProjectContextCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+
+        resolveModulePerSourceSetCheckBox = new JBCheckBox(message("gmaven.settings.project.module.per.source.set"));
+        content.add(resolveModulePerSourceSetCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
 
         outPutLevelCombobox = setupOutputLevelComboBox();
         JBLabel outputLevelLabel = new JBLabel(message("gmaven.settings.project.output.level"));

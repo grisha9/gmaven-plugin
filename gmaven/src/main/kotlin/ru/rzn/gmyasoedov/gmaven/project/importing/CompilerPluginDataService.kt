@@ -28,6 +28,7 @@ import org.jetbrains.jps.model.java.compiler.ProcessorConfigProfile
 import org.jetbrains.jps.model.java.impl.compiler.ProcessorConfigProfileImpl
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.PROC_NONE
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.CompilerPluginData
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import java.io.File
 import java.nio.file.Path
