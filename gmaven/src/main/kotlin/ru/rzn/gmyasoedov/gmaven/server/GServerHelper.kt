@@ -28,17 +28,29 @@ fun firstRun(gServerRequest: GServerRequest): MavenResult {
     return runMavenTask(processSupport, modelRequest)
 }
 
-fun getProjectModel(request: GServerRequest): MavenResult {
+fun getProjectModel(
+    request: GServerRequest,
+    processConsumer: ((process: GServerRemoteProcessSupport) -> Unit)? = null
+): MavenResult {
     val modelRequest = getModelRequest(request)
-    val mavenResult = runMavenTask(GServerRemoteProcessSupport(request), modelRequest)
+    var processSupport = GServerRemoteProcessSupport(request)
+    processConsumer?.let { it(processSupport) }
+    val mavenResult = runMavenTask(processSupport, modelRequest)
     if (tryInstallGMavenPlugin(request, mavenResult)) {
         firstRun(request)
-        return runMavenTask(GServerRemoteProcessSupport(request), modelRequest)
+        processSupport = GServerRemoteProcessSupport(request)
+        processConsumer?.let { it(processSupport) }
+        return runMavenTask(processSupport, modelRequest)
     }
     return mavenResult;
 }
 
-fun runTasks(request: GServerRequest, tasks: List<String>, artifactGA: String?): MavenResult {
+fun runTasks(
+    request: GServerRequest,
+    tasks: List<String>,
+    artifactGA: String?,
+    processConsumer: ((process: GServerRemoteProcessSupport) -> Unit)? = null
+): MavenResult {
     if (tasks.isEmpty()) {
         throw ExternalSystemException("tasks list is empty")
     }
@@ -49,6 +61,7 @@ fun runTasks(request: GServerRequest, tasks: List<String>, artifactGA: String?):
     modelRequest.tasks = tasks
     modelRequest.taskGA = artifactGA
     val processSupport = GServerRemoteProcessSupport(request)
+    processConsumer?.let { it(processSupport) }
     return runMavenTask(processSupport, modelRequest)
 }
 
