@@ -20,6 +20,7 @@ import com.intellij.util.io.isDirectory
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
+import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.firstRun
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
@@ -28,10 +29,17 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import java.io.File
 import java.nio.file.Path
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.absolutePathString
 
 class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSettings> {
-    override fun cancelTask(taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener) = false
+
+    private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, GServerRemoteProcessSupport>()
+
+    override fun cancelTask(id: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
+        cancellationMap[id]?.stopAll()
+        return true
+    }
 
     override fun resolveProjectInfo(
         id: ExternalSystemTaskId,
@@ -51,8 +59,12 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val mavenHome = getMavenHome(settings.distributionSettings)
         val buildPath = Path.of(settings.projectBuildFile ?: projectPath)
         val request = GServerRequest(id, buildPath, mavenHome, sdk, listener = listener, settings = settings)
-        val projectModel = getProjectModel(request)
-        return getProjectDataNode(projectPath, projectModel, settings)
+        try {
+            val projectModel = getProjectModel(request) { cancellationMap[id] = it }
+            return getProjectDataNode(projectPath, projectModel, settings)
+        } finally {
+            cancellationMap.remove(id)
+        }
     }
 
     private fun getPreviewProjectDataNode(
@@ -63,13 +75,12 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         listener: ExternalSystemTaskNotificationListener
     ): DataNode<ProjectData> {
         val projectDataNode = getPreviewProjectDataNode(projectPath, settings)
-        if (sdk != null && settings.distributionSettings.path != null) {
+        val distributionPath = settings.distributionSettings.path
+        if (sdk != null && distributionPath != null) {
             val buildPath = Path.of(settings.projectBuildFile ?: projectPath)
-            val request =
-                GServerRequest(id, buildPath, settings.distributionSettings.path!!, sdk, settings, listener = listener)
-            firstRun(request)
+            firstRun(GServerRequest(id, buildPath, distributionPath, sdk, settings, listener = listener))
         }
-        return projectDataNode;
+        return projectDataNode
     }
 
     private fun getPreviewProjectDataNode(
