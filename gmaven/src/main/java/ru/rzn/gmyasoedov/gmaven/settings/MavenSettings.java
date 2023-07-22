@@ -14,6 +14,7 @@ import com.intellij.util.xmlb.annotations.XCollection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -109,10 +110,12 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
 
     @Override
     public @Nullable MavenProjectSettings getLinkedProjectSettings(@NotNull String projectPath) {
+        String absoluteProjectPath = Path.of(projectPath).toAbsolutePath().toString();
         MavenProjectSettings projectSettings = super.getLinkedProjectSettings(projectPath);
         if (projectSettings == null) {
             for (MavenProjectSettings setting : getLinkedProjectsSettings()) {
-                if (projectPath.contains(setting.getExternalProjectPath())) {
+                Path absolutePath = Path.of(setting.getExternalProjectPath()).toAbsolutePath();
+                if (absoluteProjectPath.contains(absolutePath.toString())) {
                     return setting;
                 }
             }
