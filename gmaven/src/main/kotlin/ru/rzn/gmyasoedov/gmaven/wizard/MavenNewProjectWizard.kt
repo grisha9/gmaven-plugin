@@ -29,6 +29,7 @@ import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenId
 import java.nio.file.Path
+import kotlin.io.path.absolutePathString
 
 class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
 
@@ -83,7 +84,7 @@ class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
                         .findExtensionOrFail(GProjectOpenProcessor::class.java)
                     openProcessor.importProjectAfterwards(project, buildFile)
                 } else {
-                    val modulePath = buildFile.parent.path
+                    val modulePath = buildFile.parent.toNioPath().absolutePathString()
                     val projectSettings = MavenSettings.getInstance(project)
                         .getLinkedProjectSettings(modulePath)
                         ?: throw ExternalSystemException("settings not found $modulePath")
