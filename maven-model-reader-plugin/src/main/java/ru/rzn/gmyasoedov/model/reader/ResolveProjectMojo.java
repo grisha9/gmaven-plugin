@@ -57,7 +57,7 @@ public class ResolveProjectMojo extends AbstractMojo {
             resolvePluginBody(mavenProject, gPluginSet);
         }
         for (ArtifactResolutionException error : resolveArtifactErrors) {
-            getLog().warn("Resolution of annotationProcessorPath dependencies failed: "
+            getLog().debug("Resolution of annotationProcessorPath dependencies failed: "
                     + error.getLocalizedMessage(), error);
         }
     }
