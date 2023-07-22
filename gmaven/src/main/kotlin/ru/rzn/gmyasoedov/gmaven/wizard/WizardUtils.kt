@@ -16,7 +16,8 @@ fun createMavenProjectSettings(projectFile: VirtualFile, project: Project): Mave
     val projectDirectory = if (projectFile.isDirectory) projectFile else projectFile.parent
     val settings = MavenProjectSettings()
     settings.distributionSettings = getDistributionSettings(settings, project, projectDirectory)
-    settings.externalProjectPath = projectDirectory.toNioPath().absolutePathString()
+    //only canonicalPath work!!!
+    settings.externalProjectPath = projectDirectory.canonicalPath
     settings.projectBuildFile = if (!projectFile.isDirectory) projectFile.toNioPath().absolutePathString() else null
     settings.jdkName = (MavenUtils.suggestProjectSdk()
         ?: ExternalSystemJdkUtil.getJdk(project, ExternalSystemJdkUtil.USE_INTERNAL_JAVA))?.name

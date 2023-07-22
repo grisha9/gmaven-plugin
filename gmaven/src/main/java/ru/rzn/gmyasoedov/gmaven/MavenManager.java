@@ -280,10 +280,4 @@ public final class MavenManager
                 .findFirst()
                 .orElse(null);
     }
-
-    private static boolean isEquals(MavenProjectSettings projectSettings, ModuleData m) {
-        Path p1 = Path.of(m.getLinkedExternalProjectPath());
-        Path p2 = Path.of(projectSettings.getExternalProjectPath());
-        return p1.equals(p2);
-    }
 }
