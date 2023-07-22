@@ -46,10 +46,9 @@ import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings;
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings;
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettingsListener;
 import ru.rzn.gmyasoedov.gmaven.settings.ProfileExecution;
-import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
 
 import javax.swing.*;
-import java.util.ArrayList;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -59,17 +58,13 @@ import static com.intellij.openapi.externalSystem.service.execution.ExternalSyst
 import static com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil.findAll;
 import static com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil.findAllRecursively;
 
-public final class MavenManager //manager
+public final class MavenManager
         implements ExternalSystemConfigurableAware,
         ExternalSystemUiAware,
-        // ExternalSystemAutoImportAware,
         StartupActivity,
         ExternalSystemManager<MavenProjectSettings, MavenSettingsListener,
                 MavenSettings, MavenLocalSettings, MavenExecutionSettings> {
 
-    /*  @NotNull
-      private final ExternalSystemAutoImportAware myAutoImportDelegate = new CachingExternalSystemAutoImportAware(new GradleAutoImportAware());
-  */
     @NotNull
     @Override
     public ProjectSystemId getSystemId() {
@@ -271,147 +266,24 @@ public final class MavenManager //manager
 
     @Override
     public void runActivity(@NotNull final Project project) {
-        // We want to automatically refresh linked projects on gradle service directory change.
-       /* MessageBusConnection connection = project.getMessageBus().connect();
-        connection.subscribe(MavenSettings.getInstance(project).getChangesTopic(), new GradleSettingsListenerAdapter() {
-
-            @Override
-            public void onServiceDirectoryPathChange(@Nullable String oldPath, @Nullable String newPath) {
-                for (MavenProjectSettings projectSettings : MavenSettings.getInstance(project).getLinkedProjectsSettings()) {
-                    ExternalProjectsManager.getInstance(project).getExternalProjectsWatcher().markDirty(projectSettings.getExternalProjectPath());
-                }
-            }
-
-            @Override
-            public void onGradleHomeChange(@Nullable String oldPath, @Nullable String newPath, @NotNull String linkedProjectPath) {
-                ExternalProjectsManager.getInstance(project).getExternalProjectsWatcher().markDirty(linkedProjectPath);
-            }
-
-            *//*@Override
-            public void onGradleDistributionTypeChange(DistributionType currentValue, @NotNull String linkedProjectPath) {
-                ExternalProjectsManager.getInstance(project).getExternalProjectsWatcher().markDirty(linkedProjectPath);
-            }*//*
-
-            @Override
-            public void onBuildDelegationChange(boolean delegatedBuild, @NotNull String linkedProjectPath) {
-                if (!updateOutputRoots(delegatedBuild, linkedProjectPath)) {
-                    ExternalProjectsManager.getInstance(project).getExternalProjectsWatcher().markDirty(linkedProjectPath);
-                }
-            }
-
-            private boolean updateOutputRoots(boolean delegatedBuild, @NotNull String linkedProjectPath) {
-                ExternalProjectInfo projectInfo =
-                        ProjectDataManager.getInstance().getExternalProjectData(project, GradleConstants.SYSTEM_ID, linkedProjectPath);
-                if (projectInfo == null) return false;
-
-                String buildNumber = projectInfo.getBuildNumber();
-                if (buildNumber == null) return false;
-
-                final DataNode<ProjectData> projectStructure = projectInfo.getExternalProjectStructure();
-                if (projectStructure == null) return false;
-
-                String title = ExternalSystemBundle.message("progress.refresh.text", projectStructure.getData().getExternalName(),
-                        projectInfo.getProjectSystemId().getReadableName());
-                ProgressManager.getInstance().run(new Task.Backgroundable(project, title, false) {
-                    @Override
-                    public void run(@NotNull ProgressIndicator indicator) {
-                        DumbService.getInstance(project).suspendIndexingAndRun(title, () -> {
-                            for (DataNode<ModuleData> moduleDataNode : findAll(projectStructure, ProjectKeys.MODULE)) {
-                                moduleDataNode.getData().useExternalCompilerOutput(delegatedBuild);
-                                for (DataNode<GradleSourceSetData> sourceSetDataNode : findAll(moduleDataNode, GradleSourceSetData.KEY)) {
-                                    sourceSetDataNode.getData().useExternalCompilerOutput(delegatedBuild);
-                                }
-                            }
-                            ApplicationManager.getApplication().getService(ProjectDataManager.class).importData(projectStructure, project, true);
-                        });
-                    }
-                });
-                return true;
-            }
-        });
-
-        // We used to assume that gradle scripts are always named 'build.gradle' and kept path to that build.gradle file at ide settings.
-        // However, it was found out that that is incorrect assumption (IDEA-109064). Now we keep paths to gradle script's directories
-        // instead. However, we don't want to force old users to re-import gradle projects because of that. That's why we check gradle
-        // config and re-point it from build.gradle to the parent dir if necessary.
-        Map<String, String> adjustedPaths = patchLinkedProjects(project);
-        if (adjustedPaths == null) {
-            return;
-        }
-
-        GradleLocalSettings localSettings = GradleLocalSettings.getInstance(project);
-        patchRecentTasks(adjustedPaths, localSettings);
-        patchAvailableProjects(adjustedPaths, localSettings);*/
     }
-
-   /* @Nullable
-    private static Map<String, String> patchLinkedProjects(@NotNull Project project) {
-        GradleSettings settings = GradleSettings.getInstance(project);
-        Collection<GradleProjectSettings> correctedSettings = new ArrayList<>();
-        Map<String*//* old path *//*, String*//* new path *//*> adjustedPaths = new HashMap<>();
-        for (GradleProjectSettings projectSettings : settings.getLinkedProjectsSettings()) {
-            String oldPath = projectSettings.getExternalProjectPath();
-            if (oldPath != null && new File(oldPath).isFile() && FileUtilRt.extensionEquals(oldPath, GradleConstants.EXTENSION)) {
-                try {
-                    String newPath = new File(oldPath).getParentFile().getCanonicalPath();
-                    projectSettings.setExternalProjectPath(newPath);
-                    adjustedPaths.put(oldPath, newPath);
-                } catch (IOException e) {
-                    LOG.warn(String.format(
-                            "Unexpected exception occurred on attempt to re-point linked gradle project path from build.gradle to its parent dir. Path: %s",
-                            oldPath
-                    ), e);
-                }
-            }
-            correctedSettings.add(projectSettings);
-        }
-        if (adjustedPaths.isEmpty()) {
-            return null;
-        }
-
-        settings.setLinkedProjectsSettings(correctedSettings);
-        return adjustedPaths;
-    }
-
-    private static void patchAvailableProjects(@NotNull Map<String, String> adjustedPaths, @NotNull GradleLocalSettings localSettings) {
-        Map<ExternalProjectPojo, Collection<ExternalProjectPojo>> adjustedAvailableProjects =
-                new HashMap<>();
-        for (Map.Entry<ExternalProjectPojo, Collection<ExternalProjectPojo>> entry : localSettings.getAvailableProjects().entrySet()) {
-            String newPath = adjustedPaths.get(entry.getKey().getPath());
-            if (newPath == null) {
-                adjustedAvailableProjects.put(entry.getKey(), entry.getValue());
-            } else {
-                adjustedAvailableProjects.put(new ExternalProjectPojo(entry.getKey().getName(), newPath), entry.getValue());
-            }
-        }
-        localSettings.setAvailableProjects(adjustedAvailableProjects);
-    }
-
-    private static void patchRecentTasks(@NotNull Map<String, String> adjustedPaths, @NotNull GradleLocalSettings localSettings) {
-        for (ExternalTaskExecutionInfo taskInfo : localSettings.getRecentTasks()) {
-            ExternalSystemTaskExecutionSettings s = taskInfo.getSettings();
-            String newPath = adjustedPaths.get(s.getExternalProjectPath());
-            if (newPath != null) {
-                s.setExternalProjectPath(newPath);
-            }
-        }
-    }*/
 
     @Nullable
-    private static String getProjectBuildFile(MavenProjectSettings projectSettings, Collection<DataNode<ModuleData>> modules) {
-        MavenLog.LOG.warn("GMaven path test1 " + projectSettings.getExternalProjectPath());
-        ArrayList<DataNode<ModuleData>> dataNodes = new ArrayList<>(modules);
-        for (int i = 0; i < dataNodes.size(); i++) {
-            ModuleData data = dataNodes.get(0).getData();
-            MavenLog.LOG.warn("GMaven path testl" + i + " " + data.getLinkedExternalProjectPath());
-            MavenLog.LOG.warn("GMaven path testp" + i + " " + data.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE));
-        }
+    private static String getProjectBuildFile(MavenProjectSettings projectSettings,
+                                              Collection<DataNode<ModuleData>> modules) {
         return modules.stream()
                 .map(DataNode::getData)
-                .filter(m -> m.getLinkedExternalProjectPath().equals(projectSettings.getExternalProjectPath()))
+                .filter(m -> Path.of(m.getLinkedExternalProjectPath())
+                        .equals(Path.of(projectSettings.getExternalProjectPath())))
                 .filter(m -> m.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) != null)
                 .map(m -> m.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE))
                 .findFirst()
                 .orElse(null);
+    }
+
+    private static boolean isEquals(MavenProjectSettings projectSettings, ModuleData m) {
+        Path p1 = Path.of(m.getLinkedExternalProjectPath());
+        Path p2 = Path.of(projectSettings.getExternalProjectPath());
+        return p1.equals(p2);
     }
 }
