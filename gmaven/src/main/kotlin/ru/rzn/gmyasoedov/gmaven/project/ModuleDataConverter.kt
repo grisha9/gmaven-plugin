@@ -13,6 +13,8 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver.ModuleContextHolder
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.DependencyAnalyzerData
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenContentRoot
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenGeneratedContentRoot
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
@@ -51,13 +53,15 @@ fun createModuleData(
 
     val moduleDataNode = parentDataNode.createChild(ProjectKeys.MODULE, moduleData)
 
-    val contentRootData = ContentRootData(SYSTEM_ID, projectPath)
-    storePath(project.sourceRoots, contentRootData, ExternalSystemSourceType.SOURCE)
-    storePath(project.resourceRoots, contentRootData, ExternalSystemSourceType.RESOURCE)
-    storePath(project.testSourceRoots, contentRootData, ExternalSystemSourceType.TEST)
-    storePath(project.testResourceRoots, contentRootData, ExternalSystemSourceType.TEST_RESOURCE)
-    addGeneratedSources(project, contentRootData)
-    contentRootData.storePath(ExternalSystemSourceType.EXCLUDED, project.buildDirectory)
+    val rootPaths = listOf(
+        getContentRootPath(project.sourceRoots, ExternalSystemSourceType.SOURCE),
+        getContentRootPath(project.resourceRoots, ExternalSystemSourceType.RESOURCE),
+        getContentRootPath(project.testSourceRoots, ExternalSystemSourceType.TEST),
+        getContentRootPath(project.testResourceRoots, ExternalSystemSourceType.TEST_RESOURCE),
+        getPluginContentRootPaths(project)
+    ).flatten()
+    val generatedPaths = getGeneratedSources(project)
+    val contentRoot = ContentRoots(rootPaths, generatedPaths, project.buildDirectory)
 
     val compilerData = getCompilerData(project, context)
     val sourceLanguageLevel: LanguageLevel = compilerData.sourceLevel
@@ -73,11 +77,10 @@ fun createModuleData(
         moduleDataNode.createChild(DependencyAnalyzerData.KEY, DependencyAnalyzerData(SYSTEM_ID, project.artifactId))
     }
 
-    applyPlugins(project, moduleData, contentRootData)
     populateAnnotationProcessorData(project, moduleDataNode, compilerData)
     populateTasks(moduleDataNode, project, context.mavenResult.settings.localRepository?.let { Path.of(it) })
 
-    val perSourceSetModules = setupSourceSetData(moduleDataNode, contentRootData, context, project, compilerData)
+    val perSourceSetModules = setupContentRootAndSourceSetData(moduleDataNode, contentRoot, context, project, compilerData)
     context.moduleDataByArtifactId.put(project.id, ModuleContextHolder(moduleDataNode, perSourceSetModules))
 
     if (parentDataNode.data is ModuleData) {
@@ -90,37 +93,27 @@ fun createModuleData(
     return moduleDataNode
 }
 
-private fun setupSourceSetData(
+private fun setupContentRootAndSourceSetData(
     moduleDataNode: DataNode<ModuleData>,
-    contentRootData: ContentRootData,
+    contentRoot: ContentRoots,
     context: MavenProjectResolver.ProjectResolverContext,
     project: MavenProject,
     compilerData: CompilerData,
 ): MavenProjectResolver.PerSourceSetModules? {
     val perSourceSet = MavenUtils.isPerSourceSet(context.settings, project, compilerData)
     if (!perSourceSet) {
-        moduleDataNode.createChild(ProjectKeys.CONTENT_ROOT, contentRootData)
+        val contentRootData = createContentRootData(contentRoot, project.basedir)
+        contentRootData.forEach { moduleDataNode.createChild(ProjectKeys.CONTENT_ROOT, it) }
         return null
     }
 
-    val mainPaths = ArrayList<Pair<ExternalSystemSourceType, String>>()
-    val testPaths = ArrayList<Pair<ExternalSystemSourceType, String>>()
-    val excludedPaths = ArrayList<Pair<ExternalSystemSourceType, String>>()
-    for (type in ExternalSystemSourceType.values()) {
-        for (path in contentRootData.getPaths(type)) {
-            when {
-                type.isTest -> testPaths.add(type to path.path)
-                type.isExcluded -> excludedPaths.add(type to path.path)
-                else -> mainPaths.add(type to path.path)
-            }
-        }
-    }
-    val mainContentRootData = ContentRootData(SYSTEM_ID, contentRootData.rootPath)
-    excludedPaths.forEach { mainContentRootData.storePath(it.first, it.second) }
-    moduleDataNode.createChild(ProjectKeys.CONTENT_ROOT, mainContentRootData)
+    val mainModuleContentRoots = ContentRoots(emptyList(), emptyList(), contentRoot.excludedPath)
+    val contentRootData = createContentRootData(mainModuleContentRoots, project.basedir)
+    contentRootData.forEach { moduleDataNode.createChild(ProjectKeys.CONTENT_ROOT, it) }
+
     moduleDataNode.data.isInheritProjectCompileOutputPath = true
-    val mainSourceSetModule = createSourceSetModule(moduleDataNode, project, compilerData, mainPaths, false)
-    val testSourceSetModule = createSourceSetModule(moduleDataNode, project, compilerData, testPaths, true)
+    val mainSourceSetModule = createSourceSetModule(moduleDataNode, project, compilerData, contentRoot, false)
+    val testSourceSetModule = createSourceSetModule(moduleDataNode, project, compilerData, contentRoot, true)
     setDependTestOnMain(testSourceSetModule, mainSourceSetModule)
     return MavenProjectResolver.PerSourceSetModules(mainSourceSetModule, testSourceSetModule)
 }
@@ -139,39 +132,38 @@ private fun createSourceSetModule(
     mainModuleNode: DataNode<ModuleData>,
     project: MavenProject,
     compilerData: CompilerData,
-    paths: ArrayList<Pair<ExternalSystemSourceType, String>>,
+    contentRoots: ContentRoots,
     isTest: Boolean
 ): DataNode<SourceSetData> {
     val mainModuleData = mainModuleNode.data
     val moduleSuffix = if (isTest) TEST else MAIN
-    val id = mainModuleData.id + ":" + moduleSuffix;
+    val id = mainModuleData.id + ":" + moduleSuffix
     val externalName = project.artifactId + ":" + moduleSuffix
     val internalName = getInternalModuleName(mainModuleData.internalName, moduleSuffix)
     val data = SourceSetData(id, externalName, internalName, mainModuleData.moduleFileDirectoryPath, project.basedir)
     val moduleNode = mainModuleNode.createChild(SourceSetData.KEY, data)
+    val currentContentRoots = splitContentRoots(contentRoots, isTest)
 
     data.isInheritProjectCompileOutputPath = false
     data.useExternalCompilerOutput(false)
     data.setProperty(GMavenConstants.MODULE_PROP_BUILD_FILE, project.file.absolutePath)
 
-    //todo basedir check for gradle CommonGradleProjectResolverExtension#addExternalProjectContentRoots
     val basePath = Path.of(project.basedir)
-    val contentRootData = ContentRootData(SYSTEM_ID, basePath.resolve("src").resolve(moduleSuffix).toString())
-    paths.forEach { storePath(contentRootData, it.first, it.second) }
+    val rootModulePath = basePath.resolve("src").resolve(moduleSuffix).toString()
+    val contentRootData = createContentRootData(currentContentRoots, rootModulePath)
+    contentRootData.forEach { moduleNode.createChild(ProjectKeys.CONTENT_ROOT, it) }
+
     if (isTest) {
         data.setCompileOutputPath(ExternalSystemSourceType.TEST, project.testOutputDirectory)
     } else {
         data.setCompileOutputPath(ExternalSystemSourceType.SOURCE, project.outputDirectory)
     }
 
-    moduleNode.createChild(ProjectKeys.CONTENT_ROOT, contentRootData)
-    moduleNode.createChild(ModuleSdkData.KEY, ModuleSdkData(null))
-
-
     val sourceLevel = if (isTest) compilerData.testSourceLevel else compilerData.sourceLevel
     val targetLevel = (if (isTest) compilerData.testTargetLevel else compilerData.targetLevel)
         .toJavaVersion().toFeatureString()
     moduleNode.createChild(JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, sourceLevel, targetLevel))
+    moduleNode.createChild(ModuleSdkData.KEY, ModuleSdkData(null))
     return moduleNode
 }
 
@@ -197,39 +189,108 @@ private fun getIdeaModulePath(context: MavenProjectResolver.ProjectResolverConte
     return context.ideaProjectPath + File.separatorChar + subPath
 }
 
-private fun addGeneratedSources(
-    project: MavenProject,
-    contentRootData: ContentRootData,
-    isTest: Boolean? = null,
-) {
-    if (project.packaging.equals("pom", true)) return;
-    val generatedSourcePath = MavenUtils.getGeneratedSourcesDirectory(project.buildDirectory, false)
-    val generatedTestSourcePath = MavenUtils.getGeneratedSourcesDirectory(project.buildDirectory, true)
-    if (isTest == null) {
-        storeGeneratedPaths(
-            generatedSourcePath.toFile().listFiles(), contentRootData, ExternalSystemSourceType.SOURCE_GENERATED
-        )
-        storeGeneratedPaths(
-            generatedTestSourcePath.toFile().listFiles(), contentRootData, ExternalSystemSourceType.TEST_GENERATED
-        )
-    } else if (isTest) {
-        storeGeneratedPaths(
-            generatedTestSourcePath.toFile().listFiles(), contentRootData, ExternalSystemSourceType.TEST_GENERATED
-        )
-    } else {
-        storeGeneratedPaths(
-            generatedSourcePath.toFile().listFiles(), contentRootData, ExternalSystemSourceType.SOURCE_GENERATED
-        )
+private fun createContentRootData(contentRoots: ContentRoots, rootPath: String): List<ContentRootData> {
+    val roots = mutableListOf(ContentRootData(SYSTEM_ID, rootPath))
+    if (contentRoots.excludedPath != null) {
+        addExcludedContentRoot(roots, contentRoots.excludedPath)
+    }
+    for (contentRoot in contentRoots.paths) {
+        addContentRoot(roots, contentRoot.type, contentRoot.path)
+    }
+    for (generatedContentRoot in contentRoots.generatedPaths) {
+        addContentRoot(roots, generatedContentRoot)
+    }
+    return roots
+}
+
+private fun addContentRoot(roots: MutableList<ContentRootData>, type: ExternalSystemSourceType, path: String) {
+    var errorOnStorePath = false
+    for (root in roots) {
+        try {
+            root.storePath(type, path)
+            return
+        } catch (e: IllegalArgumentException) {
+            errorOnStorePath = true
+        }
+    }
+    if (errorOnStorePath) {
+        val contentRootData = ContentRootData(SYSTEM_ID, path)
+        contentRootData.storePath(type, path)
+        roots.add(contentRootData)
     }
 }
 
-private fun storeGeneratedPaths(
-    listFiles: Array<File>?,
-    contentRootData: ContentRootData,
-    sourceGenerated: ExternalSystemSourceType
-) {
-    if (listFiles != null) {
-        val paths = listFiles.filter { it.isDirectory }.map { it.absolutePath }
-        storePath(paths, contentRootData, sourceGenerated)
+private fun addContentRoot(roots: MutableList<ContentRootData>, generatedContentRoot: MavenGeneratedContentRoot) {
+    var errorOnStorePath = false
+    var added = false
+    for (root in roots) {
+        for (path in generatedContentRoot.paths) {
+            try {
+                root.storePath(generatedContentRoot.type, path)
+                added = true
+            } catch (e: IllegalArgumentException) {
+                errorOnStorePath = true
+            }
+        }
+        if (added) return
+    }
+    if (errorOnStorePath) {
+        val contentRootData = ContentRootData(SYSTEM_ID, generatedContentRoot.rootPath.toString())
+        generatedContentRoot.paths.forEach { contentRootData.storePath(generatedContentRoot.type, it) }
+        roots.add(contentRootData)
     }
 }
+
+private fun addExcludedContentRoot(roots: MutableList<ContentRootData>, path: String) {
+    var errorOnStorePath = false
+    for (root in roots) {
+        try {
+            val sizeBefore = root.getPaths(ExternalSystemSourceType.EXCLUDED).size
+            root.storePath(ExternalSystemSourceType.EXCLUDED, path)
+            val sizeAfter = root.getPaths(ExternalSystemSourceType.EXCLUDED).size
+            if (sizeBefore == sizeAfter) throw IllegalArgumentException()
+            return
+        } catch (e: IllegalArgumentException) {
+            errorOnStorePath = true
+        }
+    }
+    if (errorOnStorePath) {
+        val contentRootData = ContentRootData(SYSTEM_ID, path)
+        contentRootData.storePath(ExternalSystemSourceType.EXCLUDED, path)
+        roots.add(contentRootData)
+    }
+}
+
+
+private fun splitContentRoots(contentRoots: ContentRoots, test: Boolean): ContentRoots {
+    return ContentRoots(
+        contentRoots.paths.filter { it.type.isTest == test },
+        contentRoots.generatedPaths.filter { it.type.isTest == test },
+        null
+    )
+}
+
+private fun getGeneratedSources(project: MavenProject): List<MavenGeneratedContentRoot> {
+    if (project.packaging.equals("pom", true)) return emptyList()
+    val generatedSourcePath = MavenUtils.getGeneratedSourcesDirectory(project.buildDirectory, false)
+    val generatedTestSourcePath = MavenUtils.getGeneratedSourcesDirectory(project.buildDirectory, true)
+    return listOfNotNull(
+        getGeneratedContentRoot(generatedSourcePath, ExternalSystemSourceType.SOURCE_GENERATED),
+        getGeneratedContentRoot(generatedTestSourcePath, ExternalSystemSourceType.TEST_GENERATED),
+    )
+}
+
+private fun getGeneratedContentRoot(
+    rootPath: Path,
+    type: ExternalSystemSourceType
+): MavenGeneratedContentRoot? {
+    val listFiles = rootPath.toFile().listFiles() ?: return null
+    val paths = listFiles.asSequence().filter { it.isDirectory }.map { it.absolutePath }.toList()
+    return MavenGeneratedContentRoot(type, rootPath, paths)
+}
+
+private class ContentRoots(
+    val paths: List<MavenContentRoot>,
+    val generatedPaths: List<MavenGeneratedContentRoot>,
+    val excludedPath: String?
+)
