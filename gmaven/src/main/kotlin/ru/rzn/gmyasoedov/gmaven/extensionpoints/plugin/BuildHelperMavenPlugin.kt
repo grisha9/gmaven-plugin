@@ -1,12 +1,9 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
-import com.intellij.openapi.externalSystem.model.project.ContentRootData
-import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
-import com.intellij.openapi.externalSystem.model.project.ModuleData
-import ru.rzn.gmyasoedov.gmaven.project.storePath
+import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType.*
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenContentRoot
 import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.PluginExecution
 
 class BuildHelperMavenPlugin : MavenFullImportPlugin {
@@ -14,41 +11,33 @@ class BuildHelperMavenPlugin : MavenFullImportPlugin {
 
     override fun getArtifactId() = "build-helper-maven-plugin"
 
-    override fun populateModuleData(
-        project: MavenProject, plugin: MavenPlugin, moduleData: ModuleData, contentRootData: ContentRootData
-    ) {
+    override fun getContentRoots(plugin: MavenPlugin): List<MavenContentRoot> {
         val executions = plugin.body?.executions ?: emptyList()
+        val result = ArrayList<MavenContentRoot>()
         for (execution in executions) {
             when {
-                execution.goals.contains("add-source") -> {
-                    val paths = getPathList(execution, "sources")
-                    storePath(paths, contentRootData, ExternalSystemSourceType.SOURCE)
-                }
+                execution.goals.contains("add-source") ->
+                    getPathList(execution, "sources").forEach { result.add(MavenContentRoot(SOURCE, it)) }
 
-                execution.goals.contains("add-test-source") -> {
-                    val paths = getPathList(execution, "sources")
-                    storePath(paths, contentRootData, ExternalSystemSourceType.TEST)
-                }
+                execution.goals.contains("add-test-source") ->
+                    getPathList(execution, "sources").forEach { result.add(MavenContentRoot(TEST, it)) }
 
-                execution.goals.contains("add-resource") -> {
-                    val paths = getPathList(execution, "resources")
-                    storePath(paths, contentRootData, ExternalSystemSourceType.RESOURCE)
-                }
+                execution.goals.contains("add-resource") ->
+                    getPathList(execution, "resources").forEach { result.add(MavenContentRoot(RESOURCE, it)) }
 
-                execution.goals.contains("add-test-resource") -> {
-                    val paths = getPathList(execution, "resources")
-                    storePath(paths, contentRootData, ExternalSystemSourceType.TEST_RESOURCE)
-                }
+                execution.goals.contains("add-test-resource") ->
+                    getPathList(execution, "resources").forEach { result.add(MavenContentRoot(TEST_RESOURCE, it)) }
             }
         }
+        return result;
     }
 
-    private fun getPathList(execution: PluginExecution, paramName: String): ArrayList<String> {
+    private fun getPathList(execution: PluginExecution, paramName: String): List<String> {
         val element = MavenJDOMUtil.parseConfiguration(execution.configuration)
         val paths = ArrayList<String>()
         for (sourceElement in element.getChild(paramName)?.children ?: emptyList()) {
             val sourcePath = sourceElement.textTrim
-            if (sourcePath != null) {
+            if (sourcePath != null && sourcePath.isNotEmpty()) {
                 paths.add(sourcePath)
             }
         }

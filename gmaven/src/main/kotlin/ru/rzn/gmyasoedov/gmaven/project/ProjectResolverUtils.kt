@@ -5,7 +5,6 @@ package ru.rzn.gmyasoedov.gmaven.project
 import com.intellij.externalSystem.MavenRepositoryData
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
-import com.intellij.openapi.externalSystem.model.project.ContentRootData
 import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.model.project.ProjectData
@@ -15,14 +14,10 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.CompilerPluginData
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.LifecycleData
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginData
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
-import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenSettings
 import java.nio.file.Path
@@ -55,34 +50,23 @@ fun getCompilerData(mavenProject: MavenProject, context: MavenProjectResolver.Pr
     return CompilerData(projectLanguageLevel, emptyList(), emptyList())
 }
 
-fun storePath(paths: List<String>, contentRootData: ContentRootData, type: ExternalSystemSourceType) {
-    for (path in paths) {
-        storePath(contentRootData, type, path)
-    }
+fun getContentRootPath(paths: List<String>, type: ExternalSystemSourceType): List<MavenContentRoot> {
+    return paths.asSequence()
+        .filter { it.isNotEmpty() }
+        .map { MavenContentRoot(type, it) }
+        .toList()
 }
 
-fun storePath(
-    contentRootData: ContentRootData,
-    type: ExternalSystemSourceType,
-    path: String,
-) {
-    if (path.isNotEmpty()) {
-        try {
-            contentRootData.storePath(type, path)
-        } catch (e: Exception) {
-            MavenLog.LOG.error("error on adding path to content root $path", e)
-        }
-    }
-}
-
-fun applyPlugins(mavenProject: MavenProject, moduleData: ModuleData, contentRootData: ContentRootData) {
+fun getPluginContentRootPaths(mavenProject: MavenProject): List<MavenContentRoot> {
+    val result = ArrayList<MavenContentRoot>()
     for (plugin in mavenProject.plugins) {
         for (pluginExtension in MavenFullImportPlugin.EP_NAME.extensionList) {
             if (pluginExtension.isApplicable(plugin)) {
-                pluginExtension.populateModuleData(mavenProject, plugin, moduleData, contentRootData)
+                result += pluginExtension.getContentRoots(plugin)
             }
         }
     }
+    return result;
 }
 
 fun populateTasks(moduleDataNode: DataNode<ModuleData>, mavenProject: MavenProject, localRepo: Path?) {
