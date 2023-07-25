@@ -41,7 +41,7 @@ private fun addDependencies(
     moduleByMavenProject: DataNode<ModuleData>,
     moduleDataByArtifactId: Map<String, MavenProjectResolver.ModuleContextHolder>
 ) {
-    var hasLibrary = false;
+    var hasLibrary = false
     for (artifact in project.resolvedArtifacts) {
         val moduleContextHolder = moduleDataByArtifactId[artifact.id]
         val moduleDataNodeByMavenArtifact = moduleContextHolder?.perSourceSetModules?.mainNode
@@ -65,7 +65,7 @@ private fun addDependencies(
     testModule: DataNode<SourceSetData>,
     moduleDataByArtifactId: Map<String, MavenProjectResolver.ModuleContextHolder>
 ) {
-    var hasLibrary = false;
+    var hasLibrary = false
     for (artifact in project.resolvedArtifacts) {
         val moduleContextHolder = moduleDataByArtifactId[artifact.id]
         val moduleDataNodeByMavenArtifact = moduleContextHolder?.perSourceSetModules?.mainNode
@@ -138,7 +138,7 @@ private fun createLibrary(artifact: MavenArtifact): LibraryData {
     library.setGroup(artifact.groupId)
     library.version = artifact.version
     library.addPath(getLibraryPathType(artifact), artifact.file.absolutePath)
-    return library;
+    return library
 }
 
 private fun getScope(artifact: MavenArtifact): DependencyScope {
