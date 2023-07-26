@@ -11,7 +11,6 @@ import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest;
 import java.nio.file.Paths;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class GMavenServerImpl implements GMavenServer {
@@ -29,9 +28,6 @@ public class GMavenServerImpl implements GMavenServer {
 
     private static String[] getMvnArgs(GetModelRequest request) {
         List<String> mvnArgs = new ArrayList<>();
-        if (!StringUtilRt.isEmpty(request.artifactId)) {
-            mvnArgs.addAll(Arrays.asList("-pl", request.artifactId, "-amd", "-am"));
-        }
         if (!StringUtilRt.isEmpty(request.alternativePom)) {
             mvnArgs.add("-f");
             mvnArgs.add(request.alternativePom);
@@ -77,13 +73,12 @@ public class GMavenServerImpl implements GMavenServer {
             mvnArgs.add("-Daether.conflictResolver.verbose=true");
             mvnArgs.add("-Daether.dependencyManager.verbose=true");
         }
-        if (!StringUtilRt.isEmpty(request.taskGA)) {
+        if (!StringUtilRt.isEmpty(request.projectList)) {
             mvnArgs.add("-pl");
-            mvnArgs.add(request.taskGA);
+            mvnArgs.add(request.projectList);
             mvnArgs.add( "-am");
             mvnArgs.add( "-amd");
         }
-        //[ru.rzn.gmyasoedov:model-reader:1.0-SNAPSHOT:resolve, -pl, org.example:untitled4, -Daether.conflictResolver.verbose=true, -Daether.dependencyManager.verbose=true, -amd, -am]
         return mvnArgs.toArray(new String[0]);
     }
 

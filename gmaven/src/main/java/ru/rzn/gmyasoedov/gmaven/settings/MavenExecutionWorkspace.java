@@ -10,13 +10,16 @@ import java.util.List;
 
 public class MavenExecutionWorkspace implements Serializable {
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NotNull
     private final List<ProfileExecution> profilesData = new ArrayList<>();
-
+    @NotNull
+    private final List<ProjectExecution> projectData = new ArrayList<>(2);
     @Nullable
-    private String artifactGA;
+    private String projectBuildFile;
+    @Nullable
+    private String subProjectBuildFile;
 
     public void addProfile(@Nullable ProfileExecution data) {
         if (data != null) {
@@ -29,12 +32,32 @@ public class MavenExecutionWorkspace implements Serializable {
         return List.copyOf(profilesData);
     }
 
-    @Nullable
-    public String getArtifactGA() {
-        return artifactGA;
+    public void addProject(@Nullable ProjectExecution data) {
+        if (data != null) {
+            projectData.add(data);
+        }
     }
 
-    public void setArtifactGA(@Nullable String artifactGA) {
-        this.artifactGA = artifactGA;
+    @NotNull
+    public List<ProjectExecution> getProjectData() {
+        return List.copyOf(projectData);
+    }
+
+    @Nullable
+    public String getProjectBuildFile() {
+        return projectBuildFile;
+    }
+
+    @Nullable
+    public void setProjectBuildFile(String projectBuildFile) {
+        this.projectBuildFile = projectBuildFile;
+    }
+
+    public String getSubProjectBuildFile() {
+        return subProjectBuildFile;
+    }
+
+    public void setSubProjectBuildFile(String subProjectBuildFile) {
+        this.subProjectBuildFile = subProjectBuildFile;
     }
 }

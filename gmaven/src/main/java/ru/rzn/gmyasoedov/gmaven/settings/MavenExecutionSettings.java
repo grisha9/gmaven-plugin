@@ -28,10 +28,6 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     @Nullable
     private String myIdeProjectPath;
     @Nullable
-    private String projectBuildFile;
-    @Nullable
-    private String subProjectBuildFile;
-    @Nullable
     private String threadCount;
     private final boolean offlineWork;
     private boolean resolveModulePerSourceSet = false;
@@ -112,15 +108,6 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         return executionWorkspace;
     }
 
-    @Nullable
-    public String getProjectBuildFile() {
-        return projectBuildFile;
-    }
-
-    public void setProjectBuildFile(@Nullable String projectBuildFile) {
-        this.projectBuildFile = projectBuildFile;
-    }
-
     public boolean isSkipTests() {
         return skipTests;
     }
@@ -168,15 +155,6 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         this.outputLevel = outputLevel;
     }
 
-    @Nullable
-    public String getSubProjectBuildFile() {
-        return subProjectBuildFile;
-    }
-
-    public void setSubProjectBuildFile(@Nullable String subProjectBuildFile) {
-        this.subProjectBuildFile = subProjectBuildFile;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -195,9 +173,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
             return false;
         if (!Objects.equals(javaHome, that.javaHome)) return false;
         if (!Objects.equals(jdkName, that.jdkName)) return false;
-        if (!Objects.equals(subProjectBuildFile, that.subProjectBuildFile)) return false;
-        if (!Objects.equals(myIdeProjectPath, that.myIdeProjectPath)) return false;
-        return Objects.equals(projectBuildFile, that.projectBuildFile);
+        return Objects.equals(myIdeProjectPath, that.myIdeProjectPath);
     }
 
     @Override
@@ -212,8 +188,6 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         result = 31 * result + (myIdeProjectPath != null ? myIdeProjectPath.hashCode() : 0);
         result = 31 * result + (resolveModulePerSourceSet ? 1 : 0);
         result = 31 * result + (useQualifiedModuleNames ? 1 : 0);
-        result = 31 * result + (projectBuildFile != null ? projectBuildFile.hashCode() : 0);
-        result = 31 * result + (subProjectBuildFile != null ? subProjectBuildFile.hashCode() : 0);
         result = 31 * result + (skipTests ? 1 : 0);
         return result;
     }

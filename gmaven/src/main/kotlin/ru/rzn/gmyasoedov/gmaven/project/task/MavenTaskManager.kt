@@ -30,19 +30,14 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
             ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
         val mavenHome = getMavenHome(settings.distributionSettings)
 
-        val projectBuildFile = settings.projectBuildFile ?: throw ExternalSystemException("project build file is empty")
-        val subProjectBuildFile = settings.subProjectBuildFile
+        val workspace = settings.executionWorkspace
+        val projectBuildFile = workspace.projectBuildFile
+            ?: throw ExternalSystemException("project build file is empty")
+        val subProjectBuildFile = workspace.subProjectBuildFile
         try {
-            if (subProjectBuildFile == null) {
-                val buildPath = Path.of(projectBuildFile)
-                val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
-                runTasks(request, taskNames, null) { cancellationMap[id] = it }
-            } else {
-                val buildPath = if (settings.executionWorkspace.artifactGA == null)
-                    Path.of(subProjectBuildFile) else Path.of(projectBuildFile)
-                val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
-                runTasks(request, taskNames, settings.executionWorkspace.artifactGA) { cancellationMap[id] = it }
-            }
+            val buildPath = Path.of(subProjectBuildFile ?: projectBuildFile)
+            val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
+            runTasks(request, taskNames) { cancellationMap[id] = it }
         } finally {
             cancellationMap.remove(id)
         }
