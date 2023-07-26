@@ -8,12 +8,23 @@
     <name>Gmaven</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="gr909@mail.ru">gmyasoedov</vendor>
+    <vendor email="grisha0909@gmail.com">gmyasoedov</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
-    <description><![CDATA[maven plugin]]></description>
+    <description>
+        <![CDATA[
+        Adds support for the Maven for Java language projects:
+        <br>
+        <ul>
+          <li>Import project structure to IDE</li>
+          <li>Execution Maven tasks</li>
+          <li>Original Maven behavior for getting project model</li>
+          <li>Support separate modules for production and test roots</li>
+        </ul>
+      ]]>
+    </description>
 
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
