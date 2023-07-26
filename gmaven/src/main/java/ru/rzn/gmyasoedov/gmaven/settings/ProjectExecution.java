@@ -6,15 +6,16 @@ import org.jetbrains.annotations.NotNull;
 import java.io.Serial;
 import java.io.Serializable;
 
-public class ProfileExecution implements Serializable {
+public class ProjectExecution implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
     @NotNull
     private final String name;
-    private boolean enabled;
+    private final boolean enabled;
 
-    public ProfileExecution(@NotNull String name) {
+    public ProjectExecution(@NotNull String name, boolean enabled) {
         this.name = name;
+        this.enabled = enabled;
     }
 
     @NotNull
@@ -26,12 +27,8 @@ public class ProfileExecution implements Serializable {
         return enabled;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
     @Transient
     public String toRawName() {
-        return enabled ? name : "-" + name;
+        return enabled ? name : "!" + name;
     }
 }

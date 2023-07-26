@@ -20,12 +20,9 @@ public class MavenProjectContainerConverter {
 
     public static MavenProjectContainer convert(EventSpyResultHolder source) {
         MavenExecutionResult executionResult = source.executionResult;
-        List<MavenProject> sortedProjects = executionResult.getTopologicallySortedProjects();
-        if (sortedProjects == null) {
-            sortedProjects = Collections.emptyList();
-        }
-        Map<File, MavenProject> projectByDirectoryMap = getMapForProjects(sortedProjects);
-        for (MavenProject sortedProject : sortedProjects) {
+        List<MavenProject> allProjects = getAllProjects(source);
+        Map<File, MavenProject> projectByDirectoryMap = getMapForProjects(allProjects);
+        for (MavenProject sortedProject : allProjects) {
             projectByDirectoryMap.put(sortedProject.getBasedir(), sortedProject);
         }
 
@@ -38,6 +35,12 @@ public class MavenProjectContainerConverter {
         fillContainer(container, projectByDirectoryMap, source.session);
 
         return container;
+    }
+
+    private static List<MavenProject> getAllProjects(EventSpyResultHolder source) {
+        if (source.session == null) return Collections.emptyList();
+        return source.session.getAllProjects() == null
+                ? Collections.<MavenProject>emptyList() : source.session.getAllProjects();
     }
 
     private static Map<File, MavenProject> getMapForProjects(List<MavenProject> projects) {

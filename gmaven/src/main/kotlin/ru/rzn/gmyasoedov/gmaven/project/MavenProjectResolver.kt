@@ -57,7 +57,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
 
         sdk ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
         val mavenHome = getMavenHome(settings.distributionSettings)
-        val buildPath = Path.of(settings.projectBuildFile ?: projectPath)
+        val buildPath = Path.of(settings.executionWorkspace.projectBuildFile ?: projectPath)
         val request = GServerRequest(id, buildPath, mavenHome, sdk, listener = listener, settings = settings)
         try {
             val projectModel = getProjectModel(request) { cancellationMap[id] = it }
@@ -77,7 +77,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val projectDataNode = getPreviewProjectDataNode(projectPath, settings)
         val distributionPath = settings.distributionSettings.path
         if (sdk != null && distributionPath != null) {
-            val buildPath = Path.of(settings.projectBuildFile ?: projectPath)
+            val buildPath = Path.of(settings.executionWorkspace.projectBuildFile ?: projectPath)
             firstRun(GServerRequest(id, buildPath, distributionPath, sdk, settings, listener = listener))
         }
         return projectDataNode

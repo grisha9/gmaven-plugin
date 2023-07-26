@@ -446,4 +446,8 @@ public class MavenUtils {
     public static boolean isPomProject(@NotNull MavenProject project) {
         return "pom".equals(project.getPackaging());
     }
+
+    public static String toGAString(ModuleData moduleData) {
+        return moduleData.getGroup() + ":" + moduleData.getModuleName();
+    }
 }
