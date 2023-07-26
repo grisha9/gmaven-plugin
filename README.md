@@ -1,7 +1,7 @@
 GMaven
 ==================
 
-### IntelliJ Plugin - https://plugins.jetbrains.com/plugin/<id>
+### IntelliJ Plugin - https://plugins.jetbrains.com/plugin/22370-gmaven
 ### Plugin home page - https://github.com/grisha9/gmaven-plugin
 
 
@@ -16,14 +16,17 @@ The plugin adds support for the Maven for Java language projects:
 
 ### Prerequisites
 
-1. IntelliJ IDEA 2022.* or higher
+1. IntelliJ IDEA 2022.2 or higher
 2. JDK 11
 3. Maven 3.3.1+  or higher
 
 
-### Project setup:
+### General information
 
 - For open existing project structure - select GMaven plugin on the dialog box after selecting the project
 - For creating new project select GMaven on build system tab on New Project Wizard
+
+
+- If you found a bug, please report it on https://github.com/grisha9/gmaven-plugin/issues
 
 
