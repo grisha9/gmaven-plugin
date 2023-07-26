@@ -48,7 +48,6 @@ fun getProjectModel(
 fun runTasks(
     request: GServerRequest,
     tasks: List<String>,
-    artifactGA: String?,
     processConsumer: ((process: GServerRemoteProcessSupport) -> Unit)? = null
 ): MavenResult {
     if (tasks.isEmpty()) {
@@ -59,7 +58,6 @@ fun runTasks(
     }
     val modelRequest = getModelRequest(request)
     modelRequest.tasks = tasks
-    modelRequest.taskGA = artifactGA
     val processSupport = GServerRemoteProcessSupport(request)
     processConsumer?.let { it(processSupport) }
     return runMavenTask(processSupport, modelRequest)
@@ -105,6 +103,11 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
     modelRequest.profiles = request.settings.executionWorkspace.profilesData.asSequence()
         .map { it.toRawName() }
         .joinToString(separator = ",")
+
+    modelRequest.projectList = request.settings.executionWorkspace.projectData.asSequence()
+        .map { it.toRawName() }
+        .joinToString(separator = ",")
+
     return modelRequest
 }
 

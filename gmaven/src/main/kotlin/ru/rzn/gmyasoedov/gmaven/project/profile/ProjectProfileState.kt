@@ -37,8 +37,7 @@ class ProjectProfilesStateService : PersistentStateComponent<ProjectProfilesStat
     fun getProfileExecution(profileData: ProfileData): ProfileExecution? {
         val profileState = state.mapping[profileData.stateKey] ?: return null
 
-        val execution = ProfileExecution()
-        execution.name = profileData.name
+        val execution = ProfileExecution(profileData.name)
         if (profileState.simpleProfile != null && profileState.simpleProfile == SimpleProfile.ACTIVE) {
             execution.isEnabled = true;
             return execution
