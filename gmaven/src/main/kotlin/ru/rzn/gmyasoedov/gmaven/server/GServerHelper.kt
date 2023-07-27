@@ -2,10 +2,15 @@
 
 package ru.rzn.gmyasoedov.gmaven.server
 
+import com.intellij.notification.NotificationGroupManager
+import com.intellij.notification.NotificationType
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.util.PathUtil
 import com.intellij.util.io.isDirectory
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.serverapi.GServerUtils
@@ -74,8 +79,20 @@ fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<
     val modelRequest = getModelRequest(request)
     modelRequest.analyzerGA = artifactGA
     val processSupport = GServerRemoteProcessSupport(request)
-    val mavenResult = runMavenTask(processSupport, modelRequest)
-    return mavenResult.projectContainer?.project?.dependencyTree ?: emptyList()
+    try {
+        val mavenResult = runMavenTask(processSupport, modelRequest)
+        return mavenResult.projectContainer?.project?.dependencyTree ?: emptyList()
+    } catch (e: Exception) {
+        MavenLog.LOG.warn(e)
+        NotificationGroupManager.getInstance()
+            .getNotificationGroup(GMavenConstants.SYSTEM_ID.readableName)
+            ?.let { ApplicationManager.getApplication().invokeLater {
+                it.createNotification(
+                    GBundle.message("gmaven.dependency.tree.title"), e.localizedMessage, NotificationType.ERROR
+                ).notify(null)
+            } }
+        return emptyList()
+    }
 }
 
 private fun tryInstallGMavenPlugin(request: GServerRequest, mavenResult: MavenResult) =
