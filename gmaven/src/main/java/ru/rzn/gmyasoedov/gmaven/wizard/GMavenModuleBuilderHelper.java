@@ -1,7 +1,5 @@
 package ru.rzn.gmyasoedov.gmaven.wizard;
 
-import com.intellij.openapi.GitSilentFileAdder;
-import com.intellij.openapi.GitSilentFileAdderProvider;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -103,19 +101,14 @@ public class GMavenModuleBuilderHelper {
     }
 
     private void setupBuildPomFile(Project project, VirtualFile buildScriptFile, Properties properties) {
-        GitSilentFileAdder vcsFileAdder = GitSilentFileAdderProvider.create(project);
-        try {
-            try {
-                vcsFileAdder.markFileForAdding(buildScriptFile);
-                MavenUtils.setupFileTemplate(project, buildScriptFile, properties);
-            } catch (IOException e) {
-                showError(project, e);
-            }
 
-            updateProjectPom(project, buildScriptFile);
-        } finally {
-            vcsFileAdder.finish();
+        try {
+            MavenUtils.setupFileTemplate(project, buildScriptFile, properties);
+        } catch (IOException e) {
+            showError(project, e);
         }
+
+        updateProjectPom(project, buildScriptFile);
 
         if (myParentProject != null) {
             VirtualFile parentBuildFile = MavenUtils.getVFile(myParentProject.getFile());

@@ -9,9 +9,11 @@ import org.apache.maven.settings.building.SettingsBuildingResult;
 import org.eclipse.aether.graph.DependencyNode;
 import ru.rzn.gmyasoedov.event.handler.converter.MavenErrorConverter;
 import ru.rzn.gmyasoedov.event.handler.converter.MavenProjectContainerConverter;
+import ru.rzn.gmyasoedov.event.handler.converter.MavenProjectWithDependencyConverter;
 import ru.rzn.gmyasoedov.event.handler.converter.MavenSettingsConverter;
 import ru.rzn.gmyasoedov.gmaven.server.result.ResultHolder;
 import ru.rzn.gmyasoedov.serverapi.model.BuildErrors;
+import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer;
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult;
 
 import javax.inject.Named;
@@ -61,8 +63,14 @@ public class GMavenEventSpy extends AbstractEventSpy {
         ResultHolder.result = new MavenResult(
                 buildErrors.pluginNotResolved,
                 MavenSettingsConverter.convert(resultHolder),
-                MavenProjectContainerConverter.convert(resultHolder),
+                getProjectContainer(),
                 buildErrors.exceptions
         );
+    }
+
+    private static MavenProjectContainer getProjectContainer() {
+        return resultHolder.dependencyResult.isEmpty()
+                ? MavenProjectContainerConverter.convert(resultHolder)
+                : MavenProjectWithDependencyConverter.convert(resultHolder);
     }
 }
