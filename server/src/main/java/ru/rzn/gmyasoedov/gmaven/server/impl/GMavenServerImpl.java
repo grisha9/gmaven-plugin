@@ -72,8 +72,8 @@ public class GMavenServerImpl implements GMavenServer {
             mvnArgs.add(request.analyzerGA);
             mvnArgs.add("-Daether.conflictResolver.verbose=true");
             mvnArgs.add("-Daether.dependencyManager.verbose=true");
-        }
-        if (!StringUtilRt.isEmpty(request.projectList)) {
+            mvnArgs.add( "-am");
+        } else if (!StringUtilRt.isEmpty(request.projectList)) {
             mvnArgs.add("-pl");
             mvnArgs.add(request.projectList);
             mvnArgs.add( "-am");

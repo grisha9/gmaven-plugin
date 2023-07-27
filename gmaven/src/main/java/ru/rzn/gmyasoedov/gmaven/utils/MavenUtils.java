@@ -15,7 +15,6 @@ import com.intellij.openapi.externalSystem.model.project.ModuleData;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil;
 import com.intellij.openapi.externalSystem.service.project.IdeModelsProviderImpl;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.progress.impl.CoreProgressManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
@@ -103,8 +102,7 @@ public class MavenUtils {
 
     private static boolean isNoBackgroundMode() {
         return (ApplicationManager.getApplication().isUnitTestMode()
-                || ApplicationManager.getApplication().isHeadlessEnvironment() &&
-                !CoreProgressManager.shouldKeepTasksAsynchronousInHeadlessMode());
+                || ApplicationManager.getApplication().isHeadlessEnvironment());
     }
 
     private static void runDumbAware(@NotNull Project project, @NotNull Runnable r) {

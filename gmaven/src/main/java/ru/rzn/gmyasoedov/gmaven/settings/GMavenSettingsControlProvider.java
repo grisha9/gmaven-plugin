@@ -1,13 +1,8 @@
 package ru.rzn.gmyasoedov.gmaven.settings;
 
-import com.intellij.util.PlatformUtils;
 import org.jetbrains.annotations.NotNull;
 
 public class GMavenSettingsControlProvider {
-
-  public String getPlatformPrefix() {
-    return PlatformUtils.isIntelliJ() ? PlatformUtils.getPlatformPrefix() : PlatformUtils.IDEA_CE_PREFIX;
-  }
 
   public GMavenSystemSettingsControlBuilder getSystemSettingsControlBuilder(@NotNull MavenSettings initialSettings) {
     return new SystemSettingsControlBuilder(initialSettings);
