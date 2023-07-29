@@ -68,6 +68,7 @@
         <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.CompilerPluginDataService"/>
         <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.SourceSetDataService"/>
         <externalSystemDependencyAnalyzer implementation="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerExtension"/>
+        <externalSystemUnlinkedProjectAware implementation="ru.rzn.gmyasoedov.gmaven.autolink.UnlinkedProjectAware"/>
 
         <toolWindow id="GMaven" anchor="right" icon="GMavenIcons.ToolWindowMaven"
                     factoryClass="ru.rzn.gmyasoedov.gmaven.ui.MavenToolWindowFactory"/>
