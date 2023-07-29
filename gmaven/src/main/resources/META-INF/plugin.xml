@@ -23,6 +23,13 @@
           <li>Original Maven behavior for getting project model</li>
           <li>Support separate modules for production and test roots</li>
         </ul>
+
+        Usage:<br>
+		<ul>
+        <li>Create new project: New | Project... then select language - Java and select build system - GMaven</li>
+        <li>Open project from VCS: New | Project from Version Control... and select GMaven in next dialog box</li>
+        <li>Open project from disk: Open... select Maven directory or build file and select GMaven in next dialog box</li>
+        </ul>
       ]]>
     </description>
 
