@@ -10,6 +10,7 @@ import com.intellij.openapi.externalSystem.settings.AbstractExternalSystemSettin
 import com.intellij.openapi.externalSystem.settings.ExternalSystemSettingsListener;
 import com.intellij.openapi.project.ExternalStorageConfigurationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.xmlb.annotations.XCollection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -106,12 +107,12 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
 
     @Override
     public @Nullable MavenProjectSettings getLinkedProjectSettings(@NotNull String projectPath) {
-        String absoluteProjectPath = Path.of(projectPath).toAbsolutePath().toString();
+        Path projectAbsolutePath = Path.of(projectPath).toAbsolutePath();
         MavenProjectSettings projectSettings = super.getLinkedProjectSettings(projectPath);
         if (projectSettings == null) {
             for (MavenProjectSettings setting : getLinkedProjectsSettings()) {
-                Path absolutePath = Path.of(setting.getExternalProjectPath()).toAbsolutePath();
-                if (absoluteProjectPath.contains(absolutePath.toString())) {
+                Path settingPath = Path.of(setting.getExternalProjectPath()).toAbsolutePath();
+                if (FileUtil.isAncestor(settingPath.toFile(), projectAbsolutePath.toFile(), false)) {
                     return setting;
                 }
             }
