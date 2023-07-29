@@ -30,7 +30,7 @@ import static java.lang.String.format;
 import static org.apache.maven.plugins.annotations.LifecyclePhase.NONE;
 import static org.apache.maven.plugins.annotations.ResolutionScope.TEST;
 
-@Mojo(name = "resolve", defaultPhase = NONE, aggregator = true, requiresDependencyResolution = TEST)
+@Mojo(name = "resolve", defaultPhase = NONE, aggregator = true, requiresDependencyResolution = TEST, threadSafe = true)
 public class ResolveProjectMojo extends AbstractMojo {
     private static final String ANNOTATION_PROCESSOR_PATH = "annotationProcessorPath";
     private static final String GMAVEN_PLUGINS = "gmaven.plugins";
