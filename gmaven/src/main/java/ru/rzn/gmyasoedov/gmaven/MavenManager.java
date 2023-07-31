@@ -29,6 +29,7 @@ import com.intellij.psi.search.ExecutionSearchScopes;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.Function;
 import com.intellij.util.containers.JBIterable;
+import com.intellij.util.execution.ParametersListUtil;
 import icons.GMavenIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -53,6 +54,7 @@ import javax.swing.*;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.intellij.openapi.externalSystem.model.ProjectKeys.MODULE;
@@ -94,7 +96,7 @@ public final class MavenManager
             String projectPath = pair.second;
             MavenSettings settings = MavenSettings.getInstance(project);
             MavenProjectSettings projectSettings = settings.getLinkedProjectSettings(projectPath);
-            String rootProjectPath = projectSettings != null ? projectSettings.getExternalProjectPath() : projectPath;
+            String rootProjectDirPath = projectSettings != null ? projectSettings.getExternalProjectPath() : projectPath;
             DistributionSettings distributionSettings = projectSettings != null
                     ? projectSettings.getDistributionSettings() : DistributionSettings.getBundled();
 
@@ -117,7 +119,7 @@ public final class MavenManager
             String ideProjectPath;
             if (project.getBasePath() == null ||
                     (project.getProjectFilePath() != null && StringUtil.endsWith(project.getProjectFilePath(), ".ipr"))) {
-                ideProjectPath = rootProjectPath;
+                ideProjectPath = rootProjectDirPath;
             } else {
                 ideProjectPath = project.getBasePath() + "/.idea/modules";
             }
@@ -130,8 +132,13 @@ public final class MavenManager
                 result.setThreadCount(projectSettings.getThreadCount());
                 result.setOutputLevel(projectSettings.getOutputLevel());
                 fillExecutionWorkSpace(project, projectSettings, projectPath, result.getExecutionWorkspace());
+                if (projectSettings.getArguments() != null) {
+                    result.withArguments(ParametersListUtil.parse(projectSettings.getArguments(), true, true));
+                }
             }
-            result.setSkipTests(settings.isSkipTests());
+            if (settings.isSkipTests()) {
+                result.withEnvironmentVariables(Map.of("skipTests", "true"));
+            }
             return result;
         };
     }

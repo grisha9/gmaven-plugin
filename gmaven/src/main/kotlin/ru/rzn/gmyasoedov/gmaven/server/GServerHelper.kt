@@ -124,7 +124,7 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
     modelRequest.projectList = request.settings.executionWorkspace.projectData.asSequence()
         .map { it.toRawName() }
         .joinToString(separator = ",")
-
+    modelRequest.additionalArguments = request.settings.arguments
     return modelRequest
 }
 

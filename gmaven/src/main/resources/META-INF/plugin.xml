@@ -69,12 +69,16 @@
         <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.SourceSetDataService"/>
         <externalSystemDependencyAnalyzer implementation="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerExtension"/>
         <externalSystemUnlinkedProjectAware implementation="ru.rzn.gmyasoedov.gmaven.autolink.UnlinkedProjectAware"/>
+        <externalSystem.runConfigurationEx implementation="ru.rzn.gmyasoedov.gmaven.project.task.GMavenRunConfigurationExtension"/>
+        <externalSystemViewContributor id="GMaven" implementation="ru.rzn.gmyasoedov.gmaven.ui.MavenExternalViewContributor"/>
+        <externalIconProvider key="GMAVEN" implementationClass="ru.rzn.gmyasoedov.gmaven.ui.GMavenIconProvider"/>
+
+        <stepsBeforeRunProvider implementation="ru.rzn.gmyasoedov.gmaven.project.task.GMavenBeforeRunTaskProvider" />
 
         <toolWindow id="GMaven" anchor="right" icon="GMavenIcons.ToolWindowMaven"
                     factoryClass="ru.rzn.gmyasoedov.gmaven.ui.MavenToolWindowFactory"/>
         <consoleFilterProvider implementation="ru.rzn.gmyasoedov.gmaven.project.filter.MavenConsoleFilterProvider" order="first"/>
-        <externalSystemViewContributor id="GMaven" implementation="ru.rzn.gmyasoedov.gmaven.ui.MavenExternalViewContributor"/>
-        <externalIconProvider key="GMAVEN" implementationClass="ru.rzn.gmyasoedov.gmaven.ui.GMavenIconProvider"/>
+
 
         <registryKey key="gmaven.server.debug" defaultValue="false"
                      description="Debug maven server"/>
