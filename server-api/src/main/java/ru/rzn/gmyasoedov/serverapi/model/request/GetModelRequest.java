@@ -9,6 +9,7 @@ public class GetModelRequest implements Serializable {
     public String alternativePom;
     public String gMavenPluginPath;
     public List<String> tasks;
+    public List<String> additionalArguments;
     public String projectList;
     public String profiles;
     public String threadCount;

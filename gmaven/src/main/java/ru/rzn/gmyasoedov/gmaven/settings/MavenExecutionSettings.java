@@ -20,8 +20,6 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     @NotNull
     private final DistributionSettings distributionSettings;
     @Nullable
-    private final String vmOptions;
-    @Nullable
     private String javaHome;
     @Nullable
     private String jdkName;
@@ -32,7 +30,6 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private final boolean offlineWork;
     private boolean resolveModulePerSourceSet = false;
     private boolean useQualifiedModuleNames = false;
-    private boolean skipTests;
     private boolean nonRecursive = false;
     private boolean updateSnapshots = false;
     @NotNull
@@ -43,9 +40,8 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
                                   boolean nonRecursive,
                                   boolean offlineWork) {
         this.distributionSettings = Objects.requireNonNull(distributionSettings);
-        this.vmOptions = vmOptions;
         if (vmOptions != null) {
-            withVmOptions(ParametersListUtil.parse(vmOptions));
+            withVmOptions(ParametersListUtil.parse(vmOptions, true, true));
         }
         this.nonRecursive = nonRecursive;
         this.offlineWork = offlineWork;
@@ -108,14 +104,6 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         return executionWorkspace;
     }
 
-    public boolean isSkipTests() {
-        return skipTests;
-    }
-
-    public void setSkipTests(boolean skipTests) {
-        this.skipTests = skipTests;
-    }
-
     @Nullable
     public String getThreadCount() {
         return threadCount;
@@ -141,11 +129,6 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         this.updateSnapshots = updateSnapshots;
     }
 
-    @Nullable
-    public String getVmOptions() {
-        return vmOptions;
-    }
-
     @NotNull
     public ProjectSettingsControlBuilder.OutputLevelType getOutputLevel() {
         return outputLevel;
@@ -166,11 +149,8 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         if (offlineWork != that.offlineWork) return false;
         if (resolveModulePerSourceSet != that.resolveModulePerSourceSet) return false;
         if (useQualifiedModuleNames != that.useQualifiedModuleNames) return false;
-        if (skipTests != that.skipTests) return false;
         if (!executionWorkspace.equals(that.executionWorkspace)) return false;
         if (!distributionSettings.equals(that.distributionSettings)) return false;
-        if (!Objects.equals(vmOptions, that.vmOptions))
-            return false;
         if (!Objects.equals(javaHome, that.javaHome)) return false;
         if (!Objects.equals(jdkName, that.jdkName)) return false;
         return Objects.equals(myIdeProjectPath, that.myIdeProjectPath);
@@ -181,14 +161,12 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         int result = super.hashCode();
         result = 31 * result + executionWorkspace.hashCode();
         result = 31 * result + distributionSettings.hashCode();
-        result = 31 * result + (vmOptions != null ? vmOptions.hashCode() : 0);
         result = 31 * result + (offlineWork ? 1 : 0);
         result = 31 * result + (javaHome != null ? javaHome.hashCode() : 0);
         result = 31 * result + (jdkName != null ? jdkName.hashCode() : 0);
         result = 31 * result + (myIdeProjectPath != null ? myIdeProjectPath.hashCode() : 0);
         result = 31 * result + (resolveModulePerSourceSet ? 1 : 0);
         result = 31 * result + (useQualifiedModuleNames ? 1 : 0);
-        result = 31 * result + (skipTests ? 1 : 0);
         return result;
     }
 
