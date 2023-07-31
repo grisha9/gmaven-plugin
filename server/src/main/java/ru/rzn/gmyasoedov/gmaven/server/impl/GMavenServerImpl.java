@@ -38,18 +38,6 @@ public class GMavenServerImpl implements GMavenServer {
         if (request.offline) {
             mvnArgs.add("-o");
         }
-        if (!StringUtilRt.isEmpty(request.gMavenPluginPath)) {
-            mvnArgs.add("install:install-file");
-            mvnArgs.add("-Dfile=" + request.gMavenPluginPath);
-            mvnArgs.add("-DgroupId=ru.rzn.gmyasoedov");
-            mvnArgs.add("-DartifactId=model-reader");
-            mvnArgs.add("-Dversion=1.0-SNAPSHOT");
-            mvnArgs.add("-Dpackaging=jar");
-        } else if (request.tasks != null && !request.tasks.isEmpty()) {
-            mvnArgs.addAll(request.tasks);
-        } else {
-            mvnArgs.add("ru.rzn.gmyasoedov:model-reader:1.0-SNAPSHOT:resolve");
-        }
         if (!StringUtilRt.isEmpty(request.profiles)) {
             mvnArgs.add("-P");
             mvnArgs.add(request.profiles);
@@ -78,6 +66,21 @@ public class GMavenServerImpl implements GMavenServer {
             mvnArgs.add(request.projectList);
             mvnArgs.add( "-am");
             mvnArgs.add( "-amd");
+        }
+        if (request.additionalArguments != null && !request.additionalArguments.isEmpty()) {
+            mvnArgs.addAll(request.additionalArguments);
+        }
+        if (!StringUtilRt.isEmpty(request.gMavenPluginPath)) {
+            mvnArgs.add("install:install-file");
+            mvnArgs.add("-Dfile=" + request.gMavenPluginPath);
+            mvnArgs.add("-DgroupId=ru.rzn.gmyasoedov");
+            mvnArgs.add("-DartifactId=model-reader");
+            mvnArgs.add("-Dversion=1.0-SNAPSHOT");
+            mvnArgs.add("-Dpackaging=jar");
+        } else if (request.tasks != null && !request.tasks.isEmpty()) {
+            mvnArgs.addAll(request.tasks);
+        } else {
+            mvnArgs.add("ru.rzn.gmyasoedov:model-reader:1.0-SNAPSHOT:resolve");
         }
         return mvnArgs.toArray(new String[0]);
     }

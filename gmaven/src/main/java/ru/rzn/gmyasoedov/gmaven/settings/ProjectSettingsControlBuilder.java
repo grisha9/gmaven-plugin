@@ -74,6 +74,8 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     @Nullable
     private JTextField vmOptionsField;
     @Nullable
+    private JTextField argumentsField;
+    @Nullable
     private ComboBox<OutputLevelComboBoxItem> outPutLevelCombobox;
     @Nullable
     private ComboBox<DistributionSettingsComboBoxItem> mavenHomeCombobox;
@@ -134,6 +136,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         if (vmOptionsField != null) {
             settings.setVmOptions(vmOptionsField.getText());
         }
+        if (argumentsField != null) {
+            settings.setArguments(argumentsField.getText());
+        }
         if (outPutLevelCombobox != null && outPutLevelCombobox.getItem() != null) {
             settings.setOutputLevel(outPutLevelCombobox.getItem().value);
         }
@@ -174,6 +179,11 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         }
         if (vmOptionsField != null && !Objects.equals(
                 vmOptionsField.getText(), requireNonNullElse(projectSettings.getVmOptions(), ""))
+        ) {
+            return true;
+        }
+        if (argumentsField != null && !Objects.equals(
+                argumentsField.getText(), requireNonNullElse(projectSettings.getArguments(), ""))
         ) {
             return true;
         }
@@ -219,6 +229,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         }
         if (vmOptionsField != null) {
             vmOptionsField.setText(projectSettings.getVmOptions());
+        }
+        if (argumentsField != null) {
+            argumentsField.setText(projectSettings.getArguments());
         }
         if (outPutLevelCombobox != null) {
             outPutLevelCombobox.setItem(new OutputLevelComboBoxItem(projectSettings.getOutputLevel()));
@@ -321,6 +334,15 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
         vmOptionsLabel.setLabelFor(vmOptionsField);
 
+        JBLabel argumentsLabel = new JBLabel(message("gmaven.settings.project.arguments"));
+        argumentsLabel.setToolTipText(message("gmaven.settings.project.arguments.tooltip"));
+        argumentsField = new JTextField();
+        argumentsField.setToolTipText(message("gmaven.settings.project.arguments.tooltip"));
+        content.add(argumentsLabel, getLabelConstraints(indentLevel));
+        content.add(argumentsField, getLabelConstraints(0));
+        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        argumentsLabel.setLabelFor(argumentsField);
+
 
         JBLabel jdkLabel = new JBLabel(message("gmaven.settings.project.jvm"));
         jdkComboBoxWrapper = new JPanel(new BorderLayout());
@@ -359,7 +381,7 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     private void setPreferredComboboxSize() {
         List<? extends JComponent> components = Arrays
                 .asList(
-                        vmOptionsField, threadCountField, mavenCustomPathField,
+                        vmOptionsField, argumentsField, threadCountField, mavenCustomPathField,
                         outPutLevelCombobox, mavenHomeCombobox, jdkComboBox
                 );
         JComponent maxWidthComponent = components.stream()

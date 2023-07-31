@@ -23,40 +23,52 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
 import ru.rzn.gmyasoedov.serverapi.GMavenServer;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
-import static ru.rzn.gmyasoedov.serverapi.GMavenServer.*;
+import static ru.rzn.gmyasoedov.serverapi.GMavenServer.GMAVEN_HOME;
+import static ru.rzn.gmyasoedov.serverapi.GMavenServer.GMAVEN_PLUGINS;
+import static ru.rzn.gmyasoedov.serverapi.GMavenServer.GMAVEN_PLUGIN_ANNOTATION_PROCESSOR;
+import static ru.rzn.gmyasoedov.serverapi.GMavenServer.MAVEN_EXT_CLASS_PATH_PROPERTY;
+import static ru.rzn.gmyasoedov.serverapi.GMavenServer.SERVER_DEBUG_PROPERTY;
 
 public class MavenServerCmdState extends CommandLineState {
     private static final Logger LOG = Logger.getInstance(MavenServerCmdState.class);
+    private static final String DEFAULT_XMX = "-Xmx768m";
 
     private final Sdk jdk;
     private final Path mavenPath;
     private final Path workingDirectory;
-    private final String vmOptions;
+    private final List<String> jvmConfigOptions;
+    private final MavenExecutionSettings executionSettings;
     private final Integer debugPort;
-    private final boolean skipTests;
 
-    public MavenServerCmdState(@NotNull Sdk jdk, @NotNull Path mavenPath,
-                               @Nullable String vmOptions,
+    public MavenServerCmdState(@NotNull Sdk jdk,
+                               @NotNull Path mavenPath,
                                @NotNull Path workingDirectory,
-                               boolean skipTests) {
+                               @NotNull List<String> jvmConfigOptions,
+                               @NotNull MavenExecutionSettings executionSettings) {
         super(null);
         this.jdk = jdk;
         this.mavenPath = mavenPath;
         this.workingDirectory = workingDirectory;
-        this.vmOptions = vmOptions;
-        this.skipTests = skipTests;
+        this.jvmConfigOptions = jvmConfigOptions;
+        this.executionSettings = executionSettings;
         this.debugPort = getDebugPort();
     }
 
@@ -68,7 +80,7 @@ public class MavenServerCmdState extends CommandLineState {
         setupDebugParam(params);
         setupClasspath(params);
         setupGmavenPluginsProperty(params);
-        processVmOptions(vmOptions, params);
+        processVmOptions(jvmConfigOptions, params);
         params.setMainClass("ru.rzn.gmyasoedov.gmaven.server.RemoteGMavenServer");
         return params;
     }
@@ -110,40 +122,34 @@ public class MavenServerCmdState extends CommandLineState {
 
         params.getVMParametersList().addProperty(MAVEN_EXT_CLASS_PATH_PROPERTY, mavenExtClassesJarPathString);
         params.getVMParametersList().addProperty(GMAVEN_HOME, mavenPath.toAbsolutePath().toString());
-        if (skipTests) {
-            params.getVMParametersList().addProperty("skipTests", "true");
-        }
+        executionSettings.getEnv().forEach((k, v) -> params.getVMParametersList().addProperty(k, v));
     }
 
-    private void processVmOptions(String myVmOptions, SimpleJavaParameters params) {
+    private void processVmOptions(List<String> jvmConfigOptions, SimpleJavaParameters params) {
         @Nullable String xmxProperty = null;
         @Nullable String xmsProperty = null;
-
-        if (myVmOptions != null) {
-            ParametersList mavenOptsList = new ParametersList();
-            mavenOptsList.addParametersString(myVmOptions);
-
-            for (String param : mavenOptsList.getParameters()) {
-                if (param.startsWith("-Xmx")) {
-                    xmxProperty = param;
-                    continue;
-                }
-                if (param.startsWith("-Xms")) {
-                    xmsProperty = param;
-                    continue;
-                }
-                if (Registry.is("gmaven.vm.remove.javaagent") && param.startsWith("-javaagent")) {
-                    continue;
-                }
-                params.getVMParametersList().add(param);
+        List<String> vmOptions = new ArrayList<>(jvmConfigOptions);
+        vmOptions.addAll(executionSettings.getJvmArguments());
+        for (String param : vmOptions) {
+            if (param.startsWith("-Xmx")) {
+                xmxProperty = param;
+                continue;
             }
+            if (param.startsWith("-Xms")) {
+                xmsProperty = param;
+                continue;
+            }
+            if (Registry.is("gmaven.vm.remove.javaagent") && param.startsWith("-javaagent")) {
+                continue;
+            }
+            params.getVMParametersList().add(param);
         }
 
         String embedderXmx = System.getProperty("idea.maven.embedder.xmx");
         if (embedderXmx != null) {
             xmxProperty = "-Xmx" + embedderXmx;
         } else if (xmxProperty == null) {
-            xmxProperty = getMaxXmxStringValue("-Xmx768m", xmsProperty);
+            xmxProperty = getMaxXmxStringValue(DEFAULT_XMX, xmsProperty);
         }
         params.getVMParametersList().add(xmsProperty);
         params.getVMParametersList().add(xmxProperty);
