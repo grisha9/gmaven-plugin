@@ -24,7 +24,6 @@ import com.intellij.ui.dsl.builder.bindSelected
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.GMAVEN
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
-import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenId
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
@@ -91,9 +90,7 @@ class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
                 buildFile = GMavenModuleBuilderHelper.createExternalProjectConfigFile(moduleDir)
             }
 
-            MavenUtils.runWhenInitialized(project) {
-                setupProjectFiles(buildFile!!, project)
-            }
+            ApplicationManager.getApplication().invokeLater { setupProjectFiles(buildFile!!, project) }
         }
 
         private fun setupProjectFiles(buildFile: VirtualFile, project: Project) {

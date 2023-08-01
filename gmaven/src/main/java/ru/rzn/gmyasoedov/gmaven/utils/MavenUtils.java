@@ -15,7 +15,6 @@ import com.intellij.openapi.externalSystem.model.project.ModuleData;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil;
 import com.intellij.openapi.externalSystem.service.project.IdeModelsProviderImpl;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.projectRoots.JdkUtil;
@@ -24,7 +23,6 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkType;
 import com.intellij.openapi.projectRoots.ex.JavaSdkUtil;
 import com.intellij.openapi.roots.ProjectRootManager;
-import com.intellij.openapi.startup.StartupManager;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.openapi.util.Ref;
@@ -38,7 +36,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.ArrayUtil;
-import com.intellij.util.DisposeAwareRunnable;
 import com.intellij.util.SystemProperties;
 import com.intellij.util.xml.NanoXmlBuilder;
 import com.intellij.util.xml.NanoXmlUtil;
@@ -86,33 +83,6 @@ public class MavenUtils {
         return virtualFile;
     }
 
-    public static void runWhenInitialized(@NotNull Project project, @NotNull Runnable runnable) {
-        if (project.isDisposed()) {
-            return;
-        }
-
-        if (isNoBackgroundMode()) {
-            runnable.run();
-        } else if (project.isInitialized()) {
-            runDumbAware(project, runnable);
-        } else {
-            StartupManager.getInstance(project).runAfterOpened(runnable);
-        }
-    }
-
-    private static boolean isNoBackgroundMode() {
-        return (ApplicationManager.getApplication().isUnitTestMode()
-                || ApplicationManager.getApplication().isHeadlessEnvironment());
-    }
-
-    private static void runDumbAware(@NotNull Project project, @NotNull Runnable r) {
-        if (DumbService.isDumbAware(r)) {
-            r.run();
-        } else {
-            DumbService.getInstance(project).runWhenSmart(DisposeAwareRunnable.create(r, project));
-        }
-    }
-
     public static void setupFileTemplate(Project project,
                                          VirtualFile file,
                                          Properties properties) throws IOException {
@@ -140,11 +110,6 @@ public class MavenUtils {
         }
 
         VfsUtil.saveText(file, template.getTemplateText());
-
-       /* PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile != null) {
-            new ReformatCodeProcessor(project, psiFile, null, false).run();
-        }*/
     }
 
     public static boolean isPomFileName(String fileName) {
