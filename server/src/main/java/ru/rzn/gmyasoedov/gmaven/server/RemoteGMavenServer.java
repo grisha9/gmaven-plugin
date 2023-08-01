@@ -1,13 +1,18 @@
 package ru.rzn.gmyasoedov.gmaven.server;
 
 
-import com.intellij.execution.rmi.GRemoteServer;
+import com.intellij.execution.rmi.RemoteServer;
 import ru.rzn.gmyasoedov.gmaven.server.impl.GMavenServerImpl;
 
-public class RemoteGMavenServer extends GRemoteServer {
+import static ru.rzn.gmyasoedov.serverapi.GMavenServer.SERVER_DEBUG_PROPERTY;
+
+
+public class RemoteGMavenServer extends RemoteServer {
 
     public static void main(String[] args) throws Exception {
-        start(new GMavenServerImpl(), !Boolean.parseBoolean(System.getProperty("idea.maven.wsl")));
+        boolean debugEnabled = Boolean.parseBoolean(System.getProperty(SERVER_DEBUG_PROPERTY));
+        boolean wslEnabled = Boolean.parseBoolean(System.getProperty("idea.maven.wsl"));
+        start(new GMavenServerImpl(), !wslEnabled, !debugEnabled);
     }
 }
 
