@@ -3,13 +3,11 @@ package ru.rzn.gmyasoedov.gmaven.settings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MavenExecutionWorkspace implements Serializable {
-    @Serial
     private static final long serialVersionUID = 2L;
 
     @NotNull

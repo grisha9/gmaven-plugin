@@ -5,14 +5,12 @@ import com.intellij.util.execution.ParametersListUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.Serial;
 import java.util.Objects;
 
 import static ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.OutputLevelType.DEFAULT;
 
 public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
-    @Serial
     private static final long serialVersionUID = 1L;
 
     @NotNull
