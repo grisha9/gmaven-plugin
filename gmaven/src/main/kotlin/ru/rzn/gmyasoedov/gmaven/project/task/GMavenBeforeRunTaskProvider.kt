@@ -14,7 +14,7 @@ class GMavenBeforeRunTaskProvider(project: Project) : ExternalSystemBeforeRunTas
 
     override fun getIcon() = OpenapiIcons.RepositoryLibraryLogo
 
-    override fun getTaskIcon(task: ExternalSystemBeforeRunTask?) = OpenapiIcons.RepositoryLibraryLogo
+    override fun getTaskIcon(task: ExternalSystemBeforeRunTask) = OpenapiIcons.RepositoryLibraryLogo
 
     override fun createTask(runConfiguration: RunConfiguration) = ExternalSystemBeforeRunTask(ID, SYSTEM_ID)
 
