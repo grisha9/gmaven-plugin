@@ -29,4 +29,9 @@ The plugin adds support for the Maven for Java language projects:
 
 - If you found a bug, please report it on https://github.com/grisha9/gmaven-plugin/issues
 
+### Setup
+
+- For manual build run the command: gradlew clean build
+- And then get distribution from: gmaven-plugin/gmaven/build/distributions
+
 
