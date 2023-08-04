@@ -93,10 +93,11 @@ fun populateRemoteRepository(projectDataNode: DataNode<ProjectData>, mavenSettin
     }
 }
 
-fun populateProfiles(dataNode: DataNode<ModuleData>, mavenSettings: MavenSettings) {
+fun populateProfiles(dataNode: DataNode<ProjectData>, mavenSettings: MavenSettings) {
     for (profile in mavenSettings.profiles) {
         dataNode.createChild(
-            ProfileData.KEY, ProfileData(SYSTEM_ID, dataNode.data.moduleName, profile.name, profile.isActivation)
+            ProfileData.KEY,
+            ProfileData(SYSTEM_ID, dataNode.data.linkedExternalProjectPath, profile.name, profile.isActivation)
         )
     }
 }
