@@ -73,6 +73,9 @@ import static com.intellij.util.xml.NanoXmlBuilder.stop;
 import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.M2;
 
 public class MavenUtils {
+
+    private static final String POLYGLOT_PREFIX = ".polyglot.";
+
     private MavenUtils() {
     }
 
@@ -417,5 +420,17 @@ public class MavenUtils {
     public static boolean equalsPaths(String path1, String path2) {
         if (path1 == null || path2 == null) return Objects.equals(path1, path2);
         return Path.of(path1).equals(Path.of(path2));
+    }
+
+    @Nullable
+    public static String getBuildFilePath(@Nullable String mavenBuildFilePath) {
+        if (mavenBuildFilePath == null) return null;
+        if (mavenBuildFilePath.contains(POLYGLOT_PREFIX)) {
+            Path buildFile = Path.of(mavenBuildFilePath);
+            String originalName = buildFile.getFileName().toString().replace(POLYGLOT_PREFIX, "");
+            return buildFile.getParent().resolve(originalName).toString();
+        } else {
+            return mavenBuildFilePath;
+        }
     }
 }

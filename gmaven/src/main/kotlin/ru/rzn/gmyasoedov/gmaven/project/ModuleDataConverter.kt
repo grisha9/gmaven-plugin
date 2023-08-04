@@ -8,7 +8,7 @@ import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.project.*
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.pom.java.LanguageLevel
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_BUILD_FILE
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver.ModuleContextHolder
@@ -49,7 +49,7 @@ fun createModuleData(
     moduleData.setCompileOutputPath(ExternalSystemSourceType.SOURCE, project.outputDirectory)
     moduleData.setCompileOutputPath(ExternalSystemSourceType.TEST, project.testOutputDirectory)
     moduleData.useExternalCompilerOutput(false)
-    moduleData.setProperty(GMavenConstants.MODULE_PROP_BUILD_FILE, project.file.absolutePath)
+    moduleData.setProperty(MODULE_PROP_BUILD_FILE, MavenUtils.getBuildFilePath(project.file.absolutePath))
 
     val moduleDataNode = parentDataNode.createChild(ProjectKeys.MODULE, moduleData)
 
@@ -144,7 +144,7 @@ private fun createSourceSetModule(
 
     data.isInheritProjectCompileOutputPath = false
     data.useExternalCompilerOutput(false)
-    data.setProperty(GMavenConstants.MODULE_PROP_BUILD_FILE, project.file.absolutePath)
+    data.setProperty(MODULE_PROP_BUILD_FILE, MavenUtils.getBuildFilePath(project.file.absolutePath))
 
     val basePath = Path.of(project.basedir)
     val rootModulePath = basePath.resolve("src").resolve(moduleSuffix).toString()
