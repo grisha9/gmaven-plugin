@@ -12,7 +12,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
     var resolveModulePerSourceSet = false
     var nonRecursive  = false
     var updateSnapshots = false
-    var useWholeProjectContext = false
+    var useWholeProjectContext = true
     var outputLevel = OutputLevelType.DEFAULT
     var threadCount: String? = null
     var arguments: String? = null
