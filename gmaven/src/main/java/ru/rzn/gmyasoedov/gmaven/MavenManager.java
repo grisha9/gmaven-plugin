@@ -1,17 +1,21 @@
 package ru.rzn.gmyasoedov.gmaven;
 
 import com.intellij.execution.configurations.SimpleJavaParameters;
+import com.intellij.openapi.externalSystem.ExternalSystemAutoImportAware;
 import com.intellij.openapi.externalSystem.ExternalSystemConfigurableAware;
 import com.intellij.openapi.externalSystem.ExternalSystemManager;
 import com.intellij.openapi.externalSystem.ExternalSystemUiAware;
+import com.intellij.openapi.externalSystem.importing.ProjectResolverPolicy;
 import com.intellij.openapi.externalSystem.model.DataNode;
 import com.intellij.openapi.externalSystem.model.ExternalProjectInfo;
 import com.intellij.openapi.externalSystem.model.ProjectSystemId;
 import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExecutionSettings;
 import com.intellij.openapi.externalSystem.model.project.ModuleData;
+import com.intellij.openapi.externalSystem.model.project.ProjectData;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil;
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver;
 import com.intellij.openapi.externalSystem.service.project.ProjectDataManager;
+import com.intellij.openapi.externalSystem.service.project.autoimport.CachingExternalSystemAutoImportAware;
 import com.intellij.openapi.externalSystem.service.ui.DefaultExternalSystemUiAware;
 import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager;
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil;
@@ -34,6 +38,7 @@ import icons.GMavenIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.chooser.MavenPomFileChooserDescriptor;
+import ru.rzn.gmyasoedov.gmaven.project.GMavenAutoImportAware;
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver;
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData;
 import ru.rzn.gmyasoedov.gmaven.project.profile.ProjectProfilesStateService;
@@ -51,24 +56,30 @@ import ru.rzn.gmyasoedov.gmaven.settings.ProjectExecution;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 
 import javax.swing.*;
-import java.nio.file.Path;
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static com.intellij.openapi.externalSystem.model.ProjectKeys.MODULE;
 import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_PROJECT_JDK;
+import static com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil.find;
 import static com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil.findAll;
 import static com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil.findAllRecursively;
 import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_BUILD_FILE;
+import static ru.rzn.gmyasoedov.gmaven.utils.MavenUtils.equalsPaths;
 
 public final class MavenManager
         implements ExternalSystemConfigurableAware,
         ExternalSystemUiAware,
+        ExternalSystemAutoImportAware,
         StartupActivity,
         ExternalSystemManager<MavenProjectSettings, MavenSettingsListener,
                 MavenSettings, MavenLocalSettings, MavenExecutionSettings> {
+
+    private final ExternalSystemAutoImportAware autoImportAwareDelegate = new CachingExternalSystemAutoImportAware(
+            new GMavenAutoImportAware()
+    );
 
     @NotNull
     @Override
@@ -152,17 +163,21 @@ public final class MavenManager
 
         if (projectData == null || projectData.getExternalProjectStructure() == null) return;
         ProjectProfilesStateService profilesStateService = ProjectProfilesStateService.getInstance(project);
-        Collection<DataNode<ModuleData>> modules = findAll(projectData.getExternalProjectStructure(), MODULE);
-        workspace.setProjectBuildFile(getProjectBuildFile(projectSettings, modules));
-        boolean isNotRootPath = !Objects.equals(projectSettings.getExternalProjectPath(), projectPath);
-        Collection<DataNode<ModuleData>> allModules = findAllRecursively(
-                projectData.getExternalProjectStructure(), MODULE
-        );
+        DataNode<ProjectData> projectDataNode = projectData.getExternalProjectStructure();
+        DataNode<ModuleData> mainModuleNode = find(projectDataNode, MODULE);
+        if (mainModuleNode == null) return;
+        if (projectSettings.getProjectBuildFile() != null) {
+            workspace.setProjectBuildFile(projectSettings.getProjectBuildFile());
+        } else {
+            workspace.setProjectBuildFile(mainModuleNode.getData().getProperty(MODULE_PROP_BUILD_FILE));
+        }
 
+        Collection<DataNode<ModuleData>> allModules = findAllRecursively(mainModuleNode, MODULE);
 
-        if (isNotRootPath) {
+        boolean isRootPath = equalsPaths(projectSettings.getExternalProjectPath(), projectPath);
+        if (!isRootPath) {
             allModules.stream()
-                    .filter(node -> Objects.equals(node.getData().getLinkedExternalProjectPath(), projectPath))
+                    .filter(node -> equalsPaths(node.getData().getLinkedExternalProjectPath(), projectPath))
                     .findFirst()
                     .ifPresent(node -> {
                         ModuleData module = node.getData();
@@ -176,9 +191,10 @@ public final class MavenManager
         } else {
             addedIgnoredModule(workspace, allModules);
         }
-        for (DataNode<ModuleData> moduleNode : modules) {
-            for (DataNode<ProfileData> profileDataNode : findAll(moduleNode, ProfileData.KEY)) {
-                ProfileExecution profileExecution = profilesStateService.getProfileExecution(profileDataNode.getData());
+
+        for (DataNode<ProfileData> profileDataNode : findAll(projectDataNode, ProfileData.KEY)) {
+            ProfileExecution profileExecution = profilesStateService.getProfileExecution(profileDataNode.getData());
+            if (profileExecution != null) {
                 workspace.addProfile(profileExecution);
             }
         }
@@ -238,21 +254,21 @@ public final class MavenManager
         return ExternalSystemApiUtil.getProjectRepresentationName(targetProjectPath, rootProjectPath);
     }
 
-   /* @Nullable
+    @Nullable
     @Override
     public String getAffectedExternalProjectPath(@NotNull String changedFileOrDirPath, @NotNull Project project) {
-        return myAutoImportDelegate.getAffectedExternalProjectPath(changedFileOrDirPath, project);
+        return autoImportAwareDelegate.getAffectedExternalProjectPath(changedFileOrDirPath, project);
     }
 
     @Override
     public List<File> getAffectedExternalProjectFiles(String projectPath, @NotNull Project project) {
-        return myAutoImportDelegate.getAffectedExternalProjectFiles(projectPath, project);
+        return autoImportAwareDelegate.getAffectedExternalProjectFiles(projectPath, project);
     }
 
     @Override
     public boolean isApplicable(@Nullable ProjectResolverPolicy resolverPolicy) {
-        return myAutoImportDelegate.isApplicable(resolverPolicy);
-    }*/
+        return autoImportAwareDelegate.isApplicable(resolverPolicy);
+    }
 
     @NotNull
     @Override
@@ -286,20 +302,8 @@ public final class MavenManager
     public void runActivity(@NotNull final Project project) {
     }
 
-    @Nullable
-    private static String getProjectBuildFile(MavenProjectSettings projectSettings,
-                                              Collection<DataNode<ModuleData>> modules) {
-        return modules.stream()
-                .map(DataNode::getData)
-                .filter(m -> Path.of(m.getLinkedExternalProjectPath())
-                        .equals(Path.of(projectSettings.getExternalProjectPath())))
-                .filter(m -> m.getProperty(MODULE_PROP_BUILD_FILE) != null)
-                .map(m -> m.getProperty(MODULE_PROP_BUILD_FILE))
-                .findFirst()
-                .orElse(null);
-    }
-
-    private static void addedIgnoredModule(MavenExecutionWorkspace workspace, Collection<DataNode<ModuleData>> allModules) {
+    private static void addedIgnoredModule(MavenExecutionWorkspace workspace,
+                                           Collection<DataNode<ModuleData>> allModules) {
         allModules.stream()
                 .filter(DataNode::isIgnored)
                 .map(node -> new ProjectExecution(MavenUtils.toGAString(node.getData()), false))

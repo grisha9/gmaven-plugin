@@ -87,8 +87,6 @@ fun createModuleData(
         for (childContainer in container.modules) {
             createModuleData(childContainer, moduleDataNode, context)
         }
-    } else {
-        populateProfiles(moduleDataNode, context.mavenResult.settings)
     }
     return moduleDataNode
 }
