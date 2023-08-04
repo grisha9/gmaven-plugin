@@ -23,6 +23,7 @@ import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.layout.ValidationInfoBuilder
 import icons.OpenapiIcons
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import java.io.File
 import javax.swing.Icon
@@ -59,7 +60,7 @@ abstract class GMavenNewProjectWizardStep<ParentStep>(parent: ParentStep) :
             .filterNotNull()
             .flatMap { ExternalSystemApiUtil.findAllRecursively(it, ProjectKeys.MODULE) }
             .map { it.data }
-            .sortedBy { it.linkedExternalProjectPath != parentStep.path }
+            .sortedBy { !MavenUtils.equalsPaths(it.linkedExternalProjectPath, parentStep.path) }
             .filter { it.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) is String }
             .map { toMavenProject(it) }
             .toList()
