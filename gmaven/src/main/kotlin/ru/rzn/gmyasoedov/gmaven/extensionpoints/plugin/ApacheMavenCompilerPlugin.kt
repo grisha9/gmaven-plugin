@@ -79,7 +79,8 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         body: PluginBody, project: MavenProject,
         contextElementMap: MutableMap<String, Element>
     ): CompilerProp {
-        val executions = body.executions.filter { it.phase.equals("compile") || it.phase.equals("test-compile") }
+        val executions = body.executions
+            .filter { it.phase != null && (it.phase.equals("compile") || it.phase.equals("test-compile")) }
         val compilerProp = if (executions.isEmpty()) getCompilerProp(body.configuration, contextElementMap)
         else compilerProp(executions, contextElementMap)
         if (compilerProp.release == null) {

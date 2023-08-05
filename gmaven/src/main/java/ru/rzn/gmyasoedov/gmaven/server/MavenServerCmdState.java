@@ -163,11 +163,6 @@ public class MavenServerCmdState extends CommandLineState {
         }
     }
 
-    private void setupMainExt(SimpleJavaParameters params) {
-        //it is critical to setup maven.ext.class.path for maven >=3.6, otherwise project extensions will not be loaded
-        //  MavenUtil.addEventListener(myDistribution.getVersion(), params);
-    }
-
     private static void configureSslRelatedOptions(Map<String, String> defs) {
         for (Map.Entry<Object, Object> each : System.getProperties().entrySet()) {
             Object key = each.getKey();
@@ -196,7 +191,6 @@ public class MavenServerCmdState extends CommandLineState {
         }
         params.getVMParametersList().defineProperty("GMAVEN", getIdeaVersionToPassToMavenProcess());
     }
-
 
 
     private Integer getDebugPort() {
@@ -246,7 +240,8 @@ public class MavenServerCmdState extends CommandLineState {
 
     @NotNull
     @Override
-    public ExecutionResult execute(@NotNull Executor executor, @NotNull ProgramRunner<?> runner) throws ExecutionException {
+    public ExecutionResult execute(@NotNull Executor executor, @NotNull ProgramRunner<?> runner)
+            throws ExecutionException {
         ProcessHandler processHandler = startProcess();
         return new DefaultExecutionResult(processHandler);
     }

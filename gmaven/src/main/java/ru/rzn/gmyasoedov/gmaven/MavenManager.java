@@ -57,6 +57,7 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 
 import javax.swing.*;
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -107,50 +108,7 @@ public final class MavenManager
             String projectPath = pair.second;
             MavenSettings settings = MavenSettings.getInstance(project);
             MavenProjectSettings projectSettings = settings.getLinkedProjectSettings(projectPath);
-            String rootProjectDirPath = projectSettings != null ? projectSettings.getExternalProjectPath() : projectPath;
-            DistributionSettings distributionSettings = projectSettings != null
-                    ? projectSettings.getDistributionSettings() : DistributionSettings.getBundled();
-
-            MavenExecutionSettings result = new MavenExecutionSettings(distributionSettings,
-                    projectSettings != null ? projectSettings.getVmOptions() : null,
-                    projectSettings != null && projectSettings.getNonRecursive(),
-                    settings.isOfflineMode());
-
-            //todo - сделать как в org.jetbrains.plugins.gradle.GradleManager#configureExecutionWorkspace
-            String jdkName = projectSettings != null ? projectSettings.getJdkName() : null;
-            Sdk jdk = ExternalSystemJdkUtil.getJdk(project, jdkName);
-            if (jdk == null) {
-                jdk = ExternalSystemJdkUtil.getJdk(project, USE_PROJECT_JDK);
-            }
-            if (jdk != null) {
-                result.setJavaHome(jdk.getHomePath());
-                result.setJdkName(jdk.getName());
-            }
-
-            String ideProjectPath;
-            if (project.getBasePath() == null ||
-                    (project.getProjectFilePath() != null && StringUtil.endsWith(project.getProjectFilePath(), ".ipr"))) {
-                ideProjectPath = rootProjectDirPath;
-            } else {
-                ideProjectPath = project.getBasePath() + "/.idea/modules";
-            }
-            result.setIdeProjectPath(ideProjectPath);
-            if (projectSettings != null) {
-                result.setResolveModulePerSourceSet(projectSettings.getResolveModulePerSourceSet());
-                result.setUseQualifiedModuleNames(projectSettings.isUseQualifiedModuleNames());
-                result.setNonRecursive(projectSettings.getNonRecursive());
-                result.setUpdateSnapshots(projectSettings.getUpdateSnapshots());
-                result.setThreadCount(projectSettings.getThreadCount());
-                result.setOutputLevel(projectSettings.getOutputLevel());
-                fillExecutionWorkSpace(project, projectSettings, projectPath, result.getExecutionWorkspace());
-                if (projectSettings.getArguments() != null) {
-                    result.withArguments(ParametersListUtil.parse(projectSettings.getArguments(), true, true));
-                }
-            }
-            if (settings.isSkipTests()) {
-                result.withEnvironmentVariables(Map.of("skipTests", "true"));
-            }
-            return result;
+            return getExecutionSettings(project, projectPath, settings, projectSettings);
         };
     }
 
@@ -308,5 +266,57 @@ public final class MavenManager
                 .filter(DataNode::isIgnored)
                 .map(node -> new ProjectExecution(MavenUtils.toGAString(node.getData()), false))
                 .forEach(workspace::addProject);
+    }
+
+    @NotNull
+    public static MavenExecutionSettings getExecutionSettings(
+            @NotNull Project project,
+            @NotNull String projectPath,
+            @NotNull MavenSettings settings,
+            @Nullable MavenProjectSettings projectSettings) {
+        MavenExecutionSettings result;
+        if (projectSettings == null) {
+            result = new MavenExecutionSettings(
+                    DistributionSettings.getBundled(), null, false, settings.isOfflineMode());
+        } else {
+            result = new MavenExecutionSettings(projectSettings.getDistributionSettings(),
+                    projectSettings.getVmOptions(), projectSettings.getNonRecursive(), settings.isOfflineMode()
+            );
+            result.setResolveModulePerSourceSet(projectSettings.getResolveModulePerSourceSet());
+            result.setUseQualifiedModuleNames(projectSettings.isUseQualifiedModuleNames());
+            result.setNonRecursive(projectSettings.getNonRecursive());
+            result.setUpdateSnapshots(projectSettings.getUpdateSnapshots());
+            result.setThreadCount(projectSettings.getThreadCount());
+            result.setOutputLevel(projectSettings.getOutputLevel());
+            fillExecutionWorkSpace(project, projectSettings, projectPath, result.getExecutionWorkspace());
+            if (projectSettings.getArguments() != null) {
+                result.withArguments(ParametersListUtil.parse(projectSettings.getArguments(), true, true));
+            }
+        }
+
+        String ideProjectPath;
+        if (project.getBasePath() == null ||
+                (project.getProjectFilePath() != null && StringUtil.endsWith(project.getProjectFilePath(), ".ipr"))) {
+            ideProjectPath = projectSettings != null ? projectSettings.getExternalProjectPath() : projectPath;
+        } else {
+            ideProjectPath = Paths.get(project.getBasePath(), ".idea", "modules").toString();
+        }
+        result.setIdeProjectPath(ideProjectPath);
+
+        //todo - сделать как в org.jetbrains.plugins.gradle.GradleManager#configureExecutionWorkspace
+        String jdkName = projectSettings != null ? projectSettings.getJdkName() : null;
+        Sdk jdk = ExternalSystemJdkUtil.getJdk(project, jdkName);
+        if (jdk == null) {
+            jdk = ExternalSystemJdkUtil.getJdk(project, USE_PROJECT_JDK);
+        }
+        if (jdk != null) {
+            result.setJavaHome(jdk.getHomePath());
+            result.setJdkName(jdk.getName());
+        }
+
+        if (settings.isSkipTests()) {
+            result.withEnvironmentVariables(Map.of("skipTests", "true"));
+        }
+        return result;
     }
 }

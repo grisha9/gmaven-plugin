@@ -19,9 +19,11 @@ import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.NlsSafe
 import com.intellij.openapi.util.text.StringUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
+import ru.rzn.gmyasoedov.gmaven.MavenManager
+import ru.rzn.gmyasoedov.gmaven.project.getMavenHome
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.getDependencyTree
-import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
@@ -40,7 +42,7 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
         progressManager.addNotificationListener(object : ExternalSystemTaskNotificationListenerAdapter() {
             override fun onEnd(id: ExternalSystemTaskId) {
                 if (id.type != ExternalSystemTaskType.RESOLVE_PROJECT) return
-                if (id.projectSystemId != GMavenConstants.SYSTEM_ID) return
+                if (id.projectSystemId != SYSTEM_ID) return
                 moduleMapByProject = null
                 dependencyTreeByProject.clear()
                 listener()
@@ -67,43 +69,43 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
         val moduleData = getModuleMap().get(artifactId)?.second
         val projectPath = moduleData?.linkedExternalProjectPath ?: return emptyList()
         if (moduleData.getProperty(GMavenConstants.MODULE_PROP_HAS_DEPENDENCIES) == null) return emptyList()
-        val settings = MavenSettings.getInstance(project).getLinkedProjectSettings(projectPath) ?: return emptyList()
-        val gServerRequest = toProjectRequest(settings) ?: return emptyList()
+        val mavenSettings = MavenSettings.getInstance(project)
+        val projectSettings = mavenSettings.getLinkedProjectSettings(projectPath) ?: return emptyList()
+        val gServerRequest = toProjectRequest(mavenSettings, projectSettings) ?: return emptyList()
         val dependencyTree = getDependencyTreeNodes(artifactId, gServerRequest)
-        return createDependencyList(dependencyTree, moduleData, externalProject);
+        return createDependencyList(dependencyTree, moduleData, externalProject)
     }
 
-    private fun getDependencyTreeNodes(artifactId: String, gServerRequest: GServerRequest):
-            List<DependencyTreeNode> {
+    private fun getDependencyTreeNodes(artifactId: String, gServerRequest: GServerRequest): List<DependencyTreeNode> {
         val dependencyTreeFromMap = dependencyTreeByProject.get(artifactId)
-        if (dependencyTreeFromMap != null) return dependencyTreeFromMap;
+        if (dependencyTreeFromMap != null) return dependencyTreeFromMap
         val dependencyTree = getDependencyTree(gServerRequest, artifactId)
         dependencyTreeByProject.put(artifactId, dependencyTree)
         return dependencyTree
     }
 
-    private fun toProjectRequest(settings: MavenProjectSettings): GServerRequest? {
-        val mavenPath = settings.distributionSettings.path ?: return null
-        val sdk = settings.jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) } ?: return null
-        val id = ExternalSystemTaskId.create(GMavenConstants.SYSTEM_ID, ExternalSystemTaskType.EXECUTE_TASK, project)
-        val buildPath = Path.of(settings.projectBuildFile ?: settings.externalProjectPath)
-        val executionSettings = MavenExecutionSettings(settings.distributionSettings, settings.vmOptions, false, true)
-        return GServerRequest(id, buildPath, mavenPath, sdk, executionSettings)
+    private fun toProjectRequest(mavenSettings: MavenSettings, projectSettings: MavenProjectSettings): GServerRequest? {
+        val executionSettings = MavenManager.getExecutionSettings(
+            project, projectSettings.externalProjectPath, mavenSettings, projectSettings
+        )
+        val id = ExternalSystemTaskId.create(SYSTEM_ID, ExternalSystemTaskType.EXECUTE_TASK, project)
+        val mavenHome = getMavenHome(executionSettings.distributionSettings)
+        val sdk = executionSettings.jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) } ?: return null
+        val buildPath =
+            Path.of(executionSettings.executionWorkspace.projectBuildFile ?: projectSettings.externalProjectPath)
+        return GServerRequest(id, buildPath, mavenHome, sdk, executionSettings)
     }
 
     private fun getModuleMap(): Map<String, Pair<DAProject, ModuleData>> {
-        if (moduleMapByProject != null) return moduleMapByProject!!;
+        if (moduleMapByProject != null) return moduleMapByProject!!
         return fillModulesInfoCache()
     }
 
     private fun fillModulesInfoCache(): Map<String, Pair<DAProject, ModuleData>> {
-        val projectsData = ProjectDataManager.getInstance().getExternalProjectsData(project, GMavenConstants.SYSTEM_ID)
+        val projectsData = ProjectDataManager.getInstance().getExternalProjectsData(project, SYSTEM_ID)
         val modulesData = getModulesData(projectsData)
-        val modulesMap = modulesData.asSequence()
-            .map { Pair(it, MavenUtils.findIdeModule(project, it)) }
-            .filter { it.second != null }
-            .map { toDependencyAnalyzerProject(it) }
-            .toMap()
+        val modulesMap = modulesData.asSequence().map { Pair(it, MavenUtils.findIdeModule(project, it)) }
+            .filter { it.second != null }.map { toDependencyAnalyzerProject(it) }.toMap()
         moduleMapByProject = modulesMap
         return modulesMap
     }
@@ -112,23 +114,17 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
         val moduleData = it.first
         val daProject = DAProject(it.second!!, moduleData.moduleName)
         val artifactId = moduleData.group + ":" + moduleData.moduleName
-        daProject.putUserData(ARTIFACT_ID, artifactId);
+        daProject.putUserData(ARTIFACT_ID, artifactId)
         return Pair(artifactId, Pair(daProject, moduleData))
     }
 
     private fun getModulesData(projectsData: Collection<ExternalProjectInfo>): List<ModuleData> {
-        return projectsData.asSequence()
-            .map { it.externalProjectStructure }
-            .filterNotNull()
-            .flatMap { ExternalSystemApiUtil.findAllRecursively(it, ProjectKeys.MODULE) }
-            .map { it.data }
-            .toList()
+        return projectsData.asSequence().map { it.externalProjectStructure }.filterNotNull()
+            .flatMap { ExternalSystemApiUtil.findAllRecursively(it, ProjectKeys.MODULE) }.map { it.data }.toList()
     }
 
     private fun createDependencyList(
-        treeNodeList: List<DependencyTreeNode>,
-        moduleData: ModuleData,
-        externalProject: DependencyAnalyzerProject
+        treeNodeList: List<DependencyTreeNode>, moduleData: ModuleData, externalProject: DependencyAnalyzerProject
     ): List<DependencyAnalyzerDependency> {
         val root = DAModule(externalProject.title)
         root.putUserData(MODULE_DATA, moduleData)
@@ -148,7 +144,8 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
             val dependencyData = getDependencyData(mavenArtifactNode)
             val dependency = DADependency(
                 dependencyData,
-                scope(mavenArtifactNode.originalScope ?: GMavenConstants.SCOPE_COMPILE), parentDependency,
+                scope(mavenArtifactNode.originalScope ?: GMavenConstants.SCOPE_COMPILE),
+                parentDependency,
                 getStatus(mavenArtifactNode, dependencyData)
             )
             result.add(dependency)
@@ -174,17 +171,19 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
         return daArtifact
     }
 
-    private fun getStatus(mavenArtifactNode: DependencyTreeNode, dependencyData: DependencyAnalyzerDependency.Data):
-            List<DependencyAnalyzerDependency.Status> {
+    private fun getStatus(
+        mavenArtifactNode: DependencyTreeNode,
+        dependencyData: DependencyAnalyzerDependency.Data
+    ): List<DependencyAnalyzerDependency.Status> {
         val status = mutableListOf<DependencyAnalyzerDependency.Status>()
-        if (mavenArtifactNode.getState() == MavenArtifactState.CONFLICT) {
+        if (mavenArtifactNode.state == MavenArtifactState.CONFLICT) {
             status.add(DAOmitted)
             mavenArtifactNode.relatedArtifact?.version?.also {
                 val message =
                     ExternalSystemBundle.message("external.system.dependency.analyzer.warning.version.conflict", it)
                 status.add(DAWarning(message))
             }
-        } else if (mavenArtifactNode.getState() == MavenArtifactState.DUPLICATE) {
+        } else if (mavenArtifactNode.state == MavenArtifactState.DUPLICATE) {
             status.add(DAOmitted)
         }
         if (dependencyData is DAArtifact && !mavenArtifactNode.artifact.isResolved) {
