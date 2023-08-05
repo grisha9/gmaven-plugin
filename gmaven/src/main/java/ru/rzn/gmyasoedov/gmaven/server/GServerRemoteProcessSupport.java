@@ -85,7 +85,6 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
                            @NotNull ProcessEvent event,
                            @NotNull Key outputType) {
         String text = StringUtil.notNullize(event.getText());
-        System.out.println(text);
         if (systemTaskNotificationListener != null) {
             systemTaskNotificationListener.onTaskOutput(id, text, true);
         }
