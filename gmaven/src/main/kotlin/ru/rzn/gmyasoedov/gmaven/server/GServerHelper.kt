@@ -14,8 +14,8 @@ import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.serverapi.GServerUtils
-import ru.rzn.gmyasoedov.serverapi.model.DependencyTreeNode
 import ru.rzn.gmyasoedov.serverapi.model.MavenException
+import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest
 
@@ -68,7 +68,7 @@ fun runTasks(
     return runMavenTask(processSupport, modelRequest)
 }
 
-fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<DependencyTreeNode> {
+fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<MavenProject> {
     val request = GServerRequest(
         gServerRequest.taskId,
         gServerRequest.projectPath,
@@ -81,7 +81,7 @@ fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<
     val processSupport = GServerRemoteProcessSupport(request)
     try {
         val mavenResult = runMavenTask(processSupport, modelRequest)
-        return mavenResult.projectContainer?.project?.dependencyTree ?: emptyList()
+        return mavenResult.projectContainer?.modules?.map { it.project } ?: emptyList()
     } catch (e: Exception) {
         MavenLog.LOG.warn(e)
         NotificationGroupManager.getInstance()
