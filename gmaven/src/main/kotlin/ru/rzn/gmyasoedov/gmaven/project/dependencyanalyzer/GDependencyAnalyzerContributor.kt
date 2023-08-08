@@ -65,23 +65,23 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
     )
 
     override fun getDependencies(externalProject: DependencyAnalyzerProject): List<DependencyAnalyzerDependency> {
-        val artifactId = externalProject.getUserData(ARTIFACT_ID)!!
-        val moduleData = getModuleMap().get(artifactId)?.second
+        val artifactGA = externalProject.getUserData(ARTIFACT_ID)!!
+        val moduleData = getModuleMap().get(artifactGA)?.second
         val projectPath = moduleData?.linkedExternalProjectPath ?: return emptyList()
         if (moduleData.getProperty(GMavenConstants.MODULE_PROP_HAS_DEPENDENCIES) == null) return emptyList()
         val mavenSettings = MavenSettings.getInstance(project)
         val projectSettings = mavenSettings.getLinkedProjectSettings(projectPath) ?: return emptyList()
         val gServerRequest = toProjectRequest(mavenSettings, projectSettings) ?: return emptyList()
-        val dependencyTree = getDependencyTreeNodes(artifactId, gServerRequest)
+        val dependencyTree = getDependencyTreeNodes(artifactGA, gServerRequest)
         return createDependencyList(dependencyTree, moduleData, externalProject)
     }
 
-    private fun getDependencyTreeNodes(artifactId: String, gServerRequest: GServerRequest): List<DependencyTreeNode> {
-        val dependencyTreeFromMap = dependencyTreeByProject.get(artifactId)
+    private fun getDependencyTreeNodes(artifactGA: String, gServerRequest: GServerRequest): List<DependencyTreeNode> {
+        val dependencyTreeFromMap = dependencyTreeByProject.get(artifactGA)
         if (dependencyTreeFromMap != null) return dependencyTreeFromMap
-        val dependencyTree = getDependencyTree(gServerRequest, artifactId)
-        dependencyTreeByProject.put(artifactId, dependencyTree)
-        return dependencyTree
+        val dependencyTreeProjects = getDependencyTree(gServerRequest, artifactGA)
+        dependencyTreeProjects.forEach { dependencyTreeByProject[it.groupId + ":" + it.artifactId] = it.dependencyTree }
+        return dependencyTreeByProject[artifactGA]!!
     }
 
     private fun toProjectRequest(mavenSettings: MavenSettings, projectSettings: MavenProjectSettings): GServerRequest? {
@@ -113,7 +113,7 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
     private fun toDependencyAnalyzerProject(it: Pair<ModuleData, Module?>): Pair<String, Pair<DAProject, ModuleData>> {
         val moduleData = it.first
         val daProject = DAProject(it.second!!, moduleData.moduleName)
-        val artifactId = moduleData.group + ":" + moduleData.moduleName
+        val artifactId = MavenUtils.toGAString(moduleData)
         daProject.putUserData(ARTIFACT_ID, artifactId)
         return Pair(artifactId, Pair(daProject, moduleData))
     }
