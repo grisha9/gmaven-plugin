@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ru.rzn.gmyasoedov"
-version = "222.1"
+version = "222.2"
 
 repositories {
     mavenCentral()
