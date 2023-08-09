@@ -57,7 +57,7 @@ public class MavenErrorConverter {
         }
         return new BuildErrors(pluginNotResolved, mavenExceptions);
     }
-///home/Grigoriy.Myasoedov/jb/test-pr/test-profiles/m1/src/main/java/tst/Test.java:[9,27] cannot find symbol
+
     private static MavenException toMavenException(ModelProblem problem) {
         String message = problem.getMessage();
         String source = problem.getSource();
