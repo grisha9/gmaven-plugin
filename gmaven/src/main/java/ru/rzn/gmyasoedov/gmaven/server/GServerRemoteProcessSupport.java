@@ -9,6 +9,7 @@ import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.registry.Registry;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.execution.ParametersListUtil;
 import org.jetbrains.annotations.NotNull;
@@ -85,6 +86,9 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
                            @NotNull ProcessEvent event,
                            @NotNull Key outputType) {
         String text = StringUtil.notNullize(event.getText());
+        if (Registry.is("gmaven.server.debug")) {
+            System.out.println(text);
+        }
         if (systemTaskNotificationListener != null) {
             systemTaskNotificationListener.onTaskOutput(id, text, true);
         }
