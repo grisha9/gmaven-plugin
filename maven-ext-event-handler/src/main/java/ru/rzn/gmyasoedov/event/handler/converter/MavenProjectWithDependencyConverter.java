@@ -16,13 +16,13 @@ public class MavenProjectWithDependencyConverter {
                 || source.session == null
                 || source.executionResult.getTopologicallySortedProjects() == null) return null;
         MavenExecutionResult executionResult = source.executionResult;
-        List<String> selectedProjects = source.session.getRequest().getSelectedProjects();
-        if (selectedProjects == null || selectedProjects.isEmpty()) return null;
         List<MavenProject> allProjects = executionResult.getTopologicallySortedProjects();
         if (allProjects == null) return null;
         List<MavenProjectContainer> result = new ArrayList<>(allProjects.size());
         for (MavenProject project : allProjects) {
-            result.add(new MavenProjectContainer(MavenProjectConverter.convert(project, source.session)));
+            result.add(new MavenProjectContainer(
+                    MavenProjectConverter.convert(project, source.session, source.dependencyResult))
+            );
         }
         if (result.isEmpty()) return null;
         MavenProjectContainer projectContainer = new MavenProjectContainer(result.get(0).getProject());

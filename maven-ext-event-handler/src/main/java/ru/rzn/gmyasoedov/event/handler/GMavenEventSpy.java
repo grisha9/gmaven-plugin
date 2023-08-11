@@ -18,10 +18,10 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenResult;
 
 import javax.inject.Named;
 
+import static ru.rzn.gmyasoedov.serverapi.GMavenServer.GMAVEN_DEPENDENCY_TREE;
+
 @Named
 public class GMavenEventSpy extends AbstractEventSpy {
-    public static final String DEPENDENCY_RESULT_MAP = "dependencyResultMap";
-    public static final String AETHER_CONFLICT_RESOLVER_VERBOSE = "aether.conflictResolver.verbose";
     private static EventSpyResultHolder resultHolder;
 
     @Override
@@ -43,18 +43,15 @@ public class GMavenEventSpy extends AbstractEventSpy {
             }
         } else if (event instanceof MavenExecutionResult) {
             resultHolder.executionResult = (MavenExecutionResult) event;
-            if (resultHolder.session != null) {
-                resultHolder.session.getUserProperties().put(DEPENDENCY_RESULT_MAP, resultHolder.dependencyResult);
-            }
             setResult();
         }
     }
 
     private static boolean isDependencyAnalyzer() {
         if (resultHolder.session == null) return false;
-        return resultHolder.session.getSystemProperties().getProperty(AETHER_CONFLICT_RESOLVER_VERBOSE, "")
+        return resultHolder.session.getSystemProperties().getProperty(GMAVEN_DEPENDENCY_TREE, "")
                 .equalsIgnoreCase("true")
-                || resultHolder.session.getUserProperties().getProperty(AETHER_CONFLICT_RESOLVER_VERBOSE, "")
+                || resultHolder.session.getUserProperties().getProperty(GMAVEN_DEPENDENCY_TREE, "")
                 .equalsIgnoreCase("true");
     }
 

@@ -1,7 +1,6 @@
 package ru.rzn.gmyasoedov.event.handler.converter;
 
 import org.apache.maven.execution.MavenExecutionResult;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.Os;
 import org.codehaus.plexus.util.StringUtils;
@@ -31,8 +30,8 @@ public class MavenProjectContainerConverter {
             return null;
         }
         MavenProjectContainer container = new MavenProjectContainer(MavenProjectConverter
-                .convert(topLevelProject, source.session));
-        fillContainer(container, projectByDirectoryMap, source.session);
+                .convert(topLevelProject, source.session, source.dependencyResult));
+        fillContainer(container, projectByDirectoryMap, source);
 
         return container;
     }
@@ -53,7 +52,7 @@ public class MavenProjectContainerConverter {
 
     private static void fillContainer(MavenProjectContainer rootContainer,
                                       Map<File, MavenProject> projectByDirectoryMap,
-                                      MavenSession session) {
+                                      EventSpyResultHolder resultHolder) {
         ru.rzn.gmyasoedov.serverapi.model.MavenProject project = rootContainer.getProject();
         for (String module : project.getModulesDir()) {
             if (StringUtils.isEmpty(module)) continue;
@@ -63,10 +62,11 @@ public class MavenProjectContainerConverter {
             if (mavenProjectByModuleFile == null) continue;
 
             MavenProjectContainer projectContainer = new MavenProjectContainer(
-                    MavenProjectConverter.convert(mavenProjectByModuleFile, session)
+                    MavenProjectConverter
+                            .convert(mavenProjectByModuleFile, resultHolder.session, resultHolder.dependencyResult)
             );
             rootContainer.getModules().add(projectContainer);
-            fillContainer(projectContainer, projectByDirectoryMap, session);
+            fillContainer(projectContainer, projectByDirectoryMap, resultHolder);
         }
     }
 

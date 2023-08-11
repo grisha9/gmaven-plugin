@@ -5,7 +5,7 @@ import java.util.List;
 
 public class GetModelRequest implements Serializable {
     public String projectPath;
-    public String analyzerGA;
+    public String dependencyAnalyzerGA;
     public String alternativePom;
     public String gMavenPluginPath;
     public List<String> tasks;

@@ -81,7 +81,7 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
         if (dependencyTreeFromMap != null) return dependencyTreeFromMap
         val dependencyTreeProjects = getDependencyTree(gServerRequest, artifactGA)
         dependencyTreeProjects.forEach { dependencyTreeByProject[it.groupId + ":" + it.artifactId] = it.dependencyTree }
-        return dependencyTreeByProject[artifactGA]!!
+        return dependencyTreeByProject[artifactGA] ?: emptyList()
     }
 
     private fun toProjectRequest(mavenSettings: MavenSettings, projectSettings: MavenProjectSettings): GServerRequest? {
