@@ -5,7 +5,6 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.Task
 import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.FileUtil
@@ -14,6 +13,7 @@ import com.intellij.util.io.HttpRequests
 import org.jetbrains.annotations.Nls
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
+import ru.rzn.gmyasoedov.gmaven.util.IndicatorUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import java.io.BufferedOutputStream
@@ -41,7 +41,7 @@ class MavenWrapperDistribution {
             val current = getCurrentDistribution(urlString)
             if (current != null) return current;
 
-            val taskInfo = getTaskInfo()
+            val taskInfo = IndicatorUtil.getTaskInfo(message("gmaven.wrapper.downloading"))
             val indicator = BackgroundableProcessIndicator(taskInfo)
             try {
                 return downloadMavenDistribution(urlString, indicator)
@@ -187,12 +187,6 @@ class MavenWrapperDistribution {
                     indicator?.apply { text = message("gmaven.wrapper.failure") }
                     zip.parentFile.listFiles { it -> it.name != zip.name }?.forEach { FileUtil.delete(it) }
                 }
-            }
-        }
-
-        private fun getTaskInfo(): Task.Backgroundable {
-            return object : Task.Backgroundable(null, message("gmaven.wrapper.downloading")) {
-                override fun run(indicator: ProgressIndicator) {}
             }
         }
 
