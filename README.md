@@ -16,9 +16,9 @@ The plugin adds support for the Maven for Java language projects:
 
 ### Prerequisites
 
-1. IntelliJ IDEA 2022.2 or higher
-2. JDK 11
-3. Maven 3.3.1+  or higher
+1. IntelliJ IDEA 2022.2+
+2. JDK 11+
+3. Maven 3.3.1+
 
 
 ### General information
