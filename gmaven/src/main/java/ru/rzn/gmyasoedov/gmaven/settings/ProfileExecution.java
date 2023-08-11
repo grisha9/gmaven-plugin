@@ -30,6 +30,6 @@ public class ProfileExecution implements Serializable {
 
     @Transient
     public String toRawName() {
-        return enabled ? name : "-" + name;
+        return enabled ? name : "!" + name;
     }
 }

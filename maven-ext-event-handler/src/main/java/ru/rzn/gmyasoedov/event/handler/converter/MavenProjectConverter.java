@@ -11,20 +11,21 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
 import java.io.File;
-import java.util.*;
-
-import static ru.rzn.gmyasoedov.event.handler.GMavenEventSpy.DEPENDENCY_RESULT_MAP;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 public class MavenProjectConverter {
 
-    public static MavenProject convert(org.apache.maven.project.MavenProject mavenProject, MavenSession session) {
-        Map<String, List<DependencyNode>> dependencyResultMap = Collections.emptyMap();
-        if (session != null) {
-            dependencyResultMap = (Map<String, List<DependencyNode>>) session
-                    .getUserProperties().get(DEPENDENCY_RESULT_MAP);
-            if (dependencyResultMap == null) {
-                dependencyResultMap = Collections.emptyMap();
-            }
+    public static MavenProject convert(org.apache.maven.project.MavenProject mavenProject,
+                                       MavenSession session,
+                                       Map<String, List<DependencyNode>> dependencyResultMap) {
+        if (dependencyResultMap == null) {
+            dependencyResultMap = Collections.emptyMap();
         }
 
         List<MavenPlugin> plugins = new ArrayList<>(mavenProject.getBuildPlugins().size());

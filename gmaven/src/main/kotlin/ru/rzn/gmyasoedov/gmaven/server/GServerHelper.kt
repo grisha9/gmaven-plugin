@@ -2,17 +2,20 @@
 
 package ru.rzn.gmyasoedov.gmaven.server
 
-import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.progress.EmptyProgressIndicator
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.Task
+import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.util.PathUtil
 import com.intellij.util.io.isDirectory
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
+import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
+import ru.rzn.gmyasoedov.gmaven.util.IndicatorUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
+import ru.rzn.gmyasoedov.serverapi.GMavenServer
 import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenException
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
@@ -77,22 +80,30 @@ fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<
         gServerRequest.settings
     )
     val modelRequest = getModelRequest(request)
-    modelRequest.analyzerGA = artifactGA
+    modelRequest.dependencyAnalyzerGA = artifactGA
     val processSupport = GServerRemoteProcessSupport(request)
     try {
-        val mavenResult = runMavenTask(processSupport, modelRequest)
+        var taskInfo = IndicatorUtil.getTaskInfo(GBundle.message("gmaven.dependency.tree.title"), false)
+        var indicator = BackgroundableProcessIndicator(taskInfo)
+        var mavenResult = runMavenTaskInner(processSupport, modelRequest, indicator, taskInfo)
+        if (couldNotFindSelectedProject(mavenResult)) {
+            taskInfo = IndicatorUtil.getTaskInfo(GBundle.message("gmaven.dependency.tree.title"), false)
+            indicator = BackgroundableProcessIndicator(taskInfo)
+            modelRequest.dependencyAnalyzerGA = GMavenServer.RESOLVE_TASK
+            mavenResult = runMavenTask(GServerRemoteProcessSupport(request), modelRequest, indicator, taskInfo)
+            val message = GBundle.message("gmaven.dependency.tree.resolve.warning", artifactGA)
+            GMavenNotification.createNotificationDA(message, NotificationType.WARNING)
+        }
         return mavenResult.projectContainer?.modules?.map { it.project } ?: emptyList()
     } catch (e: Exception) {
         MavenLog.LOG.warn(e)
-        NotificationGroupManager.getInstance()
-            .getNotificationGroup(GMavenConstants.SYSTEM_ID.readableName)
-            ?.let { ApplicationManager.getApplication().invokeLater {
-                it.createNotification(
-                    GBundle.message("gmaven.dependency.tree.title"), e.localizedMessage, NotificationType.ERROR
-                ).notify(null)
-            } }
+        GMavenNotification.createNotificationDA(e.localizedMessage, NotificationType.ERROR)
         return emptyList()
     }
+}
+
+private fun couldNotFindSelectedProject(mavenResult: MavenResult): Boolean {
+    return mavenResult.exceptions?.isNotEmpty() ?: false
 }
 
 private fun tryInstallGMavenPlugin(request: GServerRequest, mavenResult: MavenResult) =
@@ -128,18 +139,23 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
     return modelRequest
 }
 
-private fun runMavenTask(processSupport: GServerRemoteProcessSupport, modelRequest: GetModelRequest): MavenResult {
-    val mavenResult = runMavenTaskInner(processSupport, modelRequest)
+private fun runMavenTask(processSupport: GServerRemoteProcessSupport,
+                         modelRequest: GetModelRequest,
+                         indicator: ProgressIndicator = EmptyProgressIndicator(),
+                         taskInfo: Task.Backgroundable? = null): MavenResult {
+    val mavenResult = runMavenTaskInner(processSupport, modelRequest, indicator, taskInfo)
     processExceptions(mavenResult.exceptions)
     return mavenResult
 }
 
 private fun runMavenTaskInner(
     processSupport: GServerRemoteProcessSupport,
-    modelRequest: GetModelRequest
+    modelRequest: GetModelRequest,
+    indicator: ProgressIndicator = EmptyProgressIndicator(),
+    taskInfo: Task.Backgroundable? = null
 ): MavenResult {
     try {
-        val projectModel = processSupport.acquire(processSupport.id, "", EmptyProgressIndicator())
+        val projectModel = processSupport.acquire(processSupport.id, "", indicator)
             .getProjectModel(modelRequest)
         return GServerUtils.toResult(projectModel)
     } catch (e: Exception) {
@@ -147,6 +163,9 @@ private fun runMavenTaskInner(
         return GServerUtils.toResult(e)
     } finally {
         processSupport.stopAll()
+        if (taskInfo != null && indicator is BackgroundableProcessIndicator) {
+            indicator.finish(taskInfo)
+        }
     }
 }
 

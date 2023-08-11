@@ -55,17 +55,20 @@ public class GMavenServerImpl implements GMavenServer {
         if (request.updateSnapshots) {
             mvnArgs.add("-U");
         }
-        if (!StringUtilRt.isEmpty(request.analyzerGA)) {
-            mvnArgs.add("-pl");
-            mvnArgs.add(request.analyzerGA);
-            mvnArgs.add("-Daether.conflictResolver.verbose=true");
-            mvnArgs.add("-Daether.dependencyManager.verbose=true");
-            mvnArgs.add( "-am");
+        if (!StringUtilRt.isEmpty(request.dependencyAnalyzerGA)) {
+            mvnArgs.add("-D" + GMAVEN_DEPENDENCY_TREE + "=true");
+            if (!request.dependencyAnalyzerGA.equals(RESOLVE_TASK)) {
+                mvnArgs.add("-pl");
+                mvnArgs.add(request.dependencyAnalyzerGA);
+                mvnArgs.add("-Daether.conflictResolver.verbose=true");
+                mvnArgs.add("-Daether.dependencyManager.verbose=true");
+                mvnArgs.add("-am");
+            }
         } else if (!StringUtilRt.isEmpty(request.projectList)) {
             mvnArgs.add("-pl");
             mvnArgs.add(request.projectList);
-            mvnArgs.add( "-am");
-            mvnArgs.add( "-amd");
+            mvnArgs.add("-am");
+            mvnArgs.add("-amd");
         }
         if (request.additionalArguments != null && !request.additionalArguments.isEmpty()) {
             mvnArgs.addAll(request.additionalArguments);
@@ -80,7 +83,7 @@ public class GMavenServerImpl implements GMavenServer {
         } else if (request.tasks != null && !request.tasks.isEmpty()) {
             mvnArgs.addAll(request.tasks);
         } else {
-            mvnArgs.add("ru.rzn.gmyasoedov:model-reader:1.0-SNAPSHOT:resolve");
+            mvnArgs.add(RESOLVE_TASK);
         }
         return mvnArgs.toArray(new String[0]);
     }
