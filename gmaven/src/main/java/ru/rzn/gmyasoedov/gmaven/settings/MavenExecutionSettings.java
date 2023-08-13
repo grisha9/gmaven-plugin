@@ -5,6 +5,7 @@ import com.intellij.util.execution.ParametersListUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Objects;
 
 import static ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.OutputLevelType.DEFAULT;
@@ -32,6 +33,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private boolean updateSnapshots = false;
     @NotNull
     private ProjectSettingsControlBuilder.OutputLevelType outputLevel = DEFAULT;
+    private List<String> argumentsImport;
 
     public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,
                                   @Nullable String vmOptions,
@@ -136,6 +138,14 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         this.outputLevel = outputLevel;
     }
 
+    public List<String> getArgumentsImport() {
+        return argumentsImport;
+    }
+
+    public void setArgumentsImport(List<String> argumentsImport) {
+        this.argumentsImport = argumentsImport;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -151,6 +161,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         if (!distributionSettings.equals(that.distributionSettings)) return false;
         if (!Objects.equals(javaHome, that.javaHome)) return false;
         if (!Objects.equals(jdkName, that.jdkName)) return false;
+        if (!Objects.equals(argumentsImport, that.argumentsImport)) return false;
         return Objects.equals(myIdeProjectPath, that.myIdeProjectPath);
     }
 
@@ -163,6 +174,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         result = 31 * result + (javaHome != null ? javaHome.hashCode() : 0);
         result = 31 * result + (jdkName != null ? jdkName.hashCode() : 0);
         result = 31 * result + (myIdeProjectPath != null ? myIdeProjectPath.hashCode() : 0);
+        result = 31 * result + (argumentsImport != null ? argumentsImport.hashCode() : 0);
         result = 31 * result + (resolveModulePerSourceSet ? 1 : 0);
         result = 31 * result + (useQualifiedModuleNames ? 1 : 0);
         return result;

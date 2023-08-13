@@ -76,6 +76,8 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     @Nullable
     private JTextField argumentsField;
     @Nullable
+    private JTextField argumentsImportField;
+    @Nullable
     private ComboBox<OutputLevelComboBoxItem> outPutLevelCombobox;
     @Nullable
     private ComboBox<DistributionSettingsComboBoxItem> mavenHomeCombobox;
@@ -139,6 +141,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         if (argumentsField != null) {
             settings.setArguments(argumentsField.getText());
         }
+        if (argumentsImportField != null) {
+            settings.setArgumentsImport(argumentsImportField.getText());
+        }
         if (outPutLevelCombobox != null && outPutLevelCombobox.getItem() != null) {
             settings.setOutputLevel(outPutLevelCombobox.getItem().value);
         }
@@ -184,6 +189,11 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         }
         if (argumentsField != null && !Objects.equals(
                 argumentsField.getText(), requireNonNullElse(projectSettings.getArguments(), ""))
+        ) {
+            return true;
+        }
+        if (argumentsImportField != null && !Objects.equals(
+                argumentsImportField.getText(), requireNonNullElse(projectSettings.getArgumentsImport(), ""))
         ) {
             return true;
         }
@@ -233,6 +243,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         if (argumentsField != null) {
             argumentsField.setText(projectSettings.getArguments());
         }
+        if (argumentsImportField != null) {
+            argumentsImportField.setText(projectSettings.getArgumentsImport());
+        }
         if (outPutLevelCombobox != null) {
             outPutLevelCombobox.setItem(new OutputLevelComboBoxItem(projectSettings.getOutputLevel()));
         }
@@ -280,7 +293,7 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
             recreateJdkComboBox(project, sdksModel);
             setSelectedJdk(jdkComboBox, projectSettings.getJdkName());
         }
-        setPreferredComboboxSize();
+        setPreferredSize();
     }
 
     private void setSelectedJdk(@Nullable SdkComboBox jdkComboBox, @Nullable String jdkName) {
@@ -343,6 +356,15 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
         argumentsLabel.setLabelFor(argumentsField);
 
+        JBLabel argumentsImportLabel = new JBLabel(message("gmaven.settings.project.arguments.import"));
+        argumentsImportLabel.setToolTipText(message("gmaven.settings.project.arguments.import.tooltip"));
+        argumentsImportField = new JTextField();
+        argumentsImportField.setToolTipText(message("gmaven.settings.project.arguments.import.tooltip"));
+        content.add(argumentsImportLabel, getLabelConstraints(indentLevel));
+        content.add(argumentsImportField, getLabelConstraints(0));
+        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        argumentsImportLabel.setLabelFor(argumentsImportField);
+
 
         JBLabel jdkLabel = new JBLabel(message("gmaven.settings.project.jvm"));
         jdkComboBoxWrapper = new JPanel(new BorderLayout());
@@ -378,10 +400,10 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         mavenCustomPathLabel.setLabelFor(mavenCustomPathField);
     }
 
-    private void setPreferredComboboxSize() {
+    private void setPreferredSize() {
         List<? extends JComponent> components = Arrays
                 .asList(
-                        vmOptionsField, argumentsField, threadCountField, mavenCustomPathField,
+                        vmOptionsField, argumentsField, argumentsImportField, threadCountField, mavenCustomPathField,
                         outPutLevelCombobox, mavenHomeCombobox, jdkComboBox
                 );
         JComponent maxWidthComponent = components.stream()

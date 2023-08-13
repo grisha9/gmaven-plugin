@@ -16,6 +16,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
     var outputLevel = OutputLevelType.DEFAULT
     var threadCount: String? = null
     var arguments: String? = null
+    var argumentsImport: String? = null
 
     override fun clone(): MavenProjectSettings {
         val result = MavenProjectSettings()
@@ -31,6 +32,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
         result.threadCount = threadCount
         result.useWholeProjectContext = useWholeProjectContext
         result.arguments = arguments
+        result.argumentsImport = argumentsImport
         return result
     }
 }
