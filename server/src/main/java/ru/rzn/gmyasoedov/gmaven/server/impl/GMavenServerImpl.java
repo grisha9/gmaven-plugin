@@ -73,6 +73,9 @@ public class GMavenServerImpl implements GMavenServer {
         if (request.additionalArguments != null && !request.additionalArguments.isEmpty()) {
             mvnArgs.addAll(request.additionalArguments);
         }
+        if (request.importArguments != null && !request.importArguments.isEmpty()) {
+            mvnArgs.addAll(request.importArguments);
+        }
         if (!StringUtilRt.isEmpty(request.gMavenPluginPath)) {
             mvnArgs.add("install:install-file");
             mvnArgs.add("-Dfile=" + request.gMavenPluginPath);
