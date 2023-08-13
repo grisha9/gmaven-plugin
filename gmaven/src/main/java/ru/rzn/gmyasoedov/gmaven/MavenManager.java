@@ -292,6 +292,9 @@ public final class MavenManager
             if (projectSettings.getArguments() != null) {
                 result.withArguments(ParametersListUtil.parse(projectSettings.getArguments(), true, true));
             }
+            if (projectSettings.getArgumentsImport() != null) {
+                result.setArgumentsImport(ParametersListUtil.parse(projectSettings.getArgumentsImport(), true, true));
+            }
         }
 
         String ideProjectPath;

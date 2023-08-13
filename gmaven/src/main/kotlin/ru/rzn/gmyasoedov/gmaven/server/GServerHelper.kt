@@ -32,6 +32,7 @@ fun firstRun(gServerRequest: GServerRequest): MavenResult {
         installGMavenPlugin = true
     )
     val modelRequest = getModelRequest(request)
+    modelRequest.importArguments = null
     val processSupport = GServerRemoteProcessSupport(request)
     return runMavenTask(processSupport, modelRequest)
 }
@@ -66,6 +67,7 @@ fun runTasks(
     }
     val modelRequest = getModelRequest(request)
     modelRequest.tasks = tasks
+    modelRequest.importArguments = null
     val processSupport = GServerRemoteProcessSupport(request)
     processConsumer?.let { it(processSupport) }
     return runMavenTask(processSupport, modelRequest)
@@ -136,6 +138,7 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
         .map { it.toRawName() }
         .joinToString(separator = ",")
     modelRequest.additionalArguments = request.settings.arguments
+    modelRequest.importArguments = request.settings.argumentsImport
     return modelRequest
 }
 
