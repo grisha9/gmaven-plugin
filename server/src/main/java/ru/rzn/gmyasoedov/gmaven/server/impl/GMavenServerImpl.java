@@ -88,6 +88,7 @@ public class GMavenServerImpl implements GMavenServer {
         } else {
             mvnArgs.add(RESOLVE_TASK);
         }
+        System.out.println("mvn: " + mvnArgs);
         return mvnArgs.toArray(new String[0]);
     }
 

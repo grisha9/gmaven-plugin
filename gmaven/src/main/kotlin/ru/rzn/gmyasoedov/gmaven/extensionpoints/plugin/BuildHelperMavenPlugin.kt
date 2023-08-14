@@ -2,8 +2,10 @@ package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
 import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType.*
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenContentRoot
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginContentRoots
 import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
+import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.PluginExecution
 
 class BuildHelperMavenPlugin : MavenFullImportPlugin {
@@ -11,7 +13,7 @@ class BuildHelperMavenPlugin : MavenFullImportPlugin {
 
     override fun getArtifactId() = "build-helper-maven-plugin"
 
-    override fun getContentRoots(plugin: MavenPlugin): List<MavenContentRoot> {
+    override fun getContentRoots(mavenProject: MavenProject, plugin: MavenPlugin): PluginContentRoots {
         val executions = plugin.body?.executions ?: emptyList()
         val result = ArrayList<MavenContentRoot>()
         for (execution in executions) {
@@ -29,7 +31,7 @@ class BuildHelperMavenPlugin : MavenFullImportPlugin {
                     getPathList(execution, "resources").forEach { result.add(MavenContentRoot(TEST_RESOURCE, it)) }
             }
         }
-        return result;
+        return PluginContentRoots(result, emptySet())
     }
 
     private fun getPathList(execution: PluginExecution, paramName: String): List<String> {

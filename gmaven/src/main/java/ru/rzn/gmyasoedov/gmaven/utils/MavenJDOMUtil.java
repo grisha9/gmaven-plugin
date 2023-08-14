@@ -10,12 +10,15 @@ import java.util.List;
 
 public final class MavenJDOMUtil {
 
-    public static Element parseConfiguration(String it) {
+    public static final Element JDOM_ELEMENT_EMPTY = new Element("empty");
+
+    public static Element parseConfiguration(@Nullable String it) {
         try {
+            if (it == null) return JDOM_ELEMENT_EMPTY;
             return JDOMUtil.load(it);
         } catch (Exception e) {
             MavenLog.LOG.error(e);
-            return new Element("empty");
+            return JDOM_ELEMENT_EMPTY;
         }
     }
 

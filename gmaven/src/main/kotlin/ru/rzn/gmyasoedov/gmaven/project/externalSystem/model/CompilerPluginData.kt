@@ -48,8 +48,7 @@ class CompilerPluginData @PropertyMapping("path", "arguments", "buildDirectory",
 
 
     class AnnotationProcessorOutput @PropertyMapping("outputPath", "testSources") constructor(
-        val outputPath: String,
-        val isTestSources: Boolean
+        val outputPath: String
     )
 
     companion object {
