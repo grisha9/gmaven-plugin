@@ -53,14 +53,15 @@ fun createModuleData(
 
     val moduleDataNode = parentDataNode.createChild(ProjectKeys.MODULE, moduleData)
 
+    val pluginContentRoots = getPluginContentRootPaths(project)
     val rootPaths = listOf(
         getContentRootPath(project.sourceRoots, ExternalSystemSourceType.SOURCE),
         getContentRootPath(project.resourceRoots, ExternalSystemSourceType.RESOURCE),
         getContentRootPath(project.testSourceRoots, ExternalSystemSourceType.TEST),
         getContentRootPath(project.testResourceRoots, ExternalSystemSourceType.TEST_RESOURCE),
-        getPluginContentRootPaths(project)
+        pluginContentRoots.contentRoots
     ).flatten()
-    val generatedPaths = getGeneratedSources(project)
+    val generatedPaths = getGeneratedSources(project, pluginContentRoots.excludedRoots)
     val contentRoot = ContentRoots(rootPaths, generatedPaths, project.buildDirectory)
 
     val compilerData = getCompilerData(project, context)
@@ -80,7 +81,8 @@ fun createModuleData(
     populateAnnotationProcessorData(project, moduleDataNode, compilerData)
     populateTasks(moduleDataNode, project, context.mavenResult.settings.localRepository?.let { Path.of(it) })
 
-    val perSourceSetModules = setupContentRootAndSourceSetData(moduleDataNode, contentRoot, context, project, compilerData)
+    val perSourceSetModules =
+        setupContentRootAndSourceSetData(moduleDataNode, contentRoot, context, project, compilerData)
     context.moduleDataByArtifactId.put(project.id, ModuleContextHolder(moduleDataNode, perSourceSetModules))
 
     if (parentDataNode.data is ModuleData) {
@@ -268,22 +270,26 @@ private fun splitContentRoots(contentRoots: ContentRoots, test: Boolean): Conten
     )
 }
 
-private fun getGeneratedSources(project: MavenProject): List<MavenGeneratedContentRoot> {
+private fun getGeneratedSources(project: MavenProject, excludedRoots: Set<String>): List<MavenGeneratedContentRoot> {
     if (project.packaging.equals("pom", true)) return emptyList()
     val generatedSourcePath = MavenUtils.getGeneratedSourcesDirectory(project.buildDirectory, false)
     val generatedTestSourcePath = MavenUtils.getGeneratedSourcesDirectory(project.buildDirectory, true)
     return listOfNotNull(
-        getGeneratedContentRoot(generatedSourcePath, ExternalSystemSourceType.SOURCE_GENERATED),
-        getGeneratedContentRoot(generatedTestSourcePath, ExternalSystemSourceType.TEST_GENERATED),
+        getGeneratedContentRoot(generatedSourcePath, excludedRoots, ExternalSystemSourceType.SOURCE_GENERATED),
+        getGeneratedContentRoot(generatedTestSourcePath, excludedRoots, ExternalSystemSourceType.TEST_GENERATED),
     )
 }
 
 private fun getGeneratedContentRoot(
     rootPath: Path,
+    excludedRoots: Set<String>,
     type: ExternalSystemSourceType
 ): MavenGeneratedContentRoot? {
     val listFiles = rootPath.toFile().listFiles() ?: return null
-    val paths = listFiles.asSequence().filter { it.isDirectory }.map { it.absolutePath }.toList()
+    val paths = listFiles.asSequence()
+        .filter { it.isDirectory }
+        .filter { !excludedRoots.contains(it.absolutePath) }
+        .map { it.absolutePath }.toList()
     return MavenGeneratedContentRoot(type, rootPath, paths)
 }
 

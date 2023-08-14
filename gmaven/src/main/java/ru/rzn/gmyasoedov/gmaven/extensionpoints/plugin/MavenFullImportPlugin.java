@@ -2,11 +2,11 @@ package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin;
 
 import com.intellij.openapi.extensions.ExtensionPointName;
 import org.jetbrains.annotations.NotNull;
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenContentRoot;
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginContentRoots;
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
+import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
 import java.util.Collections;
-import java.util.List;
 
 public interface MavenFullImportPlugin {
     ExtensionPointName<MavenFullImportPlugin> EP_NAME =
@@ -27,7 +27,7 @@ public interface MavenFullImportPlugin {
     }
 
     @NotNull
-    default List<MavenContentRoot> getContentRoots(MavenPlugin plugin) {
-        return Collections.emptyList();
+    default PluginContentRoots getContentRoots(MavenProject mavenProject, MavenPlugin plugin) {
+        return new PluginContentRoots(Collections.emptyList(), Collections.emptySet());
     }
 }
