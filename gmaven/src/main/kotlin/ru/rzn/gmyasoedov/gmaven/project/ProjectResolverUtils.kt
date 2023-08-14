@@ -57,16 +57,19 @@ fun getContentRootPath(paths: List<String>, type: ExternalSystemSourceType): Lis
         .toList()
 }
 
-fun getPluginContentRootPaths(mavenProject: MavenProject): List<MavenContentRoot> {
-    val result = ArrayList<MavenContentRoot>()
+fun getPluginContentRootPaths(mavenProject: MavenProject): PluginContentRoots {
+    val contentRoots = ArrayList<MavenContentRoot>()
+    val excludedRoots = HashSet<String>(4)
     for (plugin in mavenProject.plugins) {
         for (pluginExtension in MavenFullImportPlugin.EP_NAME.extensionList) {
             if (pluginExtension.isApplicable(plugin)) {
-                result += pluginExtension.getContentRoots(plugin)
+                val pluginContentRoot = pluginExtension.getContentRoots(mavenProject, plugin)
+                contentRoots += pluginContentRoot.contentRoots
+                excludedRoots += pluginContentRoot.excludedRoots
             }
         }
     }
-    return result;
+    return PluginContentRoots(contentRoots, excludedRoots);
 }
 
 fun populateTasks(moduleDataNode: DataNode<ModuleData>, mavenProject: MavenProject, localRepo: Path?) {
