@@ -38,8 +38,8 @@ abstract class GroovyAbstractMavenPlugin : MavenFullImportPlugin {
         }
         getPathList(mavenProject, mainConfiguration, false).forEach { result.add(MavenContentRoot(SOURCE, it)) }
         getPathList(mavenProject, testConfiguration, true).forEach { result.add(MavenContentRoot(TEST, it)) }
-        excluded.add(getExcludedPath(mavenProject, generatedConfiguration, false))
-        excluded.add(getExcludedPath(mavenProject, generatedTestConfiguration, true))
+        excluded.add(getExcludedPath(mavenProject, generatedConfiguration))
+        excluded.add(getExcludedPath(mavenProject, generatedTestConfiguration))
         return PluginContentRoots(result, excluded)
     }
 
@@ -60,13 +60,13 @@ abstract class GroovyAbstractMavenPlugin : MavenFullImportPlugin {
         return listOf(Path.of(mavenProject.basedir, "src", sourceFolderName, "groovy").toString())
     }
 
-    private fun getExcludedPath(mavenProject: MavenProject, configuration: String?, isTest: Boolean): String {
+    private fun getExcludedPath(mavenProject: MavenProject, configuration: String?): String {
         val element = MavenJDOMUtil.parseConfiguration(configuration)
-        if (element == JDOM_ELEMENT_EMPTY) return getDefaultExcludedDir(mavenProject, isTest)
+        if (element == JDOM_ELEMENT_EMPTY) return getDefaultExcludedDir(mavenProject)
         return MavenJDOMUtil.findChildValueByPath(element, "outputDirectory", null)
-            ?: return getDefaultExcludedDir(mavenProject, isTest)
+            ?: return getDefaultExcludedDir(mavenProject)
     }
 
-    private fun getDefaultExcludedDir(mavenProject: MavenProject, isTest: Boolean) =
-        MavenUtils.getGeneratedSourcesDirectory(mavenProject.buildDirectory, isTest).resolve("groovy-stubs").toString()
+    private fun getDefaultExcludedDir(mavenProject: MavenProject) =
+        MavenUtils.getGeneratedSourcesDirectory(mavenProject.buildDirectory, false).resolve("groovy-stubs").toString()
 }

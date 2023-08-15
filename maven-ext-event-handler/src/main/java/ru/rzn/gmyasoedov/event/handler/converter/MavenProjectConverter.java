@@ -1,7 +1,6 @@
 package ru.rzn.gmyasoedov.event.handler.converter;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.Resource;
 import org.eclipse.aether.graph.DependencyNode;
@@ -22,7 +21,6 @@ import java.util.Set;
 public class MavenProjectConverter {
 
     public static MavenProject convert(org.apache.maven.project.MavenProject mavenProject,
-                                       MavenSession session,
                                        Map<String, List<DependencyNode>> dependencyResultMap) {
         if (dependencyResultMap == null) {
             dependencyResultMap = Collections.emptyMap();

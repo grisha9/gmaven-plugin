@@ -30,7 +30,7 @@ public class MavenProjectContainerConverter {
             return null;
         }
         MavenProjectContainer container = new MavenProjectContainer(MavenProjectConverter
-                .convert(topLevelProject, source.session, source.dependencyResult));
+                .convert(topLevelProject, source.dependencyResult));
         fillContainer(container, projectByDirectoryMap, source);
 
         return container;
@@ -62,8 +62,7 @@ public class MavenProjectContainerConverter {
             if (mavenProjectByModuleFile == null) continue;
 
             MavenProjectContainer projectContainer = new MavenProjectContainer(
-                    MavenProjectConverter
-                            .convert(mavenProjectByModuleFile, resultHolder.session, resultHolder.dependencyResult)
+                    MavenProjectConverter.convert(mavenProjectByModuleFile, resultHolder.dependencyResult)
             );
             rootContainer.getModules().add(projectContainer);
             fillContainer(projectContainer, projectByDirectoryMap, resultHolder);
