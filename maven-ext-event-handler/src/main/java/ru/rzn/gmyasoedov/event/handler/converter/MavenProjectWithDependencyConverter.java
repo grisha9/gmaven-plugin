@@ -21,7 +21,7 @@ public class MavenProjectWithDependencyConverter {
         List<MavenProjectContainer> result = new ArrayList<>(allProjects.size());
         for (MavenProject project : allProjects) {
             result.add(new MavenProjectContainer(
-                    MavenProjectConverter.convert(project, source.session, source.dependencyResult))
+                    MavenProjectConverter.convert(project, source.dependencyResult))
             );
         }
         if (result.isEmpty()) return null;
