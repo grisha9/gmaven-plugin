@@ -1,0 +1,6 @@
+<idea-plugin>
+  <extensions defaultExtensionNs="ru.rzn.gmyasoedov.gmaven">
+    <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.GroovyMavenPlusPlugin"/>
+    <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.GroovyMavenPlugin"/>
+  </extensions>
+</idea-plugin>
