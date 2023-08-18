@@ -47,18 +47,12 @@ class CompilerPluginData @PropertyMapping("path", "arguments", "buildDirectory",
     }
 
 
-    class AnnotationProcessorOutput @PropertyMapping("outputPath", "testSources") constructor(
-        val outputPath: String
-    )
-
     companion object {
         val KEY = Key.create(
             CompilerPluginData::class.java,
             ExternalSystemConstants.UNORDERED
         )
-        val OUTPUT_KEY = Key.create(
-            AnnotationProcessorOutput::class.java, ExternalSystemConstants.UNORDERED
-        )
+
         fun create(
             path: Collection<String>,
             arguments: Collection<String>,

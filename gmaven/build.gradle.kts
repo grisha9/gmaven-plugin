@@ -25,7 +25,7 @@ dependencies {
 intellij {
     version.set("2022.3")
     type.set("IC") // Target IDE Platform
-    plugins.set(listOf("java", "properties"))
+    plugins.set(listOf("java", "properties", "org.intellij.groovy"/*, "org.jetbrains.kotlin"*/))
 }
 
 tasks {

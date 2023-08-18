@@ -11,9 +11,9 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import java.nio.file.Path
 
-abstract class GroovyAbstractMavenPlugin : MavenFullImportPlugin {
+object GroovyAbstractMavenPlugin {
 
-    override fun getContentRoots(mavenProject: MavenProject, plugin: MavenPlugin): PluginContentRoots {
+    fun getContentRoots(mavenProject: MavenProject, plugin: MavenPlugin): PluginContentRoots {
         val executions = plugin.body?.executions ?: emptyList()
         val result = ArrayList<MavenContentRoot>()
         val excluded = HashSet<String>(4)

@@ -1,7 +1,9 @@
 package ru.rzn.gmyasoedov.event.handler.converter;
 
+import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
+import ru.rzn.gmyasoedov.serverapi.model.MavenArtifact;
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
 import ru.rzn.gmyasoedov.serverapi.model.PluginBody;
 import ru.rzn.gmyasoedov.serverapi.model.PluginExecution;
@@ -19,10 +21,10 @@ public class MavenPluginConverter {
         return new MavenPlugin(plugin.getGroupId(),
                 plugin.getArtifactId(),
                 plugin.getVersion(),
-                getPluginBody(contextValue));
+                getPluginBody(contextValue, plugin.getDependencies()));
     }
 
-    private static PluginBody getPluginBody(Object contextValue) {
+    private static PluginBody getPluginBody(Object contextValue, List<Dependency> dependencies) {
         if (contextValue instanceof Map) {
             try {
                 Map<String, Object> map = (Map<String, Object>) contextValue;
@@ -30,13 +32,12 @@ public class MavenPluginConverter {
                 Object processorPath = map.get("annotationProcessorPath");
                 List<String> annotationProcessorPaths = processorPath instanceof List
                         ? (List<String>) processorPath : Collections.<String>emptyList();
-                return PluginBody.builder()
-                        .configuration(getConfiguration(map))
-                        .executions(mapToExecutions(executions))
-                        .annotationProcessorPaths(annotationProcessorPaths)
-                        .build();
+                return new PluginBody(mapToExecutions(executions),
+                        annotationProcessorPaths,
+                        toArtifactList(dependencies),
+                        getConfiguration(map));
             } catch (Exception e) {
-                System.err.println(e);
+                e.printStackTrace();
                 return null;
             }
         }
@@ -49,10 +50,10 @@ public class MavenPluginConverter {
         for (Map<String, Object> execution : executions) {
             List<String> goals = (List<String>) execution.get("goals");
             result.add(PluginExecution.builder()
-                            .id((String) execution.get("id"))
-                            .phase((String) execution.get("phase"))
-                            .goals(goals == null ? Collections.<String>emptyList() : new ArrayList<>(goals))
-                            .configuration(getConfiguration(execution))
+                    .id((String) execution.get("id"))
+                    .phase((String) execution.get("phase"))
+                    .goals(goals == null ? Collections.<String>emptyList() : new ArrayList<>(goals))
+                    .configuration(getConfiguration(execution))
                     .build());
         }
         return result;
@@ -62,5 +63,22 @@ public class MavenPluginConverter {
         if (map == null) return null;
         Object configuration = map.get("configuration");
         return configuration instanceof String ? (String) configuration : null;
+    }
+
+    private static List<MavenArtifact> toArtifactList(List<Dependency> dependencies) {
+        if (dependencies == null || dependencies.isEmpty()) return null;
+        ArrayList<MavenArtifact> result = new ArrayList<>(dependencies.size());
+        for (Dependency each : dependencies) {
+            result.add(new MavenArtifact(
+                    each.getGroupId(),
+                    each.getArtifactId(),
+                    each.getVersion(),
+                    each.getType(),
+                    each.getClassifier(),
+                    each.getScope(),
+                    each.isOptional(),
+                    null, false));
+        }
+        return result;
     }
 }

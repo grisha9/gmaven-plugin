@@ -12,10 +12,7 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_BUILD_FILE
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver.ModuleContextHolder
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.DependencyAnalyzerData
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenContentRoot
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenGeneratedContentRoot
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
@@ -64,7 +61,8 @@ fun createModuleData(
     val generatedPaths = getGeneratedSources(project, pluginContentRoots.excludedRoots)
     val contentRoot = ContentRoots(rootPaths, generatedPaths, project.buildDirectory)
 
-    val compilerData = getCompilerData(project, context)
+    val compilerPlugin = getCompilerPlugin(project)
+    val compilerData = getCompilerData(compilerPlugin, project, context)
     val sourceLanguageLevel: LanguageLevel = compilerData.sourceLevel
     val targetBytecodeLevel: LanguageLevel = compilerData.targetLevel
     moduleDataNode.createChild(ModuleSdkData.KEY, ModuleSdkData(null))
@@ -89,6 +87,10 @@ fun createModuleData(
         for (childContainer in container.modules) {
             createModuleData(childContainer, moduleDataNode, context)
         }
+    }
+    if (parentDataNode.data is ProjectData) {
+        parentDataNode.createChild(MainJavaCompilerData.KEY,
+            getMainJavaCompilerData(compilerPlugin, project, compilerData, context))
     }
     return moduleDataNode
 }
