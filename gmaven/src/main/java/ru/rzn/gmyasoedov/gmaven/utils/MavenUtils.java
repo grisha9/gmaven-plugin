@@ -6,11 +6,15 @@ import com.intellij.execution.wsl.WSLDistribution;
 import com.intellij.execution.wsl.WslPath;
 import com.intellij.ide.fileTemplates.FileTemplate;
 import com.intellij.ide.fileTemplates.FileTemplateManager;
+import com.intellij.ide.plugins.IdeaPluginDescriptor;
+import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.extensions.PluginDescriptor;
+import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.externalSystem.model.project.ModuleData;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil;
 import com.intellij.openapi.externalSystem.service.project.IdeModelsProviderImpl;
@@ -78,6 +82,7 @@ import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.M2;
 public class MavenUtils {
 
     private static final String POLYGLOT_PREFIX = ".polyglot.";
+    public static final String INTELLIJ_GROOVY_PLUGIN_ID = "org.intellij.groovy";
 
     private MavenUtils() {
     }
@@ -467,5 +472,19 @@ public class MavenUtils {
         } else {
             return mavenBuildFilePath;
         }
+    }
+
+    @Nullable
+    public static IdeaPluginDescriptor getPlugin(@NotNull String pluginId) {
+        return PluginManagerCore.getPlugin(PluginId.getId(pluginId));
+    }
+
+    public static boolean pluginEnabled(@NotNull String pluginId) {
+        return Optional.ofNullable(PluginManagerCore.getPlugin(PluginId.getId(pluginId)))
+                .map(PluginDescriptor::isEnabled).orElse(false);
+    }
+
+    public static boolean groovyPluginEnabled() {
+        return pluginEnabled(INTELLIJ_GROOVY_PLUGIN_ID);
     }
 }

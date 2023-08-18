@@ -22,6 +22,7 @@
           <li>Execution Maven tasks</li>
           <li>Original Maven behavior for getting project model</li>
           <li>Support separate modules for production and test roots</li>
+          <li>Groovy support</li>
         </ul>
 
         Usage:<br>
@@ -36,6 +37,8 @@
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.java</depends>
+    <depends optional="true" config-file="groovy-support.xml">org.intellij.groovy</depends>
+    <!--<depends>org.jetbrains.kotlin</depends>-->
     <depends>com.intellij.properties</depends>
 
     <extensionPoints>
@@ -45,8 +48,6 @@
     <extensions defaultExtensionNs="ru.rzn.gmyasoedov.gmaven">
         <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin"/>
         <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.BuildHelperMavenPlugin"/>
-        <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.GroovyMavenPlusPlugin"/>
-        <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.GroovyMavenPlugin"/>
     </extensions>
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
@@ -68,6 +69,7 @@
         <runConfigurationProducer implementation="ru.rzn.gmyasoedov.gmaven.execution.GMavenRuntimeConfigurationProducer"/>
         <configurationType implementation="ru.rzn.gmyasoedov.gmaven.execution.GMavenExternalTaskConfigurationType"/>
         <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.CompilerPluginDataService"/>
+        <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.MainJavaCompilerDataService"/>
         <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.SourceSetDataService"/>
         <externalSystemDependencyAnalyzer implementation="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerExtension"/>
         <externalSystemUnlinkedProjectAware implementation="ru.rzn.gmyasoedov.gmaven.autolink.UnlinkedProjectAware"/>

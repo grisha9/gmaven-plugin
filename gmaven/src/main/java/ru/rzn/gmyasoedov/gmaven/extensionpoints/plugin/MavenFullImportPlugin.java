@@ -28,7 +28,7 @@ public interface MavenFullImportPlugin {
     }
 
     @NotNull
-    default PluginContentRoots getContentRoots(MavenProject mavenProject, MavenPlugin plugin) {
+    default PluginContentRoots getContentRoots(@NotNull MavenProject mavenProject, @NotNull MavenPlugin plugin) {
         return new PluginContentRoots(Collections.emptyList(), Collections.emptySet());
     }
 }

@@ -4,13 +4,13 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.pom.java.LanguageLevel
 import com.jetbrains.rd.util.getOrCreate
 import org.jdom.Element
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginContentRoots
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject
-import ru.rzn.gmyasoedov.serverapi.model.PluginBody
-import ru.rzn.gmyasoedov.serverapi.model.PluginExecution
+import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
+import ru.rzn.gmyasoedov.serverapi.model.*
 import java.nio.file.Path
 
 class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
@@ -20,6 +20,16 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
 
     override fun getAnnotationProcessorTagName() = "annotationProcessorPaths"
 
+    override fun getContentRoots(mavenProject: MavenProject, plugin: MavenPlugin): PluginContentRoots {
+        val groovyDependency = plugin.body.dependencies
+            ?.firstOrNull { it.groupId == "org.codehaus.groovy" && it.artifactId == "groovy-eclipse-compiler" }
+
+        if (groovyDependency == null || !MavenUtils.groovyPluginEnabled()) {
+            return super.getContentRoots(mavenProject, plugin)
+        }
+        return GroovyAbstractMavenPlugin.getContentRoots(mavenProject, plugin)
+    }
+
     override fun getCompilerData(
         project: MavenProject,
         plugin: MavenPlugin,
@@ -28,6 +38,21 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
     ): CompilerData {
         val compilerProp = getCompilerProp(plugin.body, project, contextElementMap)
         return toCompilerData(compilerProp, project, plugin, localRepositoryPath, contextElementMap)
+    }
+
+    override fun getJavaCompilerData(
+        project: MavenProject,
+        plugin: MavenPlugin,
+        compilerData: CompilerData,
+        localRepositoryPath: Path,
+        contextElementMap: MutableMap<String, Element>
+    ): MainJavaCompilerData {
+        val configuration = plugin.body.configuration ?: return MainJavaCompilerData.createDefault()
+        val pluginConfiguration = getElement(configuration, contextElementMap)
+        val compilerId = pluginConfiguration.getChild("compilerId")?.textTrim
+            ?: return MainJavaCompilerData.createDefault()
+        val dependenciesPath = getDependenciesPath(plugin.body.dependencies, localRepositoryPath)
+        return MainJavaCompilerData.create(compilerId, dependenciesPath, compilerData.arguments)
     }
 
     private fun toCompilerData(
@@ -44,7 +69,7 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         var testTarget: LanguageLevel? = null
         if (isReleaseEnabled) {
             source = compilerProp.release
-            target = compilerProp.release;
+            target = compilerProp.release
             testSource = compilerProp.testRelease
             testTarget = compilerProp.testRelease
         }
@@ -84,24 +109,24 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         val compilerProp = if (executions.isEmpty()) getCompilerProp(body.configuration, contextElementMap)
         else compilerProp(executions, contextElementMap)
         if (compilerProp.release == null) {
-            compilerProp.release = getLanguageLevel(project.properties.get("maven.compiler.release"))
+            compilerProp.release = getLanguageLevel(project.properties["maven.compiler.release"])
         }
         if (compilerProp.source == null) {
-            compilerProp.source = getLanguageLevel(project.properties.get("maven.compiler.source"))
+            compilerProp.source = getLanguageLevel(project.properties["maven.compiler.source"])
         }
         if (compilerProp.target == null) {
-            compilerProp.target = getLanguageLevel(project.properties.get("maven.compiler.target"))
+            compilerProp.target = getLanguageLevel(project.properties["maven.compiler.target"])
         }
         if (compilerProp.testRelease == null) {
-            compilerProp.testRelease = getLanguageLevel(project.properties.get("maven.compiler.testRelease"))
+            compilerProp.testRelease = getLanguageLevel(project.properties["maven.compiler.testRelease"])
         }
         if (compilerProp.testSource == null) {
-            compilerProp.testSource = getLanguageLevel(project.properties.get("maven.compiler.testSource"))
+            compilerProp.testSource = getLanguageLevel(project.properties["maven.compiler.testSource"])
         }
         if (compilerProp.testTarget == null) {
-            compilerProp.testTarget = getLanguageLevel(project.properties.get("maven.compiler.testTarget"))
+            compilerProp.testTarget = getLanguageLevel(project.properties["maven.compiler.testTarget"])
         }
-        return compilerProp;
+        return compilerProp
     }
 
     private fun compilerProp(executions: List<PluginExecution>, contextElementMap: MutableMap<String, Element>) =
@@ -115,7 +140,7 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         acc.testRelease = maxLanguageLevel(acc.testRelease, next.testRelease)
         acc.testSource = maxLanguageLevel(acc.testSource, next.testSource)
         acc.testTarget = maxLanguageLevel(acc.testTarget, next.testTarget)
-        return acc;
+        return acc
     }
 
     private fun maxLanguageLevel(first: LanguageLevel?, second: LanguageLevel?): LanguageLevel? {
@@ -138,7 +163,7 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
     }
 
     private fun getLanguageLevel(value: Any?): LanguageLevel? {
-        return if (value is String) LanguageLevel.parse(value) else null;
+        return if (value is String) LanguageLevel.parse(value) else null
     }
 
     private fun getElement(body: String, contextElementMap: MutableMap<String, Element>): Element {
@@ -147,14 +172,24 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
 
 
     private fun getDefaultCompilerData(plugin: MavenPlugin, localRepositoryPath: Path): CompilerData {
-        val descriptor = MavenArtifactUtil.readPluginDescriptor(localRepositoryPath, plugin);
+        val descriptor = MavenArtifactUtil.readPluginDescriptor(localRepositoryPath, plugin)
         if (descriptor == null) {
             MavenLog.LOG.warn("null descriptor $plugin")
             return CompilerData(LanguageLevel.HIGHEST, emptyList(), emptyList())
         }
-        val source = LanguageLevel.parse(descriptor.myParams.get("source")) ?: LanguageLevel.HIGHEST
-        val target = LanguageLevel.parse(descriptor.myParams.get("target")) ?: LanguageLevel.HIGHEST
+        val source = LanguageLevel.parse(descriptor.myParams["source"]) ?: LanguageLevel.HIGHEST
+        val target = LanguageLevel.parse(descriptor.myParams["target"]) ?: LanguageLevel.HIGHEST
         return CompilerData(source, target, source, target, emptyList(), emptyList())
+    }
+
+    private fun getDependenciesPath(dependencies: List<MavenArtifact>?, localRepositoryPath: Path): List<String> {
+        return dependencies
+            ?.filter { "jar".equals(it.type, true) }
+            ?.map {
+                MavenArtifactUtil.getArtifactNioPath(
+                    localRepositoryPath, it.groupId, it.artifactId, it.version, it.type
+                ).toString()
+            } ?: emptyList()
     }
 
     private data class CompilerProp(

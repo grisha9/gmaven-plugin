@@ -1,21 +1,30 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin;
 
 import org.jdom.Element;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData;
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.Map;
 
 public interface MavenCompilerFullImportPlugin extends MavenFullImportPlugin {
 
-    @Nonnull
-    CompilerData getCompilerData(@Nonnull MavenProject project,
-                                 @Nonnull MavenPlugin plugin,
-                                 @Nonnull Path localRepositoryPath,
-                                 @Nonnull Map<String, Element> contextElementMap);
+    @NotNull
+    CompilerData getCompilerData(@NotNull MavenProject project,
+                                 @NotNull MavenPlugin plugin,
+                                 @NotNull Path localRepositoryPath,
+                                 @NotNull Map<String, Element> contextElementMap);
+
+    @NotNull
+    MainJavaCompilerData getJavaCompilerData(@NotNull MavenProject project,
+                                             @NotNull MavenPlugin plugin,
+                                             @NotNull CompilerData compilerData,
+                                             @NotNull Path localRepositoryPath,
+                                             @NotNull Map<String, Element> contextElementMap);
+
 
     @Nullable
     String getAnnotationProcessorTagName();
