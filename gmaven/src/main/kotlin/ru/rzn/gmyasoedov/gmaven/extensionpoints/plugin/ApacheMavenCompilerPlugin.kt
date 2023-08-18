@@ -108,24 +108,7 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
             .filter { it.phase != null && (it.phase.equals("compile") || it.phase.equals("test-compile")) }
         val compilerProp = if (executions.isEmpty()) getCompilerProp(body.configuration, contextElementMap)
         else compilerProp(executions, contextElementMap)
-        if (compilerProp.release == null) {
-            compilerProp.release = getLanguageLevel(project.properties["maven.compiler.release"])
-        }
-        if (compilerProp.source == null) {
-            compilerProp.source = getLanguageLevel(project.properties["maven.compiler.source"])
-        }
-        if (compilerProp.target == null) {
-            compilerProp.target = getLanguageLevel(project.properties["maven.compiler.target"])
-        }
-        if (compilerProp.testRelease == null) {
-            compilerProp.testRelease = getLanguageLevel(project.properties["maven.compiler.testRelease"])
-        }
-        if (compilerProp.testSource == null) {
-            compilerProp.testSource = getLanguageLevel(project.properties["maven.compiler.testSource"])
-        }
-        if (compilerProp.testTarget == null) {
-            compilerProp.testTarget = getLanguageLevel(project.properties["maven.compiler.testTarget"])
-        }
+        fillCompilerPropFromMavenProjectProperies(compilerProp, project)
         return compilerProp
     }
 
@@ -162,10 +145,6 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         )
     }
 
-    private fun getLanguageLevel(value: Any?): LanguageLevel? {
-        return if (value is String) LanguageLevel.parse(value) else null
-    }
-
     private fun getElement(body: String, contextElementMap: MutableMap<String, Element>): Element {
         return contextElementMap.getOrCreate(body) { MavenJDOMUtil.parseConfiguration(it) }
     }
@@ -196,4 +175,60 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         var release: LanguageLevel?, var source: LanguageLevel?, var target: LanguageLevel?,
         var testRelease: LanguageLevel?, var testSource: LanguageLevel?, var testTarget: LanguageLevel?
     )
+
+    companion object {
+        fun getDefaultCompilerData(mavenProject: MavenProject, defaultLanguageLevel: LanguageLevel): CompilerData {
+            val compilerProp = CompilerProp(null, null, null, null, null, null)
+            fillCompilerPropFromMavenProjectProperies(compilerProp, mavenProject)
+            var source: LanguageLevel? = compilerProp.release
+            var target: LanguageLevel? = compilerProp.release
+            var testSource: LanguageLevel? = compilerProp.testRelease
+            var testTarget: LanguageLevel? = compilerProp.testRelease
+
+            if (source == null) {
+                source = compilerProp.source
+            }
+            if (target == null) {
+                target = compilerProp.target
+            }
+            if (testSource == null) {
+                testSource = compilerProp.testSource ?: source
+            }
+            if (testTarget == null) {
+                testTarget = compilerProp.testTarget ?: target
+            }
+            if (source == null || target == null || testSource == null || testTarget == null) {
+                return CompilerData(defaultLanguageLevel, emptyList(), emptyList())
+            }
+            return CompilerData(source, target, testSource, testTarget, emptyList(), emptyList())
+        }
+
+        private fun getLanguageLevel(value: Any?): LanguageLevel? {
+            return if (value is String) LanguageLevel.parse(value) else null
+        }
+
+        private fun fillCompilerPropFromMavenProjectProperies(
+            compilerProp: CompilerProp,
+            project: MavenProject
+        ) {
+            if (compilerProp.release == null) {
+                compilerProp.release = getLanguageLevel(project.properties["maven.compiler.release"])
+            }
+            if (compilerProp.source == null) {
+                compilerProp.source = getLanguageLevel(project.properties["maven.compiler.source"])
+            }
+            if (compilerProp.target == null) {
+                compilerProp.target = getLanguageLevel(project.properties["maven.compiler.target"])
+            }
+            if (compilerProp.testRelease == null) {
+                compilerProp.testRelease = getLanguageLevel(project.properties["maven.compiler.testRelease"])
+            }
+            if (compilerProp.testSource == null) {
+                compilerProp.testSource = getLanguageLevel(project.properties["maven.compiler.testSource"])
+            }
+            if (compilerProp.testTarget == null) {
+                compilerProp.testTarget = getLanguageLevel(project.properties["maven.compiler.testTarget"])
+            }
+        }
+    }
 }
