@@ -2,6 +2,7 @@ plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.6.20"
     id("org.jetbrains.intellij") version "1.9.0"
+    id("org.jetbrains.changelog") version "2.1.0"
 }
 
 group = "ru.rzn.gmyasoedov"
@@ -28,6 +29,10 @@ intellij {
     plugins.set(listOf("java", "properties", "org.intellij.groovy"/*, "org.jetbrains.kotlin"*/))
 }
 
+changelog {
+    headerParserRegex.set("""(\d+\.\d+(.\d+)?)""".toRegex())
+}
+
 tasks {
     // Set the JVM compatibility versions
     withType<JavaCompile> {
@@ -41,6 +46,18 @@ tasks {
     patchPluginXml {
         sinceBuild.set(providers.gradleProperty("pluginSinceBuild").get())
         untilBuild.set(providers.gradleProperty("pluginUntilBuild").get())
+
+        val changelog = project.changelog
+        changeNotes.set(providers.gradleProperty("pluginVersion").map { pluginVersion ->
+            with(changelog) {
+                renderItem(
+                    (getOrNull(pluginVersion) ?: getUnreleased())
+                        .withHeader(false)
+                        .withEmptySections(false),
+                    org.jetbrains.changelog.Changelog.OutputType.HTML,
+                )
+            }
+        })
     }
 
     signPlugin {
