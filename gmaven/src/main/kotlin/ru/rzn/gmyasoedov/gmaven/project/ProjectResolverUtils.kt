@@ -18,6 +18,7 @@ import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
+import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenSettings
 import java.nio.file.Path
@@ -32,22 +33,45 @@ fun getMavenHome(distributionSettings: DistributionSettings): Path {
     throw ExternalSystemException("maven home is empty")
 }
 
-fun getCompilerData(mavenProject: MavenProject, context: MavenProjectResolver.ProjectResolverContext):
-        CompilerData {
-    val projectLanguageLevel = context.projectLanguageLevel
-    val localRepoPath = context.mavenResult.settings.localRepository
-        ?: return CompilerData(projectLanguageLevel, emptyList(), emptyList())
-    val compilerPlugin = MavenFullImportPlugin.EP_NAME.extensionList
-        .filterIsInstance<MavenCompilerFullImportPlugin>()
-        .firstOrNull() ?: return CompilerData(projectLanguageLevel, emptyList(), emptyList())
+fun getCompilerPlugin(mavenProject: MavenProject): MavenPlugin? {
+    val compilerPluginExtension = MavenFullImportPlugin.EP_NAME
+        .findExtensionOrFail(MavenCompilerFullImportPlugin::class.java)
 
     for (plugin in mavenProject.plugins) {
-        if (compilerPlugin.isApplicable(plugin)) {
-            return compilerPlugin
-                .getCompilerData(mavenProject, plugin, Path.of(localRepoPath), context.contextElementMap)
+        if (compilerPluginExtension.isApplicable(plugin)) {
+            return plugin
         }
     }
-    return CompilerData(projectLanguageLevel, emptyList(), emptyList())
+    return null
+}
+
+fun getCompilerData(
+    plugin: MavenPlugin?,
+    mavenProject: MavenProject,
+    context: MavenProjectResolver.ProjectResolverContext
+): CompilerData {
+    val projectLanguageLevel = context.projectLanguageLevel
+    plugin ?: return CompilerData(projectLanguageLevel, emptyList(), emptyList())
+    val localRepoPath = context.mavenResult.settings.localRepository
+        ?: return CompilerData(projectLanguageLevel, emptyList(), emptyList())
+
+    return MavenFullImportPlugin.EP_NAME
+        .findExtensionOrFail(MavenCompilerFullImportPlugin::class.java)
+        .getCompilerData(mavenProject, plugin, Path.of(localRepoPath), context.contextElementMap)
+}
+
+fun getMainJavaCompilerData(
+    plugin: MavenPlugin?,
+    mavenProject: MavenProject,
+    compilerData: CompilerData,
+    context: MavenProjectResolver.ProjectResolverContext
+): MainJavaCompilerData {
+    plugin ?: return MainJavaCompilerData.createDefault()
+    val localRepoPath = context.mavenResult.settings.localRepository ?: return MainJavaCompilerData.createDefault()
+
+    return MavenFullImportPlugin.EP_NAME
+        .findExtensionOrFail(MavenCompilerFullImportPlugin::class.java)
+        .getJavaCompilerData(mavenProject, plugin, compilerData, Path.of(localRepoPath), context.contextElementMap)
 }
 
 fun getContentRootPath(paths: List<String>, type: ExternalSystemSourceType): List<MavenContentRoot> {
