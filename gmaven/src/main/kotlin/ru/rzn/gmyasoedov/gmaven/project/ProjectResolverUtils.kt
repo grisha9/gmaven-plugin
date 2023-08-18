@@ -11,6 +11,7 @@ import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.module.ModuleTypeManager
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
@@ -51,9 +52,9 @@ fun getCompilerData(
     context: MavenProjectResolver.ProjectResolverContext
 ): CompilerData {
     val projectLanguageLevel = context.projectLanguageLevel
-    plugin ?: return CompilerData(projectLanguageLevel, emptyList(), emptyList())
+    plugin ?: return ApacheMavenCompilerPlugin.getDefaultCompilerData(mavenProject, projectLanguageLevel)
     val localRepoPath = context.mavenResult.settings.localRepository
-        ?: return CompilerData(projectLanguageLevel, emptyList(), emptyList())
+        ?: return ApacheMavenCompilerPlugin.getDefaultCompilerData(mavenProject, projectLanguageLevel)
 
     return MavenFullImportPlugin.EP_NAME
         .findExtensionOrFail(MavenCompilerFullImportPlugin::class.java)
