@@ -10,6 +10,21 @@
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="grisha0909@gmail.com">gmyasoedov</vendor>
 
+    <change-notes>
+    <![CDATA[
+        <h3>Added</h3>
+        <ul>
+            <li>Groovy support (maven-compiler-plugin/groovy-maven-plugin/gmavenplus-plugin)</li>
+            <li>Eclipse/Groovy-Eclipse Java Compiler support</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+            <li>Default compiler settings from maven.properties</li>
+            <li>Change jdk from GMaven settings</li>
+        </ul>
+    ]]>
+    </change-notes>
+
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
