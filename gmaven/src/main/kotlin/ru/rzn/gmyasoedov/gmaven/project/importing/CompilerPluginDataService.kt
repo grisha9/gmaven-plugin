@@ -2,7 +2,6 @@ package ru.rzn.gmyasoedov.gmaven.project.importing
 
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.compiler.CompilerConfigurationImpl
-import com.intellij.ide.projectView.actions.MarkRootActionBase
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.Key
@@ -16,14 +15,7 @@ import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
 import com.intellij.openapi.externalSystem.util.Order
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.ContentEntry
-import com.intellij.openapi.roots.ModifiableRootModel
-import com.intellij.openapi.roots.SourceFolder
 import com.intellij.openapi.util.Computable
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VfsUtilCore
-import org.jetbrains.jps.model.java.JavaSourceRootType
-import org.jetbrains.jps.model.java.JpsJavaExtensionService
 import org.jetbrains.jps.model.java.compiler.ProcessorConfigProfile
 import org.jetbrains.jps.model.java.impl.compiler.ProcessorConfigProfileImpl
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
@@ -75,102 +67,6 @@ class CompilerPluginDataService : AbstractProjectDataService<CompilerPluginData,
                 )*/
             }
         }
-    }
-
-    private fun clearGeneratedSourceFolders(
-        ideModule: Module,
-        node: DataNode<CompilerPluginData>,
-        modelsProvider: IdeModifiableModelsProvider
-    ) {
-        val moduleOutputs = ExternalSystemApiUtil.findAll(node, CompilerPluginData.OUTPUT_KEY)
-        val buildDirectory = node.data.buildDirectory
-        val pathsToRemove =
-            (moduleOutputs
-                .map { it.data.outputPath } +
-                    listOf(
-                        MavenUtils.getGeneratedSourcesDirectory(buildDirectory, false).toString(),
-                        MavenUtils.getGeneratedSourcesDirectory(buildDirectory, true).toString(),
-                    ))
-                .filterNotNull()
-
-        pathsToRemove.forEach { path ->
-            val url = VfsUtilCore.pathToUrl(path)
-            val modifiableRootModel = modelsProvider.getModifiableRootModel(ideModule)
-
-            val (entry, folder) = findContentEntryOrFolder(modifiableRootModel, url)
-
-            if (entry != null) {
-                if (folder != null) {
-                    entry.removeSourceFolder(folder)
-                }
-
-                if (entry.sourceFolders.isEmpty()) {
-                    modifiableRootModel.removeContentEntry(entry)
-                }
-            }
-        }
-    }
-
-    private fun addGeneratedSourceFolders(
-        ideModule: Module,
-        node: DataNode<CompilerPluginData>,
-        modelsProvider: IdeModifiableModelsProvider,
-        sourceFolderManager: SourceFolderManager
-    ) {
-        val buildDirectory = node.data.buildDirectory
-        val outputPath = MavenUtils.getGeneratedSourcesDirectory(buildDirectory, false).toString()
-        if (outputPath != null) {
-            addGeneratedSourceFolder(ideModule, outputPath, false, modelsProvider, sourceFolderManager)
-        }
-
-        val testOutputPath = MavenUtils.getGeneratedSourcesDirectory(buildDirectory, true).toString()
-        if (testOutputPath != null) {
-            addGeneratedSourceFolder(ideModule, testOutputPath, true, modelsProvider, sourceFolderManager)
-        }
-    }
-
-
-    private fun addGeneratedSourceFolder(
-        ideModule: Module,
-        path: String,
-        isTest: Boolean,
-        modelsProvider: IdeModifiableModelsProvider,
-        sourceFolderManager: SourceFolderManager
-    ) {
-        val type = if (isTest) JavaSourceRootType.TEST_SOURCE else JavaSourceRootType.SOURCE
-        val url = VfsUtilCore.pathToUrl(path)
-        val vf = LocalFileSystem.getInstance().refreshAndFindFileByPath(path)
-        if (vf == null || !vf.exists()) {
-            sourceFolderManager.addSourceFolder(ideModule, url, type)
-            sourceFolderManager.setSourceFolderGenerated(url, true)
-        } else {
-            val modifiableRootModel = modelsProvider.getModifiableRootModel(ideModule)
-            val contentEntry = MarkRootActionBase.findContentEntry(modifiableRootModel, vf)
-                ?: modifiableRootModel.addContentEntry(url)
-            val properties = JpsJavaExtensionService.getInstance().createSourceRootProperties("", true)
-            contentEntry.addSourceFolder(url, type, properties)
-        }
-    }
-
-    private fun findContentEntryOrFolder(
-        modifiableRootModel: ModifiableRootModel,
-        url: String
-    ): Pair<ContentEntry?, SourceFolder?> {
-        var entryVar: ContentEntry? = null
-        var folderVar: SourceFolder? = null
-        modifiableRootModel.contentEntries.forEach search@{ ce ->
-            ce.sourceFolders.forEach { sf ->
-                if (sf.url == url) {
-                    entryVar = ce
-                    folderVar = sf
-                    return@search
-                }
-            }
-            if (ce.url == url) {
-                entryVar = ce
-            }
-        }
-        return entryVar to folderVar
     }
 
     override fun computeOrphanData(
