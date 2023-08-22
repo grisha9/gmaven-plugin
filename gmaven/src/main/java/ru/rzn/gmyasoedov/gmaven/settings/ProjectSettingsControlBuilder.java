@@ -201,7 +201,8 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
                 && !Objects.equals(outPutLevelCombobox.getItem().value, projectSettings.getOutputLevel())) {
             return true;
         }
-        if (jdkComboBox != null && jdkComboBox.getModel().getSdksModel().isModified()) {
+        if (jdkComboBox != null
+                && !Objects.equals(getJdkName(jdkComboBox.getSelectedItem()), projectSettings.getJdkName())) {
             return true;
         }
         if (mavenHomeCombobox != null && mavenCustomPathField != null && mavenHomeCombobox.getItem() != null) {
