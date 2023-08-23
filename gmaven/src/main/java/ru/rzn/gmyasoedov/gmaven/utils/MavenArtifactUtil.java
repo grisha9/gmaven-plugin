@@ -16,7 +16,11 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -27,6 +31,12 @@ public final class MavenArtifactUtil {
     public static final String MAVEN_PLUGIN_DESCRIPTOR = "META-INF/maven/plugin.xml";
 
     private static final Map<MavenId, MavenPluginDescription> PLUGIN_DESCRIPTOR_CACHE = new ConcurrentHashMap<>();
+
+    public static void clearPluginDescriptorCache() {
+        if (!PLUGIN_DESCRIPTOR_CACHE.isEmpty()) {
+            PLUGIN_DESCRIPTOR_CACHE.clear();
+        }
+    }
 
     public static boolean isPluginIdEquals(@Nullable String groupId1, @Nullable String artifactId1,
                                            @Nullable String groupId2, @Nullable String artifactId2) {
