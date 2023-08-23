@@ -77,7 +77,7 @@ fun createModuleData(
     }
 
     populateAnnotationProcessorData(project, moduleDataNode, compilerData)
-    populateTasks(moduleDataNode, project, context.mavenResult.settings.localRepository?.let { Path.of(it) })
+    populateTasks(moduleDataNode, project, context)
 
     val perSourceSetModules =
         setupContentRootAndSourceSetData(moduleDataNode, contentRoot, context, project, compilerData)

@@ -33,6 +33,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private boolean useQualifiedModuleNames = false;
     private boolean nonRecursive = false;
     private boolean updateSnapshots = false;
+    private boolean showPluginNodes = true;
     @NotNull
     private ProjectSettingsControlBuilder.OutputLevelType outputLevel = DEFAULT;
     private List<String> argumentsImport;
@@ -146,6 +147,14 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     public void setArgumentsImport(List<String> argumentsImport) {
         this.argumentsImport = argumentsImport;
+    }
+
+    public boolean isShowPluginNodes() {
+        return showPluginNodes;
+    }
+
+    public void setShowPluginNodes(boolean showPluginNodes) {
+        this.showPluginNodes = showPluginNodes;
     }
 
     @Override
