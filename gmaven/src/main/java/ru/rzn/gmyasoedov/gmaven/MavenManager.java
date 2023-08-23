@@ -288,6 +288,7 @@ public final class MavenManager
             result.setUpdateSnapshots(projectSettings.getUpdateSnapshots());
             result.setThreadCount(projectSettings.getThreadCount());
             result.setOutputLevel(projectSettings.getOutputLevel());
+            result.setShowPluginNodes(projectSettings.getShowPluginNodes());
             fillExecutionWorkSpace(project, projectSettings, projectPath, result.getExecutionWorkspace());
             if (projectSettings.getArguments() != null) {
                 result.withArguments(ParametersListUtil.parse(projectSettings.getArguments(), true, true));
