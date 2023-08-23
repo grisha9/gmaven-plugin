@@ -31,6 +31,7 @@ intellij {
 
 changelog {
     headerParserRegex.set("""(\d+\.\d+(.\d+)?)""".toRegex())
+    path.set(file("../CHANGELOG.md").canonicalPath)
 }
 
 tasks {
