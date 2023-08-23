@@ -97,12 +97,20 @@ fun getPluginContentRootPaths(mavenProject: MavenProject): PluginContentRoots {
     return PluginContentRoots(contentRoots, excludedRoots);
 }
 
-fun populateTasks(moduleDataNode: DataNode<ModuleData>, mavenProject: MavenProject, localRepo: Path?) {
+fun populateTasks(
+    moduleDataNode: DataNode<ModuleData>, mavenProject: MavenProject,
+    context: MavenProjectResolver.ProjectResolverContext
+) {
     for (basicPhase in GMavenConstants.BASIC_PHASES) {
         moduleDataNode.createChild(LifecycleData.KEY, LifecycleData(SYSTEM_ID, basicPhase, mavenProject.basedir))
     }
+    if (!context.settings.isShowPluginNodes) {
+        MavenArtifactUtil.clearPluginDescriptorCache()
+        return
+    }
+    val localRepoPath = context.mavenResult.settings.localRepository?.let { Path.of(it) }
     for (plugin in mavenProject.plugins) {
-        val pluginDescriptor = MavenArtifactUtil.readPluginDescriptor(localRepo, plugin) ?: continue
+        val pluginDescriptor = MavenArtifactUtil.readPluginDescriptor(localRepoPath, plugin) ?: continue
         for (mojo in pluginDescriptor.mojos) {
             moduleDataNode.createChild(
                 PluginData.KEY, PluginData(

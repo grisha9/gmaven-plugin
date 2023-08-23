@@ -70,6 +70,8 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     @Nullable
     private JBCheckBox resolveModulePerSourceSetCheckBox;
     @Nullable
+    private JBCheckBox showPluginNodesCheckBox;
+    @Nullable
     private JTextField threadCountField;
     @Nullable
     private JTextField vmOptionsField;
@@ -132,6 +134,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         if (resolveModulePerSourceSetCheckBox != null) {
             settings.setResolveModulePerSourceSet(resolveModulePerSourceSetCheckBox.isSelected());
         }
+        if (showPluginNodesCheckBox != null) {
+            settings.setShowPluginNodes(showPluginNodesCheckBox.isSelected());
+        }
         if (threadCountField != null) {
             settings.setThreadCount(threadCountField.getText());
         }
@@ -175,6 +180,10 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         }
         if (resolveModulePerSourceSetCheckBox != null
                 && resolveModulePerSourceSetCheckBox.isSelected() != projectSettings.getResolveModulePerSourceSet()) {
+            return true;
+        }
+        if (showPluginNodesCheckBox != null
+                && showPluginNodesCheckBox.isSelected() != projectSettings.getShowPluginNodes()) {
             return true;
         }
         if (threadCountField != null && !Objects.equals(
@@ -234,6 +243,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         }
         if (resolveModulePerSourceSetCheckBox != null) {
             resolveModulePerSourceSetCheckBox.setSelected(projectSettings.getResolveModulePerSourceSet());
+        }
+        if (showPluginNodesCheckBox != null) {
+            showPluginNodesCheckBox.setSelected(projectSettings.getShowPluginNodes());
         }
         if (threadCountField != null) {
             threadCountField.setText(projectSettings.getThreadCount());
@@ -324,6 +336,10 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
 
         resolveModulePerSourceSetCheckBox = new JBCheckBox(message("gmaven.settings.project.module.per.source.set"));
         content.add(resolveModulePerSourceSetCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+
+        showPluginNodesCheckBox = new JBCheckBox(message("gmaven.settings.project.plugins"));
+        showPluginNodesCheckBox.setToolTipText(message("gmaven.settings.project.plugins.tooltip"));
+        content.add(showPluginNodesCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
 
         outPutLevelCombobox = setupOutputLevelComboBox();
         JBLabel outputLevelLabel = new JBLabel(message("gmaven.settings.project.output.level"));

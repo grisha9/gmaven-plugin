@@ -13,6 +13,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
     var nonRecursive  = false
     var updateSnapshots = false
     var useWholeProjectContext = true
+    var showPluginNodes = true
     var outputLevel = OutputLevelType.DEFAULT
     var threadCount: String? = null
     var arguments: String? = null
@@ -29,6 +30,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
         result.projectBuildFile = projectBuildFile
         result.outputLevel = outputLevel
         result.updateSnapshots = updateSnapshots
+        result.showPluginNodes = showPluginNodes
         result.threadCount = threadCount
         result.useWholeProjectContext = useWholeProjectContext
         result.arguments = arguments
