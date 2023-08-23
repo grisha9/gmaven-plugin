@@ -14,13 +14,8 @@
     <![CDATA[
         <h3>Added</h3>
         <ul>
-            <li>Groovy support (maven-compiler-plugin/groovy-maven-plugin/gmavenplus-plugin)</li>
-            <li>Eclipse/Groovy-Eclipse Java Compiler support</li>
-        </ul>
-        <h3>Fixed</h3>
-        <ul>
-            <li>Default compiler settings from maven.properties</li>
-            <li>Change jdk from GMaven settings</li>
+            <li>Cleanup README</li>
+            <li>Added setting - showPluginNodes for optimizing large projects</li>
         </ul>
     ]]>
     </change-notes>
