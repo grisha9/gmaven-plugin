@@ -40,8 +40,8 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.java</depends>
     <depends optional="true" config-file="groovy-support.xml">org.intellij.groovy</depends>
-    <!--<depends>org.jetbrains.kotlin</depends>-->
     <depends>com.intellij.properties</depends>
+    <depends optional="true" config-file="kotlin-support.xml">org.jetbrains.kotlin</depends>
 
     <extensionPoints>
         <extensionPoint name="import.full.plugin" dynamic="true"

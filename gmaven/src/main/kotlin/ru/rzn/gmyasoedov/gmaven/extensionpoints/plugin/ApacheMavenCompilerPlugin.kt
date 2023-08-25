@@ -4,6 +4,7 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.pom.java.LanguageLevel
 import com.jetbrains.rd.util.getOrCreate
 import org.jdom.Element
+import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginContentRoots
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
@@ -20,14 +21,16 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
 
     override fun getAnnotationProcessorTagName() = "annotationProcessorPaths"
 
-    override fun getContentRoots(mavenProject: MavenProject, plugin: MavenPlugin): PluginContentRoots {
+    override fun getContentRoots(
+        mavenProject: MavenProject, plugin: MavenPlugin, context: MavenProjectResolver.ProjectResolverContext
+    ): PluginContentRoots {
         val groovyDependency = plugin.body.dependencies
             ?.firstOrNull { it.groupId == "org.codehaus.groovy" && it.artifactId == "groovy-eclipse-compiler" }
 
         if (groovyDependency == null || !MavenUtils.groovyPluginEnabled()) {
-            return super.getContentRoots(mavenProject, plugin)
+            return super.getContentRoots(mavenProject, plugin, context)
         }
-        return GroovyAbstractMavenPlugin.getContentRoots(mavenProject, plugin)
+        return GroovyAbstractMavenPlugin.getContentRoots(mavenProject, plugin, context)
     }
 
     override fun getCompilerData(

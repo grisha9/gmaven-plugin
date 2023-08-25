@@ -83,6 +83,4 @@ class CompilerPluginData @PropertyMapping("path", "arguments", "buildDirectory",
     override fun toString(): String {
         return "CompilerPluginData(baseDirectory='$baseDirectory', path=$path, arguments=$arguments)"
     }
-
-
 }

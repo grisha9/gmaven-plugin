@@ -49,14 +49,10 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData;
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectsManager;
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
+import ru.rzn.gmyasoedov.serverapi.model.MavenId;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -68,11 +64,7 @@ import java.util.regex.Pattern;
 
 import static com.intellij.openapi.util.io.JarUtil.getJarAttribute;
 import static com.intellij.openapi.util.io.JarUtil.loadProperties;
-import static com.intellij.openapi.util.text.StringUtil.compareVersionNumbers;
-import static com.intellij.openapi.util.text.StringUtil.contains;
-import static com.intellij.openapi.util.text.StringUtil.isEmptyOrSpaces;
-import static com.intellij.openapi.util.text.StringUtil.nullize;
-import static com.intellij.openapi.util.text.StringUtil.toUpperCase;
+import static com.intellij.openapi.util.text.StringUtil.*;
 import static com.intellij.util.xml.NanoXmlBuilder.stop;
 import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.M2;
 
@@ -418,8 +410,14 @@ public class MavenUtils {
         return "pom".equals(project.getPackaging());
     }
 
-    public static String toGAString(ModuleData moduleData) {
+    @NotNull
+    public static String toGAString(@NotNull ModuleData moduleData) {
         return moduleData.getGroup() + ":" + moduleData.getModuleName();
+    }
+
+    @NotNull
+    public static String toGAString(@NotNull MavenId mavenId) {
+        return mavenId.getGroupId() + ":" + mavenId.getArtifactId();
     }
 
     public static boolean equalsPaths(String path1, String path2) {
