@@ -19,6 +19,7 @@ import com.intellij.pom.java.LanguageLevel
 import com.intellij.util.io.isDirectory
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
 import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
@@ -154,7 +155,9 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val mavenResult: MavenResult,
         val projectLanguageLevel: LanguageLevel,
         val contextElementMap: MutableMap<String, Element> = HashMap(),
-        val moduleDataByArtifactId: MutableMap<String, ModuleContextHolder> = TreeMap()
+        val moduleDataByArtifactId: MutableMap<String, ModuleContextHolder> = TreeMap(),
+        val pluginExtensionMap: Map<String, MavenFullImportPlugin> = MavenFullImportPlugin.EP_NAME.extensions
+            .associateBy { it.key }
     )
 
     class ModuleContextHolder(

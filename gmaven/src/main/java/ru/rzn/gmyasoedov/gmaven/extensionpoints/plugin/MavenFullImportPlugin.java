@@ -1,8 +1,12 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin;
 
 import com.intellij.openapi.extensions.ExtensionPointName;
+import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver;
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginContentRoots;
+import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil;
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
@@ -28,7 +32,20 @@ public interface MavenFullImportPlugin {
     }
 
     @NotNull
-    default PluginContentRoots getContentRoots(@NotNull MavenProject mavenProject, @NotNull MavenPlugin plugin) {
+    default PluginContentRoots getContentRoots(@NotNull MavenProject mavenProject,
+                                               @NotNull MavenPlugin plugin,
+                                               @NotNull MavenProjectResolver.ProjectResolverContext context) {
         return new PluginContentRoots(Collections.emptyList(), Collections.emptySet());
+    }
+
+    @NotNull
+    static Element parseConfiguration(@Nullable String configuration,
+                                      @NotNull MavenProjectResolver.ProjectResolverContext context) {
+        if (configuration == null) return MavenJDOMUtil.JDOM_ELEMENT_EMPTY;
+        Element element = context.getContextElementMap().get(configuration);
+        if (element != null) return element;
+        element = MavenJDOMUtil.parseConfiguration(configuration);
+        context.getContextElementMap().put(configuration, element);
+        return element;
     }
 }

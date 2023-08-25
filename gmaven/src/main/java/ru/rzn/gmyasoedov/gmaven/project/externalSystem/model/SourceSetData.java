@@ -7,7 +7,6 @@ import com.intellij.openapi.externalSystem.model.project.ModuleData;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.serialization.PropertyMapping;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.project.ProjectResolverUtils;
 
@@ -34,7 +33,7 @@ public final class SourceSetData extends ModuleData {
   }
 
   @Override
-  @Nullable
+  @NotNull
   public String getIdeParentGrouping() {
     return super.getIdeGrouping();
   }

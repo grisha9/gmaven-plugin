@@ -1,0 +1,8 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="ru.rzn.gmyasoedov.gmaven">
+        <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPlugin"/>
+    </extensions>
+    <extensions defaultExtensionNs="com.intellij">
+        <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.kotlin.KotlinMavenPluginDataService"/>
+    </extensions>
+</idea-plugin>
