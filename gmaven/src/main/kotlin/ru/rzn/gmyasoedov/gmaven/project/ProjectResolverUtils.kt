@@ -15,10 +15,13 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPlugin
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPluginData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
+import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenSettings
@@ -34,31 +37,36 @@ fun getMavenHome(distributionSettings: DistributionSettings): Path {
     throw ExternalSystemException("maven home is empty")
 }
 
-fun getCompilerPlugin(mavenProject: MavenProject): MavenPlugin? {
-    val compilerPluginExtension = MavenFullImportPlugin.EP_NAME
-        .findExtensionOrFail(MavenCompilerFullImportPlugin::class.java)
+fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.ProjectResolverContext): PluginsData {
+    val contentRoots = ArrayList<MavenContentRoot>()
+    val excludedRoots = HashSet<String>(4)
 
+    var compilerPlugin: MavenPlugin? = null
+    var compilerData: CompilerData? = null
+    var kotlinPluginData: KotlinMavenPluginData? = null
+
+    val localRepoPath: String? = context.mavenResult.settings.localRepository
     for (plugin in mavenProject.plugins) {
-        if (compilerPluginExtension.isApplicable(plugin)) {
-            return plugin
+        val pluginExtension = context.pluginExtensionMap.get(MavenUtils.toGAString(plugin)) ?: continue
+        val pluginContentRoot = pluginExtension.getContentRoots(mavenProject, plugin, context)
+        contentRoots += pluginContentRoot.contentRoots
+        excludedRoots += pluginContentRoot.excludedRoots
+        if (pluginExtension is MavenCompilerFullImportPlugin && compilerPlugin == null) {
+            compilerPlugin = plugin
+            if (localRepoPath != null) {
+                compilerData = pluginExtension
+                    .getCompilerData(mavenProject, plugin, Path.of(localRepoPath), context.contextElementMap)
+            }
+        } else if (pluginExtension is KotlinMavenPlugin && kotlinPluginData == null) {
+            kotlinPluginData = pluginExtension.getCompilerData(mavenProject, plugin, context)
         }
     }
-    return null
-}
-
-fun getCompilerData(
-    plugin: MavenPlugin?,
-    mavenProject: MavenProject,
-    context: MavenProjectResolver.ProjectResolverContext
-): CompilerData {
-    val projectLanguageLevel = context.projectLanguageLevel
-    plugin ?: return ApacheMavenCompilerPlugin.getDefaultCompilerData(mavenProject, projectLanguageLevel)
-    val localRepoPath = context.mavenResult.settings.localRepository
-        ?: return ApacheMavenCompilerPlugin.getDefaultCompilerData(mavenProject, projectLanguageLevel)
-
-    return MavenFullImportPlugin.EP_NAME
-        .findExtensionOrFail(MavenCompilerFullImportPlugin::class.java)
-        .getCompilerData(mavenProject, plugin, Path.of(localRepoPath), context.contextElementMap)
+    return PluginsData(
+        compilerPlugin,
+        compilerData ?: ApacheMavenCompilerPlugin.getDefaultCompilerData(mavenProject, context.projectLanguageLevel),
+        kotlinPluginData,
+        PluginContentRoots(contentRoots, excludedRoots)
+    )
 }
 
 fun getMainJavaCompilerData(
@@ -80,21 +88,6 @@ fun getContentRootPath(paths: List<String>, type: ExternalSystemSourceType): Lis
         .filter { it.isNotEmpty() }
         .map { MavenContentRoot(type, it) }
         .toList()
-}
-
-fun getPluginContentRootPaths(mavenProject: MavenProject): PluginContentRoots {
-    val contentRoots = ArrayList<MavenContentRoot>()
-    val excludedRoots = HashSet<String>(4)
-    for (plugin in mavenProject.plugins) {
-        for (pluginExtension in MavenFullImportPlugin.EP_NAME.extensionList) {
-            if (pluginExtension.isApplicable(plugin)) {
-                val pluginContentRoot = pluginExtension.getContentRoots(mavenProject, plugin)
-                contentRoots += pluginContentRoot.contentRoots
-                excludedRoots += pluginContentRoot.excludedRoots
-            }
-        }
-    }
-    return PluginContentRoots(contentRoots, excludedRoots);
 }
 
 fun populateTasks(
@@ -152,3 +145,8 @@ fun populateAnnotationProcessorData(
 fun getDefaultModuleTypeId(): String {
     return ModuleTypeManager.getInstance().defaultModuleType.id
 }
+
+class PluginsData(
+    val compilerPlugin: MavenPlugin?, val compilerData: CompilerData,
+    val kotlinPluginData: KotlinMavenPluginData?, val contentRoots: PluginContentRoots
+)

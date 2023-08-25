@@ -2,6 +2,8 @@ package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
 import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType.SOURCE
 import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType.TEST
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin.parseConfiguration
+import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenContentRoot
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginContentRoots
 import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil
@@ -13,7 +15,9 @@ import java.nio.file.Path
 
 object GroovyAbstractMavenPlugin {
 
-    fun getContentRoots(mavenProject: MavenProject, plugin: MavenPlugin): PluginContentRoots {
+    fun getContentRoots(
+        mavenProject: MavenProject, plugin: MavenPlugin, context: MavenProjectResolver.ProjectResolverContext
+    ): PluginContentRoots {
         val executions = plugin.body?.executions ?: emptyList()
         val result = ArrayList<MavenContentRoot>()
         val excluded = HashSet<String>(4)
@@ -36,15 +40,22 @@ object GroovyAbstractMavenPlugin {
                 generatedTestConfiguration = execution.configuration
             }
         }
-        getPathList(mavenProject, mainConfiguration, false).forEach { result.add(MavenContentRoot(SOURCE, it)) }
-        getPathList(mavenProject, testConfiguration, true).forEach { result.add(MavenContentRoot(TEST, it)) }
-        excluded.add(getExcludedPath(mavenProject, generatedConfiguration))
-        excluded.add(getExcludedPath(mavenProject, generatedTestConfiguration))
+        getPathList(mavenProject, mainConfiguration, false, context)
+            .forEach { result.add(MavenContentRoot(SOURCE, it)) }
+        getPathList(mavenProject, testConfiguration, true, context)
+            .forEach { result.add(MavenContentRoot(TEST, it)) }
+        excluded.add(getExcludedPath(mavenProject, generatedConfiguration, context))
+        excluded.add(getExcludedPath(mavenProject, generatedTestConfiguration, context))
         return PluginContentRoots(result, excluded)
     }
 
-    private fun getPathList(mavenProject: MavenProject, configuration: String?, isTest: Boolean): List<String> {
-        val element = MavenJDOMUtil.parseConfiguration(configuration)
+    private fun getPathList(
+        mavenProject: MavenProject,
+        configuration: String?,
+        isTest: Boolean,
+        context: MavenProjectResolver.ProjectResolverContext
+    ): List<String> {
+        val element = parseConfiguration(configuration, context)
         if (element == JDOM_ELEMENT_EMPTY) {
             return getDefaultPath(mavenProject, isTest)
         }
@@ -60,8 +71,10 @@ object GroovyAbstractMavenPlugin {
         return listOf(Path.of(mavenProject.basedir, "src", sourceFolderName, "groovy").toString())
     }
 
-    private fun getExcludedPath(mavenProject: MavenProject, configuration: String?): String {
-        val element = MavenJDOMUtil.parseConfiguration(configuration)
+    private fun getExcludedPath(
+        mavenProject: MavenProject, configuration: String?, context: MavenProjectResolver.ProjectResolverContext
+    ): String {
+        val element = parseConfiguration(configuration, context)
         if (element == JDOM_ELEMENT_EMPTY) return getDefaultExcludedDir(mavenProject)
         return MavenJDOMUtil.findChildValueByPath(element, "outputDirectory", null)
             ?: return getDefaultExcludedDir(mavenProject)
