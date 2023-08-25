@@ -11,6 +11,7 @@ import com.intellij.pom.java.LanguageLevel
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_BUILD_FILE
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPluginData
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver.ModuleContextHolder
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
@@ -50,7 +51,8 @@ fun createModuleData(
 
     val moduleDataNode = parentDataNode.createChild(ProjectKeys.MODULE, moduleData)
 
-    val pluginContentRoots = getPluginContentRootPaths(project)
+    val pluginsData = getPluginsData(project, context)
+    val pluginContentRoots = pluginsData.contentRoots
     val rootPaths = listOf(
         getContentRootPath(project.sourceRoots, ExternalSystemSourceType.SOURCE),
         getContentRootPath(project.resourceRoots, ExternalSystemSourceType.RESOURCE),
@@ -61,8 +63,7 @@ fun createModuleData(
     val generatedPaths = getGeneratedSources(project, pluginContentRoots.excludedRoots)
     val contentRoot = ContentRoots(rootPaths, generatedPaths, project.buildDirectory)
 
-    val compilerPlugin = getCompilerPlugin(project)
-    val compilerData = getCompilerData(compilerPlugin, project, context)
+    val compilerData = pluginsData.compilerData
     val sourceLanguageLevel: LanguageLevel = compilerData.sourceLevel
     val targetBytecodeLevel: LanguageLevel = compilerData.targetLevel
     moduleDataNode.createChild(ModuleSdkData.KEY, ModuleSdkData(null))
@@ -78,6 +79,7 @@ fun createModuleData(
 
     populateAnnotationProcessorData(project, moduleDataNode, compilerData)
     populateTasks(moduleDataNode, project, context)
+    pluginsData.kotlinPluginData?.also { moduleDataNode.createChild(KotlinMavenPluginData.KEY, it) }
 
     val perSourceSetModules =
         setupContentRootAndSourceSetData(moduleDataNode, contentRoot, context, project, compilerData)
@@ -90,7 +92,7 @@ fun createModuleData(
     }
     if (parentDataNode.data is ProjectData) {
         parentDataNode.createChild(MainJavaCompilerData.KEY,
-            getMainJavaCompilerData(compilerPlugin, project, compilerData, context))
+            getMainJavaCompilerData(pluginsData.compilerPlugin, project, compilerData, context))
     }
     return moduleDataNode
 }
