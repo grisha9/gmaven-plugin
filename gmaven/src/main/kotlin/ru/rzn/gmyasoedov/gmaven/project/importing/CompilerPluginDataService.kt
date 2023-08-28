@@ -2,7 +2,6 @@ package ru.rzn.gmyasoedov.gmaven.project.importing
 
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.compiler.CompilerConfigurationImpl
-import com.intellij.ide.projectView.actions.MarkRootActionBase
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.Key
@@ -10,20 +9,12 @@ import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.externalSystem.service.project.IdeModifiableModelsProvider
 import com.intellij.openapi.externalSystem.service.project.manage.AbstractProjectDataService
-import com.intellij.openapi.externalSystem.service.project.manage.SourceFolderManager
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
 import com.intellij.openapi.externalSystem.util.Order
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.ContentEntry
-import com.intellij.openapi.roots.ModifiableRootModel
-import com.intellij.openapi.roots.SourceFolder
 import com.intellij.openapi.util.Computable
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VfsUtilCore
-import org.jetbrains.jps.model.java.JavaSourceRootType
-import org.jetbrains.jps.model.java.JpsJavaExtensionService
 import org.jetbrains.jps.model.java.compiler.ProcessorConfigProfile
 import org.jetbrains.jps.model.java.impl.compiler.ProcessorConfigProfileImpl
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
@@ -74,10 +65,9 @@ class CompilerPluginDataService : AbstractProjectDataService<CompilerPluginData,
     ): Computable<Collection<ProcessorConfigProfile>> =
         Computable {
             val compilerConfiguration = CompilerConfiguration.getInstance(project)
-            val gProfiles =
-                ArrayList(( compilerConfiguration as CompilerConfigurationImpl).moduleProcessorProfiles)
-                    .filter { it.name.equals(IMPORTED_PROFILE_NAME) }
-            val importedProcessingProfiles = ArrayList(toImport).asSequence()
+            val gProfiles = (compilerConfiguration as CompilerConfigurationImpl).moduleProcessorProfiles
+                .filter { it.name.equals(IMPORTED_PROFILE_NAME) }
+            val importedProcessingProfiles = toImport.asSequence()
                 .map { it.data }
                 .distinct()
                 .map { createProcessorConfigProfile(it) }
