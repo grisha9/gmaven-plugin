@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [232.7] - 2023-08-29
+
+### Added
+- Kotlin JVM support
+
+
 ## [232.6] - 2023-08-23
 
 ### Added
