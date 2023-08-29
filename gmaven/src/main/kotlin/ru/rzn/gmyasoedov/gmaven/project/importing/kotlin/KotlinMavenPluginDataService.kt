@@ -1,14 +1,10 @@
 package ru.rzn.gmyasoedov.gmaven.project.importing.kotlin
 
 import com.intellij.openapi.externalSystem.model.DataNode
-import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.externalSystem.service.project.IdeModifiableModelsProvider
 import com.intellij.openapi.externalSystem.service.project.manage.AbstractProjectDataService
-import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
-import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
-import com.intellij.openapi.externalSystem.util.Order
 import com.intellij.openapi.project.Project
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.parseCommandLineArguments
@@ -25,25 +21,23 @@ import org.jetbrains.kotlin.platform.impl.JvmIdePlatformKind
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPluginData
 
-@Order(ExternalSystemConstants.BUILTIN_MODULE_DATA_SERVICE_ORDER + 1)
-class KotlinMavenPluginDataService : AbstractProjectDataService<ModuleData, Void>() {
+class KotlinMavenPluginDataService : AbstractProjectDataService<KotlinMavenPluginData, Void>() {
 
-    override fun getTargetDataKey() = ProjectKeys.MODULE
+    override fun getTargetDataKey() = KotlinMavenPluginData.KEY
 
-    override fun importData(
-        toImport: Collection<DataNode<ModuleData>>,
+    override fun postProcess(
+        toImport: Collection<DataNode<KotlinMavenPluginData>>,
         projectData: ProjectData?,
         project: Project,
         modifiableModelsProvider: IdeModifiableModelsProvider
     ) {
-        for (moduleNode in toImport) {
-            val moduleData = moduleNode.data
-            val kotlinNode = ExternalSystemApiUtil.find(moduleNode, KotlinMavenPluginData.KEY) ?: continue
+        for (kotlinNode in toImport) {
+            val moduleData = kotlinNode.parent?.data as? ModuleData ?: continue
             val ideModule = modifiableModelsProvider.findIdeModule(moduleData) ?: continue
 
             val kotlinData = kotlinNode.data
             val compilerVersion = kotlinData.kotlinVersion.let(IdeKotlinVersion::opt)
-                ?: KotlinPluginLayout.instance.standaloneCompilerVersion
+                ?: KotlinPluginLayout.standaloneCompilerVersion
 
             val kotlinFacet = ideModule.getOrCreateFacet(
                 modifiableModelsProvider,
