@@ -37,7 +37,7 @@ class KotlinMavenPluginDataService : AbstractProjectDataService<KotlinMavenPlugi
 
             val kotlinData = kotlinNode.data
             val compilerVersion = kotlinData.kotlinVersion.let(IdeKotlinVersion::opt)
-                ?: KotlinPluginLayout.standaloneCompilerVersion
+                ?: KotlinPluginLayout.instance.standaloneCompilerVersion
 
             val kotlinFacet = ideModule.getOrCreateFacet(
                 modifiableModelsProvider,
