@@ -14,8 +14,7 @@
         <![CDATA[
          <h3>Added</h3>
          <ul>
-             <li>Cleanup README</li>
-             <li>Added setting - showPluginNodes for optimizing large projects</li>
+             <li>Kotlin JVM support</li>
          </ul>
     ]]>
     </change-notes>
