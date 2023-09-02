@@ -6,8 +6,6 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
-
 public interface GMavenProjectSettingsControlBuilder {
 
   /**
@@ -21,16 +19,6 @@ public interface GMavenProjectSettingsControlBuilder {
    * @return
    */
   MavenProjectSettings getInitialSettings();
-
-  /**
-   * Add Gradle JDK component to the panel
-   */
-  GMavenProjectSettingsControlBuilder addGradleJdkComponents(JPanel content, int indentLevel);
-
-  /**
-   * Add Gradle distribution chooser component to the panel
-   */
-  GMavenProjectSettingsControlBuilder addGradleChooserComponents(JPanel content, int indentLevel);
 
   boolean validate(MavenProjectSettings settings) throws ConfigurationException;
 

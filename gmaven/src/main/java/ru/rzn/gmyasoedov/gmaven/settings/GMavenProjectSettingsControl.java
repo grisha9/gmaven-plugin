@@ -79,6 +79,6 @@ public class GMavenProjectSettingsControl extends AbstractExternalProjectSetting
   @Nullable
   @Override
   public String getHelpId() {
-    return "Import_from_Gradle_Page_1";
+    return "Import_from_GMaven_Page_1";
   }
 }
