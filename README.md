@@ -15,6 +15,8 @@ The plugin adds support for the Maven for Java language projects:
  - Original Maven behavior for getting project model
  - Execution Maven tasks 
  - Support separate modules for production and test roots
+ - Groovy support
+ - Kotlin JVM support
 
 
 ### Prerequisites

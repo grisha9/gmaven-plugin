@@ -36,18 +36,11 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 import javax.swing.*;
 import java.awt.*;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
-import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.JAVA_HOME;
-import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_JAVA_HOME;
-import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_PROJECT_JDK;
+import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.*;
 import static com.intellij.openapi.externalSystem.util.ExternalSystemUiUtil.getLabelConstraints;
 import static com.intellij.openapi.fileChooser.FileChooserDescriptorFactory.createSingleFolderDescriptor;
 import static com.intellij.openapi.projectRoots.impl.SdkConfigurationUtil.createUniqueSdkName;
@@ -103,16 +96,6 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     @NotNull
     public MavenProjectSettings getInitialSettings() {
         return projectSettings;
-    }
-
-    @Override
-    public GMavenProjectSettingsControlBuilder addGradleJdkComponents(JPanel content, int indentLevel) {
-        return null;
-    }
-
-    @Override
-    public GMavenProjectSettingsControlBuilder addGradleChooserComponents(JPanel content, int indentLevel) {
-        return null;
     }
 
     @Override
