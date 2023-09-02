@@ -45,8 +45,8 @@ If you found a bug, please report it on https://github.com/grisha9/gmaven-plugin
 If your problem is related to importing a project model or executing a maven task,
 then please compare the behavior of the plugin with the original behavior of Maven.
 To do this, take the following output from the logs (Build or Run IDEA window),
-for example: "mvn: [-f, /home/test-profiles/pom.xml, compile"
-And run from command line: mvn -f /home/test-profiles/pom.xml compile
+for example: "mvn: [-f, /home/IdeaProjects/untitled/pom.xml, compile"
+And run from command line: mvn -f /home/IdeaProjects/untitled/pom.xml compile
 If the behavior of the plugin and Maven are the same, then the problem is not with the plugin.
 
 ![issue-import.png](issue-import.png)
