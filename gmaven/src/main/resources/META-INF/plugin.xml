@@ -34,6 +34,7 @@
           <li>Original Maven behavior for getting project model</li>
           <li>Support separate modules for production and test roots</li>
           <li>Groovy support</li>
+          <li>Kotlin JVM support</li>
         </ul>
 
         Usage:<br>
