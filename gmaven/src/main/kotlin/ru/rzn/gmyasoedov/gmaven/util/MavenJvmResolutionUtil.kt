@@ -1,4 +1,4 @@
-@file:JvmName("GradleJvmResolutionUtil")
+@file:JvmName("MavenJvmResolutionUtil")
 @file:ApiStatus.Internal
 package ru.rzn.gmyasoedov.gmaven.util
 
@@ -24,9 +24,9 @@ private data class MavenJvmProviderId(val projectSettings: MavenProjectSettings)
 fun getMavenJvmLookupProvider(project: Project, projectSettings: MavenProjectSettings) =
   SdkLookupProvider.getInstance(project, MavenJvmProviderId(projectSettings))
 
-fun setupGradleJvm(project: Project, projectSettings: MavenProjectSettings) {
+fun setupJvm(project: Project, projectSettings: MavenProjectSettings) {
   val resolutionContext = MavenJvmResolutionContext(project, Paths.get(projectSettings.externalProjectPath))
-  projectSettings.jdkName = resolutionContext.findGradleJvm()
+  projectSettings.jdkName = resolutionContext.findMavenJvm()
   if (projectSettings.jdkName != null) {
     return
   }
@@ -90,7 +90,7 @@ private class MavenJvmResolutionContext(
   val externalProjectPath: Path
 )
 
-private fun MavenJvmResolutionContext.findGradleJvm(): String? {
+private fun MavenJvmResolutionContext.findMavenJvm(): String? {
   val settings = MavenSettings.getInstance(project)
   return settings.linkedProjectsSettings.asSequence()
     .mapNotNull { it.jdkName }

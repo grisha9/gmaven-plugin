@@ -43,16 +43,7 @@ import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver;
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData;
 import ru.rzn.gmyasoedov.gmaven.project.profile.ProjectProfilesStateService;
 import ru.rzn.gmyasoedov.gmaven.project.task.MavenTaskManager;
-import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings;
-import ru.rzn.gmyasoedov.gmaven.settings.GMavenConfigurable;
-import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
-import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionWorkspace;
-import ru.rzn.gmyasoedov.gmaven.settings.MavenLocalSettings;
-import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings;
-import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings;
-import ru.rzn.gmyasoedov.gmaven.settings.MavenSettingsListener;
-import ru.rzn.gmyasoedov.gmaven.settings.ProfileExecution;
-import ru.rzn.gmyasoedov.gmaven.settings.ProjectExecution;
+import ru.rzn.gmyasoedov.gmaven.settings.*;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 
 import javax.swing.*;
@@ -64,9 +55,7 @@ import java.util.Map;
 
 import static com.intellij.openapi.externalSystem.model.ProjectKeys.MODULE;
 import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_PROJECT_JDK;
-import static com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil.find;
-import static com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil.findAll;
-import static com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil.findAllRecursively;
+import static com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil.*;
 import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_BUILD_FILE;
 import static ru.rzn.gmyasoedov.gmaven.utils.MavenUtils.equalsPaths;
 
@@ -97,7 +86,7 @@ public final class MavenManager
     @NotNull
     @Override
     public Function<Project, MavenLocalSettings> getLocalSettingsProvider() {
-        return MavenLocalSettings::getInstance;
+        return project -> project.getService(MavenLocalSettings.class);
     }
 
     @NotNull

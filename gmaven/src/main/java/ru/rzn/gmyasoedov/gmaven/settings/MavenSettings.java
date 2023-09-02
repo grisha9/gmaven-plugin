@@ -4,7 +4,6 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManager;
 import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManagerImpl;
 import com.intellij.openapi.externalSystem.settings.AbstractExternalSystemSettings;
 import com.intellij.openapi.externalSystem.settings.ExternalSystemSettingsListener;
@@ -16,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -91,18 +89,6 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
 
     @Override
     protected void checkSettings(@NotNull MavenProjectSettings old, @NotNull MavenProjectSettings current) {
-        if (!Objects.equals(old.getDistributionSettings(), current.getDistributionSettings())) {
-            /*getPublisher().onMavenHomeChange(
-                    old.getDistributionSettings().getPath().toString(), //todo
-                    current.getDistributionSettings().getPath().toString(),
-                    current.getExternalProjectPath());*/
-        }
-        /*if (old.getDistributionType() != current.getDistributionType()) {
-            getPublisher().onGradleDistributionTypeChange(current.getDistributionType(), current.getExternalProjectPath());
-        }*/
-        if (old.getResolveModulePerSourceSet() != current.getResolveModulePerSourceSet()) {
-            ExternalProjectsManager.getInstance(getProject()).getExternalProjectsWatcher().markDirty(current.getExternalProjectPath());
-        }
     }
 
     @Override
