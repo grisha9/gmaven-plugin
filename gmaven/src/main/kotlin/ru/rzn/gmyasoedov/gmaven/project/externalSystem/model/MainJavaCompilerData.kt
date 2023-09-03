@@ -1,14 +1,16 @@
 package ru.rzn.gmyasoedov.gmaven.project.externalSystem.model
 
 import com.intellij.openapi.externalSystem.model.Key
+import com.intellij.openapi.externalSystem.model.project.AbstractExternalEntityData
 import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
 import com.intellij.serialization.PropertyMapping
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 
 class MainJavaCompilerData @PropertyMapping("compilerId", "dependenciesPath", "arguments") private constructor(
     compilerId: String,
     dependenciesPath: Collection<String>,
     arguments: Collection<String>,
-) {
+) : AbstractExternalEntityData(GMavenConstants.SYSTEM_ID) {
     val compilerId: String
     val dependenciesPath: Collection<String>
     val arguments: Collection<String>
