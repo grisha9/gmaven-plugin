@@ -1,16 +1,18 @@
 package ru.rzn.gmyasoedov.gmaven.project.externalSystem.model
 
 import com.intellij.openapi.externalSystem.model.Key
+import com.intellij.openapi.externalSystem.model.project.AbstractExternalEntityData
 import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
 import com.intellij.serialization.PropertyMapping
 import com.intellij.util.containers.ContainerUtil
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 
 class CompilerPluginData @PropertyMapping("path", "arguments", "buildDirectory", "baseDirectory") private constructor(
     path: Collection<String>,
     arguments: Collection<String>,
     buildDirectory: String,
     baseDirectory : String,
-) {
+) : AbstractExternalEntityData(GMavenConstants.SYSTEM_ID) {
     /**
      * Annotation processor path
      *
