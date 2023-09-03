@@ -2,7 +2,9 @@ package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin
 
 import com.intellij.openapi.externalSystem.model.Key
 import com.intellij.openapi.externalSystem.model.ProjectKeys
+import com.intellij.openapi.externalSystem.model.project.AbstractExternalEntityData
 import com.intellij.serialization.PropertyMapping
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 
 class KotlinMavenPluginData @PropertyMapping(
     "jvmTarget", "jdkHome", "kotlinVersion",
@@ -18,7 +20,7 @@ class KotlinMavenPluginData @PropertyMapping(
     arguments: List<String>,
     compilerPlugins: List<String>,
     pluginOptions: List<String>,
-) {
+) : AbstractExternalEntityData(GMavenConstants.SYSTEM_ID) {
     val jvmTarget: String
     val jdkHome: String?
     val kotlinVersion: String
