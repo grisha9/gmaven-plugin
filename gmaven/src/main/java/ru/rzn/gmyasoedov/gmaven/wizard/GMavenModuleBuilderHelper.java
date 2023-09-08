@@ -117,11 +117,11 @@ public class GMavenModuleBuilderHelper {
             if (!(psiFile instanceof XmlFile)) {
                 return;
             }
-            XmlFile xmlFile = (XmlFile) psiFile;
-            XmlTag rootTag = xmlFile.getRootTag();
+            XmlTag rootTag = ((XmlFile) psiFile).getRootTag();
             if (rootTag == null) return;
             XmlTag modules = getOrCreateTag(rootTag, "modules", null);
-            XmlTag module = modules.createChildTag("module", null, myProjectId.getArtifactId(), true);
+            String moduleDirectoryName = buildScriptFile.getParent().getName();
+            XmlTag module = modules.createChildTag("module", null, moduleDirectoryName, true);
             modules.addSubTag(module, false);
 
             XmlTag packaging = getOrCreateTag(rootTag, "packaging", "pom");
