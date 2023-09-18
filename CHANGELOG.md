@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [232.8] - 2023-09-18
+
+### Added
+- use ExternalEntityData for custom model data
+
+### Fixed
+- https://github.com/grisha9/gmaven-plugin/issues/3 (experimental key="gmaven.settings.linked.modules")
+- create new module with artifactId != directory
+- set project jdk after first import
+
 ## [232.7] - 2023-08-29
 
 ### Added
