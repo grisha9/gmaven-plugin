@@ -9,6 +9,7 @@
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="grisha0909@gmail.com">gmyasoedov</vendor>
+    <category>Build</category>
 
     <change-notes>
     <![CDATA[
@@ -32,6 +33,7 @@
           <li>Import project structure to IDE</li>
           <li>Execution Maven tasks</li>
           <li>Original Maven behavior for getting project model</li>
+          <li>Maven 4+ support</li>
           <li>Support separate modules for production and test roots</li>
           <li>Groovy support</li>
           <li>Kotlin JVM support</li>
