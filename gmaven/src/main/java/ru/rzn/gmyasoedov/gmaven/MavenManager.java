@@ -169,19 +169,19 @@ public final class MavenManager
         return new GMavenConfigurable(project);
     }
 
-    @Nullable
+    @NotNull
     @Override
     public FileChooserDescriptor getExternalProjectConfigDescriptor() {
         return FileChooserDescriptorFactory.createSingleFolderDescriptor();
     }
 
-    @Nullable
+    @NotNull
     @Override
     public Icon getProjectIcon() {
         return GMavenIcons.MavenProject;
     }
 
-    @Nullable
+    @NotNull
     @Override
     public Icon getTaskIcon() {
         return DefaultExternalSystemUiAware.INSTANCE.getTaskIcon();
