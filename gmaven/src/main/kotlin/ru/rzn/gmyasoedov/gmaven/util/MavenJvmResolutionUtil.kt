@@ -3,19 +3,16 @@
 package ru.rzn.gmyasoedov.gmaven.util
 
 import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.projectRoots.Sdk
-import com.intellij.openapi.projectRoots.ex.JavaSdkUtil
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.roots.ui.configuration.SdkLookupProvider
 import com.intellij.openapi.roots.ui.configuration.SdkLookupProvider.Id
 import org.jetbrains.annotations.ApiStatus
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
-import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -72,13 +69,6 @@ fun updateMavenJdk(project: Project, externalProjectPath: String) {
   val projectSettings = settings.getLinkedProjectSettings(externalProjectPath) ?: return
   val jdkName = projectSettings.jdkName ?: return
   val projectRootManager = ProjectRootManager.getInstance(project)
-
-  if (ProjectRootManager.getInstance(project).projectSdk == null) {
-    runWriteAction {
-      val projectSdk = MavenUtils.suggestProjectSdk() ?: return@runWriteAction
-      JavaSdkUtil.applyJdkToProject(project, projectSdk)
-    }
-  }
 
   val projectSdk = projectRootManager.projectSdk ?: return
   if (projectSdk.name != jdkName) return
