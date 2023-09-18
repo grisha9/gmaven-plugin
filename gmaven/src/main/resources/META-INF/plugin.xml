@@ -51,8 +51,8 @@
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.java</depends>
-    <depends optional="true" config-file="groovy-support.xml">org.intellij.groovy</depends>
     <depends>com.intellij.properties</depends>
+    <depends optional="true" config-file="groovy-support.xml">org.intellij.groovy</depends>
     <depends optional="true" config-file="kotlin-support.xml">org.jetbrains.kotlin</depends>
 
     <extensionPoints>
@@ -70,7 +70,8 @@
         <projectOpenProcessor implementation="ru.rzn.gmyasoedov.gmaven.wizard.GProjectOpenProcessor"/>
         <projectImportProvider implementation="ru.rzn.gmyasoedov.gmaven.wizard.GMavenProjectImportProvider"/>
         <fileTemplateGroup implementation="ru.rzn.gmyasoedov.gmaven.utils.MavenFileTemplateGroupFactory"/>
-        <treeStructureProvider implementation="ru.rzn.gmyasoedov.gmaven.projectView.GMavenTreeStructureProvider" order="last"/>
+        <treeStructureProvider implementation="ru.rzn.gmyasoedov.gmaven.projectView.GMavenTreeStructureProvider"
+                               order="last"/>
 
         <projectConfigurable groupId="build.tools" groupWeight="200" id="reference.settingsdialog.project.gmaven"
                              instance="ru.rzn.gmyasoedov.gmaven.settings.GMavenConfigurable"
@@ -80,22 +81,29 @@
         <projectService serviceImplementation="ru.rzn.gmyasoedov.gmaven.settings.MavenSettings"/>
         <projectService serviceImplementation="ru.rzn.gmyasoedov.gmaven.settings.MavenLocalSettings"/>
         <projectService serviceImplementation="ru.rzn.gmyasoedov.gmaven.project.profile.ProjectProfilesStateService"/>
-        <runConfigurationProducer implementation="ru.rzn.gmyasoedov.gmaven.execution.GMavenRuntimeConfigurationProducer"/>
+        <runConfigurationProducer
+                implementation="ru.rzn.gmyasoedov.gmaven.execution.GMavenRuntimeConfigurationProducer"/>
         <configurationType implementation="ru.rzn.gmyasoedov.gmaven.execution.GMavenExternalTaskConfigurationType"/>
-        <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.CompilerPluginDataService"/>
-        <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.MainJavaCompilerDataService"/>
+        <externalProjectDataService
+                implementation="ru.rzn.gmyasoedov.gmaven.project.importing.CompilerPluginDataService"/>
+        <externalProjectDataService
+                implementation="ru.rzn.gmyasoedov.gmaven.project.importing.MainJavaCompilerDataService"/>
         <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.SourceSetDataService"/>
-        <externalSystemDependencyAnalyzer implementation="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerExtension"/>
+        <externalSystemDependencyAnalyzer
+                implementation="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerExtension"/>
         <externalSystemUnlinkedProjectAware implementation="ru.rzn.gmyasoedov.gmaven.autolink.UnlinkedProjectAware"/>
-        <externalSystem.runConfigurationEx implementation="ru.rzn.gmyasoedov.gmaven.project.task.GMavenRunConfigurationExtension"/>
-        <externalSystemViewContributor id="GMaven" implementation="ru.rzn.gmyasoedov.gmaven.ui.MavenExternalViewContributor"/>
+        <externalSystem.runConfigurationEx
+                implementation="ru.rzn.gmyasoedov.gmaven.project.task.GMavenRunConfigurationExtension"/>
+        <externalSystemViewContributor id="GMaven"
+                                       implementation="ru.rzn.gmyasoedov.gmaven.ui.MavenExternalViewContributor"/>
         <externalIconProvider key="GMAVEN" implementationClass="ru.rzn.gmyasoedov.gmaven.ui.GMavenIconProvider"/>
 
-        <stepsBeforeRunProvider implementation="ru.rzn.gmyasoedov.gmaven.project.task.GMavenBeforeRunTaskProvider" />
+        <stepsBeforeRunProvider implementation="ru.rzn.gmyasoedov.gmaven.project.task.GMavenBeforeRunTaskProvider"/>
 
         <toolWindow id="GMaven" anchor="right" icon="GMavenIcons.ToolWindowMaven"
                     factoryClass="ru.rzn.gmyasoedov.gmaven.ui.MavenToolWindowFactory"/>
-        <consoleFilterProvider implementation="ru.rzn.gmyasoedov.gmaven.project.filter.MavenConsoleFilterProvider" order="first"/>
+        <consoleFilterProvider implementation="ru.rzn.gmyasoedov.gmaven.project.filter.MavenConsoleFilterProvider"
+                               order="first"/>
 
 
         <registryKey key="gmaven.server.debug" defaultValue="false"
@@ -110,6 +118,8 @@
                      description="Remove java vm parameter -javaagent for maven import process"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
+        <registryKey key="gmaven.settings.linked.modules" defaultValue="false"
+                     description="Use module linked path for find project settings"/>
 
         <notificationGroup id="GMaven" displayType="BALLOON"/>
 
@@ -121,19 +131,24 @@
     </extensions>
 
     <actions>
-        <action id="GMaven.DependencyAnalyzer.GoTo" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerGoToAction">
+        <action id="GMaven.DependencyAnalyzer.GoTo"
+                class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerGoToAction">
             <add-to-group group-id="ExternalSystem.DependencyAnalyzer.DependencyListGroup"/>
             <add-to-group group-id="ExternalSystem.DependencyAnalyzer.DependencyTreeGroup"/>
             <add-to-group group-id="ExternalSystem.DependencyAnalyzer.UsagesTreeGroup"/>
         </action>
-        <action id="GMaven.DependencyAnalyzer.OpenConfig" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerOpenConfigAction">
+        <action id="GMaven.DependencyAnalyzer.OpenConfig"
+                class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerOpenConfigAction">
             <add-to-group group-id="ExternalSystem.DependencyAnalyzer.DependencyListGroup"/>
             <add-to-group group-id="ExternalSystem.DependencyAnalyzer.DependencyTreeGroup"/>
             <add-to-group group-id="ExternalSystem.DependencyAnalyzer.UsagesTreeGroup"/>
         </action>
-        <action id="GMaven.ViewDependencyAnalyzer" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ViewDependencyAnalyzerAction"/>
-        <action id="GMaven.ToolbarDependencyAnalyzer" class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ToolbarDependencyAnalyzerAction"/>
-        <action id="GMaven.ExternalSystem.ChangeProfile" class="ru.rzn.gmyasoedov.gmaven.project.action.ChangeProfileStateAction"/>
+        <action id="GMaven.ViewDependencyAnalyzer"
+                class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ViewDependencyAnalyzerAction"/>
+        <action id="GMaven.ToolbarDependencyAnalyzer"
+                class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ToolbarDependencyAnalyzerAction"/>
+        <action id="GMaven.ExternalSystem.ChangeProfile"
+                class="ru.rzn.gmyasoedov.gmaven.project.action.ChangeProfileStateAction"/>
         <action id="GMaven.Toolbar.SkipTests" class="ru.rzn.gmyasoedov.gmaven.project.action.SkipTestsAction"/>
         <action id="GMaven.Toolbar.Offline" class="ru.rzn.gmyasoedov.gmaven.project.action.OfflineModeAction"/>
 
