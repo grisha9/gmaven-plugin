@@ -10,13 +10,17 @@ import com.intellij.openapi.externalSystem.settings.ExternalSystemSettingsListen
 import com.intellij.openapi.project.ExternalStorageConfigurationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.registry.Registry;
 import com.intellij.util.xmlb.annotations.XCollection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import static ru.rzn.gmyasoedov.gmaven.project.ProjectResolverUtils.getAllModulesLinkedExternalPath;
 
 @State(name = "MavenSettings", storages = @Storage("gmaven.xml"))
 public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings, MavenProjectSettings, MavenSettingsListener>
@@ -97,16 +101,27 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
 
     @Override
     public @Nullable MavenProjectSettings getLinkedProjectSettings(@NotNull String projectPath) {
-        Path projectAbsolutePath = Path.of(projectPath).toAbsolutePath();
         MavenProjectSettings projectSettings = super.getLinkedProjectSettings(projectPath);
-        if (projectSettings == null) {
+        if (projectSettings != null)  return projectSettings;
+
+        Path projectAbsolutePath = Path.of(projectPath).toAbsolutePath();
+        if (Registry.is("gmaven.settings.linked.modules")) {
             for (MavenProjectSettings setting : getLinkedProjectsSettings()) {
-                Path settingPath = Path.of(setting.getExternalProjectPath()).toAbsolutePath();
-                if (FileUtil.isAncestor(settingPath.toFile(), projectAbsolutePath.toFile(), false)) {
+                List<Path> linkedExternalPath = getAllModulesLinkedExternalPath(getProject(), setting);
+                if (linkedExternalPath.contains(projectAbsolutePath)) {
                     return setting;
                 }
             }
+            return null;
         }
+
+        for (MavenProjectSettings setting : getLinkedProjectsSettings()) {
+            Path settingPath = Path.of(setting.getExternalProjectPath()).toAbsolutePath();
+            if (FileUtil.isAncestor(settingPath.toFile(), projectAbsolutePath.toFile(), false)) {
+                return setting;
+            }
+        }
+
         return projectSettings;
     }
 
