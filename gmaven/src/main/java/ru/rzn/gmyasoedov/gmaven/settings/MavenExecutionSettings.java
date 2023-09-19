@@ -30,10 +30,11 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private boolean resolveModulePerSourceSet = false;
     private boolean useQualifiedModuleNames = false;
     private boolean nonRecursive = false;
-    private boolean updateSnapshots = false;
     private boolean showPluginNodes = true;
     @NotNull
     private ProjectSettingsControlBuilder.OutputLevelType outputLevel = DEFAULT;
+    @NotNull
+    private ProjectSettingsControlBuilder.SnapshotUpdateType snapshotUpdateType = ProjectSettingsControlBuilder.SnapshotUpdateType.DEFAULT;
     private List<String> argumentsImport;
 
     public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,
@@ -122,12 +123,13 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         this.nonRecursive = nonRecursive;
     }
 
-    public boolean isUpdateSnapshots() {
-        return updateSnapshots;
+    @NotNull
+    public ProjectSettingsControlBuilder.SnapshotUpdateType getSnapshotUpdateType() {
+        return snapshotUpdateType;
     }
 
-    public void setUpdateSnapshots(boolean updateSnapshots) {
-        this.updateSnapshots = updateSnapshots;
+    public void setSnapshotUpdateType(@NotNull ProjectSettingsControlBuilder.SnapshotUpdateType snapshotUpdateType) {
+        this.snapshotUpdateType = snapshotUpdateType;
     }
 
     @NotNull

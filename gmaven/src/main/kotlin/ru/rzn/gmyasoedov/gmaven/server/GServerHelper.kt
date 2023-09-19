@@ -12,6 +12,7 @@ import com.intellij.util.PathUtil
 import com.intellij.util.io.isDirectory
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
+import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotUpdateType
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
 import ru.rzn.gmyasoedov.gmaven.util.IndicatorUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
@@ -120,7 +121,8 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
     modelRequest.projectPath = projectDirectory.toString()
     modelRequest.alternativePom = if (directory) null else projectPath.toString()
     modelRequest.nonRecursion = request.settings.isNonRecursive
-    modelRequest.updateSnapshots = request.settings.isUpdateSnapshots
+    modelRequest.updateSnapshots = request.settings.snapshotUpdateType == SnapshotUpdateType.FORCE
+    modelRequest.notUpdateSnapshots = request.settings.snapshotUpdateType == SnapshotUpdateType.NEVER
     modelRequest.offline = request.settings.isOfflineWork
     modelRequest.threadCount = request.settings.threadCount
     modelRequest.quiteLogs = request.settings.outputLevel == ProjectSettingsControlBuilder.OutputLevelType.QUITE
