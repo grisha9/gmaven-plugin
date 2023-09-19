@@ -8,8 +8,7 @@ import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.project.*
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.pom.java.LanguageLevel
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_BUILD_FILE
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants.*
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPluginData
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver.ModuleContextHolder
@@ -83,18 +82,34 @@ fun createModuleData(
 
     val perSourceSetModules =
         setupContentRootAndSourceSetData(moduleDataNode, contentRoot, context, project, compilerData)
-    context.moduleDataByArtifactId.put(project.id, ModuleContextHolder(moduleDataNode, perSourceSetModules))
+    context.moduleDataByArtifactId[project.id] = ModuleContextHolder(moduleDataNode, perSourceSetModules)
 
+    setParentGA(project, context, moduleData)
     if (parentDataNode.data is ModuleData) {
         for (childContainer in container.modules) {
             createModuleData(childContainer, moduleDataNode, context)
         }
     }
     if (parentDataNode.data is ProjectData) {
-        parentDataNode.createChild(MainJavaCompilerData.KEY,
-            getMainJavaCompilerData(pluginsData.compilerPlugin, project, compilerData, context))
+        parentDataNode.createChild(
+            MainJavaCompilerData.KEY,
+            getMainJavaCompilerData(pluginsData.compilerPlugin, project, compilerData, context)
+        )
     }
     return moduleDataNode
+}
+
+private fun setParentGA(
+    project: MavenProject,
+    context: MavenProjectResolver.ProjectResolverContext,
+    moduleData: ModuleData
+) {
+    if (project.parentArtifact != null) {
+        val parentModule = context.moduleDataByArtifactId[project.parentArtifact.id]
+        parentModule?.moduleNode?.data?.also {
+            moduleData.setProperty(MODULE_PROP_PARENT_GA, MavenUtils.toGAString(it))
+        }
+    }
 }
 
 private fun setupContentRootAndSourceSetData(
