@@ -55,6 +55,9 @@ public class GMavenServerImpl implements GMavenServer {
         if (request.updateSnapshots) {
             mvnArgs.add("-U");
         }
+        if (request.notUpdateSnapshots) {
+            mvnArgs.add("-nsu");
+        }
         if (!StringUtilRt.isEmpty(request.dependencyAnalyzerGA)) {
             mvnArgs.add("-D" + GMAVEN_DEPENDENCY_TREE + "=true");
             if (!request.dependencyAnalyzerGA.equals(RESOLVE_TASK)) {
