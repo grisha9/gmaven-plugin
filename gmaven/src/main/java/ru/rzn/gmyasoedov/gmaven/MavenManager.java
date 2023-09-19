@@ -274,7 +274,7 @@ public final class MavenManager
             result.setResolveModulePerSourceSet(projectSettings.getResolveModulePerSourceSet());
             result.setUseQualifiedModuleNames(projectSettings.isUseQualifiedModuleNames());
             result.setNonRecursive(projectSettings.getNonRecursive());
-            result.setUpdateSnapshots(projectSettings.getUpdateSnapshots());
+            result.setSnapshotUpdateType(projectSettings.getSnapshotUpdateType());
             result.setThreadCount(projectSettings.getThreadCount());
             result.setOutputLevel(projectSettings.getOutputLevel());
             result.setShowPluginNodes(projectSettings.getShowPluginNodes());

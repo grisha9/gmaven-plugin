@@ -17,6 +17,7 @@ public class GetModelRequest implements Serializable {
     public boolean offline;
     public boolean nonRecursion;
     public boolean updateSnapshots;
+    public boolean notUpdateSnapshots;
     public boolean quiteLogs;
     public boolean debugLog;
 }

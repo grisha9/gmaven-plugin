@@ -3,6 +3,7 @@ package ru.rzn.gmyasoedov.gmaven.settings
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.openapi.externalSystem.settings.ExternalProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.OutputLevelType
+import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotUpdateType
 
 class MavenProjectSettings : ExternalProjectSettings() {
     var projectBuildFile: String? = null
@@ -11,9 +12,9 @@ class MavenProjectSettings : ExternalProjectSettings() {
     var vmOptions: String? = null
     var resolveModulePerSourceSet = false
     var nonRecursive  = false
-    var updateSnapshots = false
     var useWholeProjectContext = true
     var showPluginNodes = true
+    var snapshotUpdateType = SnapshotUpdateType.DEFAULT
     var outputLevel = OutputLevelType.DEFAULT
     var threadCount: String? = null
     var arguments: String? = null
@@ -29,7 +30,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
         result.distributionSettings = distributionSettings
         result.projectBuildFile = projectBuildFile
         result.outputLevel = outputLevel
-        result.updateSnapshots = updateSnapshots
+        result.snapshotUpdateType = snapshotUpdateType
         result.showPluginNodes = showPluginNodes
         result.threadCount = threadCount
         result.useWholeProjectContext = useWholeProjectContext
