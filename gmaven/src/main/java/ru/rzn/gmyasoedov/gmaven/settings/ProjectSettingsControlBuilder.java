@@ -57,8 +57,6 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     @Nullable
     private JBCheckBox nonRecursiveCheckBox;
     @Nullable
-    private JBCheckBox updateSnapshotsCheckBox;
-    @Nullable
     private JBCheckBox useWholeProjectContextCheckBox;
     @Nullable
     private JBCheckBox resolveModulePerSourceSetCheckBox;
@@ -72,6 +70,8 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     private JTextField argumentsField;
     @Nullable
     private JTextField argumentsImportField;
+    @Nullable
+    private ComboBox<SnapshotUpdateComboBoxItem> snapshotUpdateComboBox;
     @Nullable
     private ComboBox<OutputLevelComboBoxItem> outPutLevelCombobox;
     @Nullable
@@ -108,9 +108,6 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         if (nonRecursiveCheckBox != null) {
             settings.setNonRecursive(nonRecursiveCheckBox.isSelected());
         }
-        if (updateSnapshotsCheckBox != null) {
-            settings.setUpdateSnapshots(updateSnapshotsCheckBox.isSelected());
-        }
         if (useWholeProjectContextCheckBox != null) {
             settings.setUseWholeProjectContext(useWholeProjectContextCheckBox.isSelected());
         }
@@ -132,6 +129,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         if (argumentsImportField != null) {
             settings.setArgumentsImport(argumentsImportField.getText());
         }
+        if (snapshotUpdateComboBox != null && snapshotUpdateComboBox.getItem() != null) {
+            settings.setSnapshotUpdateType(snapshotUpdateComboBox.getItem().value);
+        }
         if (outPutLevelCombobox != null && outPutLevelCombobox.getItem() != null) {
             settings.setOutputLevel(outPutLevelCombobox.getItem().value);
         }
@@ -151,10 +151,6 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     public boolean isModified() {
         if (nonRecursiveCheckBox != null
                 && nonRecursiveCheckBox.isSelected() != projectSettings.getNonRecursive()) {
-            return true;
-        }
-        if (updateSnapshotsCheckBox != null
-                && updateSnapshotsCheckBox.isSelected() != projectSettings.getUpdateSnapshots()) {
             return true;
         }
         if (useWholeProjectContextCheckBox != null
@@ -189,6 +185,10 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         ) {
             return true;
         }
+        if (snapshotUpdateComboBox != null
+                && !Objects.equals(snapshotUpdateComboBox.getItem().value, projectSettings.getSnapshotUpdateType())) {
+            return true;
+        }
         if (outPutLevelCombobox != null
                 && !Objects.equals(outPutLevelCombobox.getItem().value, projectSettings.getOutputLevel())) {
             return true;
@@ -218,9 +218,6 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         if (nonRecursiveCheckBox != null) {
             nonRecursiveCheckBox.setSelected(projectSettings.getNonRecursive());
         }
-        if (updateSnapshotsCheckBox != null) {
-            updateSnapshotsCheckBox.setSelected(projectSettings.getUpdateSnapshots());
-        }
         if (useWholeProjectContextCheckBox != null) {
             useWholeProjectContextCheckBox.setSelected(projectSettings.getUseWholeProjectContext());
         }
@@ -241,6 +238,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         }
         if (argumentsImportField != null) {
             argumentsImportField.setText(projectSettings.getArgumentsImport());
+        }
+        if (snapshotUpdateComboBox != null) {
+            snapshotUpdateComboBox.setItem(new SnapshotUpdateComboBoxItem(projectSettings.getSnapshotUpdateType()));
         }
         if (outPutLevelCombobox != null) {
             outPutLevelCombobox.setItem(new OutputLevelComboBoxItem(projectSettings.getOutputLevel()));
@@ -310,9 +310,6 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         nonRecursiveCheckBox = new JBCheckBox(message("gmaven.settings.project.recursive"));
         content.add(nonRecursiveCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
 
-        updateSnapshotsCheckBox = new JBCheckBox(message("gmaven.settings.project.update"));
-        content.add(updateSnapshotsCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
-
         useWholeProjectContextCheckBox = new JBCheckBox(message("gmaven.settings.project.task.context"));
         useWholeProjectContextCheckBox.setToolTipText(message("gmaven.settings.project.task.context.tooltip"));
         content.add(useWholeProjectContextCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
@@ -323,6 +320,13 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         showPluginNodesCheckBox = new JBCheckBox(message("gmaven.settings.project.plugins"));
         showPluginNodesCheckBox.setToolTipText(message("gmaven.settings.project.plugins.tooltip"));
         content.add(showPluginNodesCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+
+        snapshotUpdateComboBox = setupSnapshotUpdateComboBox();
+        JBLabel snapshotUpdateLabel = new JBLabel(message("gmaven.settings.project.snapshot.update"));
+        content.add(snapshotUpdateLabel, getLabelConstraints(indentLevel));
+        content.add(snapshotUpdateComboBox, getLabelConstraints(0));
+        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        snapshotUpdateLabel.setLabelFor(snapshotUpdateComboBox);
 
         outPutLevelCombobox = setupOutputLevelComboBox();
         JBLabel outputLevelLabel = new JBLabel(message("gmaven.settings.project.output.level"));
@@ -404,7 +408,7 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         List<? extends JComponent> components = Arrays
                 .asList(
                         vmOptionsField, argumentsField, argumentsImportField, threadCountField, mavenCustomPathField,
-                        outPutLevelCombobox, mavenHomeCombobox, jdkComboBox
+                        outPutLevelCombobox, mavenHomeCombobox, jdkComboBox, snapshotUpdateComboBox
                 );
         JComponent maxWidthComponent = components.stream()
                 .filter(Objects::nonNull)
@@ -429,6 +433,16 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         OutputLevelComboBoxItem[] levels = Arrays.stream(OutputLevelType.values())
                 .map(OutputLevelComboBoxItem::new)
                 .toArray(OutputLevelComboBoxItem[]::new);
+        var combobox = new ComboBox<>(levels);
+        combobox.setRenderer(new MyItemCellRenderer<>());
+        return combobox;
+    }
+
+    @NotNull
+    private ComboBox<SnapshotUpdateComboBoxItem> setupSnapshotUpdateComboBox() {
+        SnapshotUpdateComboBoxItem[] levels = Arrays.stream(SnapshotUpdateType.values())
+                .map(SnapshotUpdateComboBoxItem::new)
+                .toArray(SnapshotUpdateComboBoxItem[]::new);
         var combobox = new ComboBox<>(levels);
         combobox.setRenderer(new MyItemCellRenderer<>());
         return combobox;
@@ -537,6 +551,10 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         DEFAULT, QUITE, DEBUG
     }
 
+    public enum SnapshotUpdateType {
+        DEFAULT, NEVER, FORCE
+    }
+
     private final class OutputLevelComboBoxItem extends MyItem<OutputLevelType> {
 
         private OutputLevelComboBoxItem(@NotNull OutputLevelType value) {
@@ -545,17 +563,29 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
 
         @Override
         protected String getText() {
-            return getText(value);
+            return StringUtil.capitalize(value.name().toLowerCase());
         }
 
         @Override
         protected String getComment() {
             return null;
         }
+    }
 
-        @NotNull
-        private String getText(OutputLevelType levelType) {
-            return StringUtil.capitalize(levelType.name().toLowerCase());
+    private final class SnapshotUpdateComboBoxItem extends MyItem<SnapshotUpdateType> {
+
+        private SnapshotUpdateComboBoxItem(@NotNull SnapshotUpdateType value) {
+            super(Objects.requireNonNull(value));
+        }
+
+        @Override
+        protected String getText() {
+            return StringUtil.capitalize(value.name().toLowerCase());
+        }
+
+        @Override
+        protected String getComment() {
+            return null;
         }
     }
 
