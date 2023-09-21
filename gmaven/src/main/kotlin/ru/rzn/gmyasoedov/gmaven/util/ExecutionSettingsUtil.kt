@@ -71,12 +71,13 @@ private fun fillProjectBuildFiles(
     }
 }
 
-@Suppress("UNCHECKED_CAST")
 private fun getParentBuildFile(node: DataNode<ModuleData>): String? {
     val parentGA = node.data.getProperty(GMavenConstants.MODULE_PROP_PARENT_GA)
-    return if (parentGA != null && node.parent != null && node.parent!!.data is ModuleData) {
-        getParentBuildFile((node.parent as DataNode<ModuleData>?)!!)
-    } else node.data.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
+    val parent = ExternalSystemApiUtil.findParent(node, ProjectKeys.MODULE)
+    if (parentGA != null && parent != null) {
+        return getParentBuildFile(parent)
+    }
+    return node.data.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
 }
 
 private fun addedIgnoredModule(
