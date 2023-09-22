@@ -8,6 +8,7 @@ import java.util.Collection;
 
 @RequiredArgsConstructor
 public class MavenSettings implements Serializable {
+    public final int modulesCount;
     public final String localRepository;
     public final String settingsPath;
     @NonNull

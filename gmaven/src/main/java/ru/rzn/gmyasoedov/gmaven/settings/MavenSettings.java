@@ -9,8 +9,6 @@ import com.intellij.openapi.externalSystem.settings.AbstractExternalSystemSettin
 import com.intellij.openapi.externalSystem.settings.ExternalSystemSettingsListener;
 import com.intellij.openapi.project.ExternalStorageConfigurationManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.util.registry.Registry;
 import com.intellij.util.xmlb.annotations.XCollection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -102,27 +100,16 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
     @Override
     public @Nullable MavenProjectSettings getLinkedProjectSettings(@NotNull String projectPath) {
         MavenProjectSettings projectSettings = super.getLinkedProjectSettings(projectPath);
-        if (projectSettings != null)  return projectSettings;
+        if (projectSettings != null) return projectSettings;
 
         Path projectAbsolutePath = Path.of(projectPath).toAbsolutePath();
-        if (Registry.is("gmaven.settings.linked.modules")) {
-            for (MavenProjectSettings setting : getLinkedProjectsSettings()) {
-                List<Path> linkedExternalPath = getAllModulesLinkedExternalPath(getProject(), setting);
-                if (linkedExternalPath.contains(projectAbsolutePath)) {
-                    return setting;
-                }
-            }
-            return null;
-        }
-
         for (MavenProjectSettings setting : getLinkedProjectsSettings()) {
-            Path settingPath = Path.of(setting.getExternalProjectPath()).toAbsolutePath();
-            if (FileUtil.isAncestor(settingPath.toFile(), projectAbsolutePath.toFile(), false)) {
+            List<Path> linkedExternalPath = getAllModulesLinkedExternalPath(getProject(), setting);
+            if (linkedExternalPath.contains(projectAbsolutePath)) {
                 return setting;
             }
         }
-
-        return projectSettings;
+        return null;
     }
 
     public static class MyState implements State<MavenProjectSettings> {

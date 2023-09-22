@@ -137,9 +137,9 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         for (childContainer in container.modules) {
             createModuleData(childContainer, moduleNode, context)
         }
-        addDependencies(container, projectDataNode, context.moduleDataByArtifactId)
+        addDependencies(container, projectDataNode, context)
         populateProfiles(projectDataNode, context.mavenResult.settings)
-        //populateRemoteRepository(projectDataNode, mavenResult.settings)
+        moduleNode.data.setProperty(GMavenConstants.MODULE_PROP_LOCAL_REPO, mavenResult.settings.localRepository)
         return projectDataNode
     }
 
