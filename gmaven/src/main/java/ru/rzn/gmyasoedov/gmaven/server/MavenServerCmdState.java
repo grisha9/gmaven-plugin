@@ -30,22 +30,13 @@ import ru.rzn.gmyasoedov.serverapi.GMavenServer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
-import static ru.rzn.gmyasoedov.serverapi.GMavenServer.GMAVEN_HOME;
-import static ru.rzn.gmyasoedov.serverapi.GMavenServer.GMAVEN_PLUGINS;
-import static ru.rzn.gmyasoedov.serverapi.GMavenServer.GMAVEN_PLUGIN_ANNOTATION_PROCESSOR;
-import static ru.rzn.gmyasoedov.serverapi.GMavenServer.MAVEN_EXT_CLASS_PATH_PROPERTY;
-import static ru.rzn.gmyasoedov.serverapi.GMavenServer.SERVER_DEBUG_PROPERTY;
+import static ru.rzn.gmyasoedov.serverapi.GMavenServer.*;
 
 public class MavenServerCmdState extends CommandLineState {
     private static final Logger LOG = Logger.getInstance(MavenServerCmdState.class);
@@ -122,7 +113,15 @@ public class MavenServerCmdState extends CommandLineState {
 
         params.getVMParametersList().addProperty(MAVEN_EXT_CLASS_PATH_PROPERTY, mavenExtClassesJarPathString);
         params.getVMParametersList().addProperty(GMAVEN_HOME, mavenPath.toAbsolutePath().toString());
-        executionSettings.getEnv().forEach((k, v) -> params.getVMParametersList().addProperty(k, v));
+        executionSettings.getEnv().forEach((k, v) -> addProperty(params, k, v));
+    }
+
+    private static void addProperty(SimpleJavaParameters params, String k, String v) {
+        if (v != null) {
+            params.getVMParametersList().addProperty(k, v);
+        } else {
+            params.getVMParametersList().addProperty(k);
+        }
     }
 
     private void processVmOptions(List<String> jvmConfigOptions, SimpleJavaParameters params) {

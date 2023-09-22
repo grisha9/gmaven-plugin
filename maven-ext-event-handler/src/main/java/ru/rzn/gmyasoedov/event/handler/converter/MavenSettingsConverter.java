@@ -1,6 +1,5 @@
 package ru.rzn.gmyasoedov.event.handler.converter;
 
-import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Profile;
 import org.apache.maven.project.MavenProject;
@@ -10,11 +9,9 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenRemoteRepository;
 import ru.rzn.gmyasoedov.serverapi.model.MavenSettings;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class MavenSettingsConverter {
@@ -23,27 +20,18 @@ public class MavenSettingsConverter {
         MavenSession session = source.session;
         if (session == null) {
             return new MavenSettings(
-                    null, null, Collections.<MavenProfile>emptyList(), Collections.<MavenRemoteRepository>emptyList()
+                    0, null, null, Collections.<MavenProfile>emptyList(), Collections.<MavenRemoteRepository>emptyList()
             );
         }
         String localRepository = session.getRequest().getLocalRepository().getBasedir();
         File settingsFile = session.getRequest().getUserSettingsFile();
         String settingsFilePath = settingsFile == null ? null : settingsFile.getAbsolutePath();
         Collection<String> activeProfiles = source.settingsActiveProfiles;
-        Collection<MavenRemoteRepository> repositories = getRemoteRepositories(session);
-        return new MavenSettings(
+        Collection<MavenRemoteRepository> repositories = RemoteRepositoryConverter
+                .convert(session.getRequest().getRemoteRepositories());
+        return new MavenSettings(session.getAllProjects().size(),
                 localRepository, settingsFilePath, getMavenProfiles(session, activeProfiles), repositories
         );
-    }
-
-    private static Collection<MavenRemoteRepository> getRemoteRepositories(MavenSession session) {
-        List<ArtifactRepository> remoteRepositories = session.getRequest().getRemoteRepositories();
-        if (remoteRepositories.isEmpty()) return Collections.emptyList();
-        ArrayList<MavenRemoteRepository> result = new ArrayList<>(remoteRepositories.size());
-        for (ArtifactRepository repository : remoteRepositories) {
-            result.add(new MavenRemoteRepository(repository.getId(), repository.getUrl()));
-        }
-        return result;
     }
 
     private static Collection<MavenProfile> getMavenProfiles(MavenSession session,
