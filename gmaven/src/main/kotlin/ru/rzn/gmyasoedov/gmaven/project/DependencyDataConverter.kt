@@ -7,47 +7,50 @@ import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.project.*
 import com.intellij.openapi.externalSystem.model.project.dependencies.ProjectDependenciesImpl
 import com.intellij.openapi.roots.DependencyScope
+import com.intellij.openapi.util.registry.Registry
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
 import ru.rzn.gmyasoedov.serverapi.model.MavenArtifact
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
+import java.nio.file.Path
+import kotlin.io.path.exists
 
 fun addDependencies(
     container: MavenProjectContainer,
     projectNode: DataNode<ProjectData>,
-    moduleDataByArtifactId: Map<String, MavenProjectResolver.ModuleContextHolder>
+    context: MavenProjectResolver.ProjectResolverContext
 ) {
-    addDependencies(container.project, moduleDataByArtifactId)
+    addDependencies(container.project, context)
     for (childContainer in container.modules) {
-        addDependencies(childContainer, projectNode, moduleDataByArtifactId)
+        addDependencies(childContainer, projectNode, context)
     }
 }
 
 private fun addDependencies(
-    project: MavenProject, moduleDataByArtifactId: Map<String, MavenProjectResolver.ModuleContextHolder>
+    project: MavenProject, context: MavenProjectResolver.ProjectResolverContext
 ) {
-    val moduleContextHolder = moduleDataByArtifactId[project.id]!!
+    val moduleContextHolder = context.moduleDataByArtifactId[project.id]!!
     val sourceSetModules = moduleContextHolder.perSourceSetModules
     if (sourceSetModules == null) {
-        addDependencies(project, moduleContextHolder.moduleNode, moduleDataByArtifactId)
+        addDependencies(project, moduleContextHolder.moduleNode, context)
     } else {
-        addDependencies(project, sourceSetModules.mainNode, sourceSetModules.testNode, moduleDataByArtifactId)
+        addDependencies(project, sourceSetModules.mainNode, sourceSetModules.testNode, context)
     }
 }
 
 private fun addDependencies(
     project: MavenProject,
     moduleByMavenProject: DataNode<ModuleData>,
-    moduleDataByArtifactId: Map<String, MavenProjectResolver.ModuleContextHolder>
+    context: MavenProjectResolver.ProjectResolverContext
 ) {
     var hasLibrary = false
     for (artifact in project.resolvedArtifacts) {
-        val moduleContextHolder = moduleDataByArtifactId[artifact.id]
+        val moduleContextHolder = context.moduleDataByArtifactId[artifact.id]
         val moduleDataNodeByMavenArtifact = moduleContextHolder?.perSourceSetModules?.mainNode
             ?: moduleContextHolder?.moduleNode
         if (moduleDataNodeByMavenArtifact == null) {
-            addLibrary(moduleByMavenProject, artifact)
+            addLibrary(moduleByMavenProject, artifact, context)
             if (!hasLibrary) hasLibrary = true
         } else {
             addModuleDependency(moduleByMavenProject, moduleDataNodeByMavenArtifact.data)
@@ -63,15 +66,15 @@ private fun addDependencies(
     project: MavenProject,
     mainModule: DataNode<SourceSetData>,
     testModule: DataNode<SourceSetData>,
-    moduleDataByArtifactId: Map<String, MavenProjectResolver.ModuleContextHolder>
+    context: MavenProjectResolver.ProjectResolverContext
 ) {
     var hasLibrary = false
     for (artifact in project.resolvedArtifacts) {
-        val moduleContextHolder = moduleDataByArtifactId[artifact.id]
+        val moduleContextHolder = context.moduleDataByArtifactId[artifact.id]
         val moduleDataNodeByMavenArtifact = moduleContextHolder?.perSourceSetModules?.mainNode
             ?: moduleContextHolder?.moduleNode
         if (moduleDataNodeByMavenArtifact == null) {
-            addLibrary(mainModule, testModule, artifact)
+            addLibrary(mainModule, testModule, artifact, context)
             if (!hasLibrary) hasLibrary = true
         } else {
             addModuleDependency(mainModule, moduleDataNodeByMavenArtifact.data)
@@ -87,8 +90,10 @@ private fun addDependencies(
     }
 }
 
-private fun addLibrary(parentNode: DataNode<ModuleData>, artifact: MavenArtifact) {
-    val createLibrary = createLibrary(artifact)
+private fun addLibrary(parentNode: DataNode<ModuleData>,
+                       artifact: MavenArtifact,
+                       context: MavenProjectResolver.ProjectResolverContext) {
+    val createLibrary = createLibrary(artifact, context.mavenResult.settings.modulesCount)
     val libraryDependencyData = LibraryDependencyData(parentNode.data, createLibrary, LibraryLevel.PROJECT)
     libraryDependencyData.scope = getScope(artifact)
     libraryDependencyData.order = 20 + getScopeOrder(libraryDependencyData.scope)
@@ -103,10 +108,11 @@ private fun addLibrary(parentNode: DataNode<ModuleData>, artifact: MavenArtifact
 }
 
 private fun addLibrary(
-    mainNode: DataNode<SourceSetData>, testNode: DataNode<SourceSetData>, artifact: MavenArtifact
+    mainNode: DataNode<SourceSetData>, testNode: DataNode<SourceSetData>, artifact: MavenArtifact,
+    context: MavenProjectResolver.ProjectResolverContext
 ) {
     val scope = getScope(artifact)
-    val createLibrary = createLibrary(artifact)
+    val createLibrary = createLibrary(artifact, context.mavenResult.settings.modulesCount)
     if (scope != DependencyScope.TEST) {
         val libraryDependencyData = LibraryDependencyData(mainNode.data, createLibrary, LibraryLevel.PROJECT)
         libraryDependencyData.scope = scope
@@ -132,12 +138,21 @@ private fun addModuleDependency(parentNode: DataNode<out ModuleData>, targetModu
     parentNode.createChild(ProjectKeys.MODULE_DEPENDENCY, data)
 }
 
-private fun createLibrary(artifact: MavenArtifact): LibraryData {
+private fun createLibrary(artifact: MavenArtifact, modulesCount: Int): LibraryData {
     val library = LibraryData(GMavenConstants.SYSTEM_ID, artifact.id, !artifact.isResolved)
     library.artifactId = artifact.artifactId
     library.setGroup(artifact.groupId)
     library.version = artifact.version
-    library.addPath(getLibraryPathType(artifact), artifact.file.absolutePath)
+    if (artifact.file == null) return library
+    val artifactAbsolutePath = artifact.file.absolutePath
+    library.addPath(getLibraryPathType(artifact), artifactAbsolutePath)
+    if (modulesCount <= 10 || Registry.`is`("gmaven.import.library.sync.sources")) {
+        val sourceAbsolutePath = artifactAbsolutePath.replace(".jar", "-sources.jar")
+        if (sourceAbsolutePath != artifactAbsolutePath && Path.of(sourceAbsolutePath).exists()) {
+            library.addPath(LibraryPathType.SOURCE, sourceAbsolutePath)
+        }
+    }
+
     return library
 }
 

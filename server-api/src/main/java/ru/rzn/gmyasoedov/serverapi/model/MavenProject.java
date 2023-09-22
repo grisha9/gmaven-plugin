@@ -32,6 +32,7 @@ public class MavenProject extends MavenId {
     private final String outputDirectory;
     private final String testOutputDirectory;
     private final Map<Object, Object> properties;
+    private final List<MavenRemoteRepository> remoteRepositories;
 
     public @NotNull String getDisplayName() {
         return (name == null || name.isEmpty()) ? artifactId : name;
