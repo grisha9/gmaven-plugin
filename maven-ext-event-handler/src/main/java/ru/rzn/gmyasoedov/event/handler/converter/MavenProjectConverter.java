@@ -4,19 +4,10 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.Resource;
 import org.eclipse.aether.graph.DependencyNode;
-import ru.rzn.gmyasoedov.serverapi.model.DependencyTreeNode;
-import ru.rzn.gmyasoedov.serverapi.model.MavenArtifact;
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
+import ru.rzn.gmyasoedov.serverapi.model.*;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 public class MavenProjectConverter {
 
@@ -66,6 +57,8 @@ public class MavenProjectConverter {
                 .parentArtifact(mavenProject.getParentArtifact() != null
                         ? MavenArtifactConverter.convert(mavenProject.getParentArtifact()) : null)
                 .properties(getProperties(mavenProject))
+                .remoteRepositories(Collections.<MavenRemoteRepository>emptyList())
+                //.remoteRepositories(RemoteRepositoryConverter.convert(mavenProject.getRemoteArtifactRepositories()))
                 .build();
     }
 

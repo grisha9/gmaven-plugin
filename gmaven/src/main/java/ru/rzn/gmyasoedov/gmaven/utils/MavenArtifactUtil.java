@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -36,33 +35,6 @@ public final class MavenArtifactUtil {
         if (!PLUGIN_DESCRIPTOR_CACHE.isEmpty()) {
             PLUGIN_DESCRIPTOR_CACHE.clear();
         }
-    }
-
-    public static boolean isPluginIdEquals(@Nullable String groupId1, @Nullable String artifactId1,
-                                           @Nullable String groupId2, @Nullable String artifactId2) {
-        if (artifactId1 == null) return false;
-
-        if (!artifactId1.equals(artifactId2)) return false;
-
-        if (groupId1 != null) {
-            for (String group : DEFAULT_GROUPS) {
-                if (groupId1.equals(group)) {
-                    groupId1 = null;
-                    break;
-                }
-            }
-        }
-
-        if (groupId2 != null) {
-            for (String group : DEFAULT_GROUPS) {
-                if (groupId2.equals(group)) {
-                    groupId2 = null;
-                    break;
-                }
-            }
-        }
-
-        return Objects.equals(groupId1, groupId2);
     }
 
     @Nullable
@@ -81,11 +53,26 @@ public final class MavenArtifactUtil {
     }
 
     @NotNull
-    public static Path getArtifactNioPath(Path localRepository, String groupId, String artifactId,
-                                          String version, String type) {
+    public static Path getArtifactNioPath(@NotNull Path localRepository,
+                                          @NotNull String groupId,
+                                          @NotNull String artifactId,
+                                          @NotNull String version,
+                                          @NotNull String extension) {
+        return getArtifactNioPath(localRepository, groupId, artifactId, version, extension, null);
+    }
+
+    @NotNull
+    public static Path getArtifactNioPath(@NotNull Path localRepository,
+                                          @NotNull String groupId,
+                                          @NotNull String artifactId,
+                                          @NotNull String version,
+                                          @NotNull String extension,
+                                          @Nullable String classifier) {
         Path dir = getArtifactDirectory(localRepository, groupId, artifactId);
         if (StringUtil.isEmpty(version)) version = resolveVersion(dir);
-        return dir.resolve(version).resolve(artifactId + "-" + version + "." + type);
+
+        return dir.resolve(version).resolve(artifactId + "-" + version +
+                (classifier == null ? "." + extension : "-" + classifier + "." + extension));
     }
 
     private static Path getArtifactDirectory(Path localRepository,

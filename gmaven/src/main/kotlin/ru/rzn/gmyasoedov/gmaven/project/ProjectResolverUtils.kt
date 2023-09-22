@@ -29,6 +29,7 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
+import ru.rzn.gmyasoedov.serverapi.model.MavenRemoteRepository
 import ru.rzn.gmyasoedov.serverapi.model.MavenSettings
 import java.nio.file.Path
 
@@ -119,8 +120,8 @@ fun populateTasks(
     }
 }
 
-fun populateRemoteRepository(projectDataNode: DataNode<ProjectData>, mavenSettings: MavenSettings) {
-    for (repository in mavenSettings.remoteRepositories) {
+fun populateRemoteRepository(projectDataNode: DataNode<ProjectData>, remoteRepositories: Set<MavenRemoteRepository>) {
+    for (repository in remoteRepositories) {
         projectDataNode.createChild(
             MavenRepositoryData.KEY, MavenRepositoryData(SYSTEM_ID, repository.id, repository.url)
         )
