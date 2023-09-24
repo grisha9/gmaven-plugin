@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added
+- attach sources provider
+- improvement maven snapshot setting
+
+### Fixed
+- task execution - use project context (get parent build file correctly)
+
 ## [232.8] - 2023-09-18
 
 ### Added
