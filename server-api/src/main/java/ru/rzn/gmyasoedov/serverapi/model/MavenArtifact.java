@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public class MavenArtifact extends MavenId {
 
-  static final long serialVersionUID = 6389627095309274357L;
+  private static final long serialVersionUID = 6389627095309274357L;
 
 
   private final String type;
