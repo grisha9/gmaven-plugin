@@ -2,15 +2,15 @@
 
 ## [Unreleased]
 
-## [232.9] - 2023-09-27
+## [232.10] - 2023-09-27
 
 ### Added
-- attach sources provider
-- improvement maven snapshot setting
+- Download sources
+- Improvement maven snapshot setting
 
 ### Fixed
-- task execution - use project context (get parent build file correctly)
-- sub module creation (redundant gitignore & groupId from parent)
+- Task execution - use project context (get parent build file correctly)
+- Sub-module creation (redundant gitignore & groupId from parent)
 
 ## [232.8] - 2023-09-18
 
