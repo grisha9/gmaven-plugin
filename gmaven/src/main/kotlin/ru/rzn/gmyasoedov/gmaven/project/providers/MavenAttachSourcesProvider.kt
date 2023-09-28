@@ -22,6 +22,7 @@ import com.intellij.openapi.roots.LibraryOrderEntry
 import com.intellij.openapi.util.ActionCallback
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiFile
+import org.jetbrains.annotations.Nls
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
@@ -80,7 +81,7 @@ internal class DownloadSourceAction(
         val project = psiFile.project
         val localRepoPath = getLocalRepoPath(project, externalProjectPath) ?: return ActionCallback.REJECTED
         val artifactNioPath = MavenArtifactUtil
-            .getArtifactNioPath(Path.of(localRepoPath), split[0], split[1], split[2], "sources", "jar")
+            .getArtifactNioPath(Path.of(localRepoPath), split[0], split[1], split[2], "jar", "sources")
         if (artifactNioPath.exists()) {
             attachSources(artifactNioPath.toFile(), orderEntries)
             return ActionCallback.DONE
@@ -104,11 +105,13 @@ internal class DownloadSourceAction(
                         sourceJar = artifactNioPath.toFile()
                         if (!sourceJar.exists()) {
                             resultWrapper.setRejected()
+                            errorNotification("file not found $sourceJar", project)
                             return
                         }
                     } catch (e: IOException) {
                         MavenLog.LOG.warn(e)
                         resultWrapper.setRejected()
+                        errorNotification(e.localizedMessage, project)
                         return
                     }
                     attachSources(sourceJar, orderEntries)
@@ -117,19 +120,26 @@ internal class DownloadSourceAction(
 
                 override fun onFailure() {
                     resultWrapper.setRejected()
-                    val title = GBundle.message("gmaven.action.notifications.sources.download.failed.title")
                     val message = GBundle.message(
                         "gmaven.action.notifications.sources.download.failed.content", artifactCoordinates
                     )
-                    val notification =
-                        NotificationData(title, message, NotificationCategory.WARNING, NotificationSource.PROJECT_SYNC)
-                    notification.isBalloonNotification = true
-                    ExternalSystemNotificationManager.getInstance(project)
-                        .showNotification(SYSTEM_ID, notification)
+                    errorNotification(message, project)
                 }
             }, ProgressExecutionMode.IN_BACKGROUND_ASYNC, true
         )
         return resultWrapper
+    }
+
+    private fun errorNotification(
+        message: @Nls String,
+        project: Project
+    ) {
+        val title = GBundle.message("gmaven.action.notifications.sources.download.failed.title")
+        val notification =
+            NotificationData(title, message, NotificationCategory.ERROR, NotificationSource.TASK_EXECUTION)
+        notification.isBalloonNotification = true
+        ExternalSystemNotificationManager.getInstance(project)
+            .showNotification(SYSTEM_ID, notification)
     }
 
     private fun getLocalRepoPath(project: Project, externalProjectPath: String): String? {
