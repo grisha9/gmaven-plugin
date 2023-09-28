@@ -104,7 +104,7 @@
                      description="Debug maven server"/>
         <registryKey key="gmaven.support.extensions" defaultValue="pom,xml,scala,groovy,atom,rb,yml,clj"
                      description="Maven support extensions"/>
-        <registryKey key="gmaven.bundled.wrapper.version" defaultValue="3.9.1"
+        <registryKey key="gmaven.bundled.wrapper.version" defaultValue="3.9.4"
                      description="Maven bundled wrapper version"/>
         <registryKey key="gmaven.vm.remove.javaagent" defaultValue="true"
                      description="Remove java vm parameter -javaagent for maven import process"/>
