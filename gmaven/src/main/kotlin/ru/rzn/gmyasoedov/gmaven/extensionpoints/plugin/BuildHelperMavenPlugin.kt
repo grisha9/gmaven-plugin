@@ -22,30 +22,37 @@ class BuildHelperMavenPlugin : MavenFullImportPlugin {
         for (execution in executions) {
             when {
                 execution.goals.contains("add-source") ->
-                    getPathList(execution, "sources", context).forEach { result.add(MavenContentRoot(SOURCE, it)) }
+                    getPathList(execution, mavenProject, "sources", context)
+                        .forEach { result.add(MavenContentRoot(SOURCE, it)) }
 
                 execution.goals.contains("add-test-source") ->
-                    getPathList(execution, "sources", context).forEach { result.add(MavenContentRoot(TEST, it)) }
+                    getPathList(execution, mavenProject, "sources", context)
+                        .forEach { result.add(MavenContentRoot(TEST, it)) }
 
                 execution.goals.contains("add-resource") ->
-                    getPathList(execution, "resources", context).forEach { result.add(MavenContentRoot(RESOURCE, it)) }
+                    getPathList(execution, mavenProject, "resources", context)
+                        .forEach { result.add(MavenContentRoot(RESOURCE, it)) }
 
                 execution.goals.contains("add-test-resource") ->
-                    getPathList(execution, "resources", context).forEach { result.add(MavenContentRoot(TEST_RESOURCE, it)) }
+                    getPathList(execution, mavenProject, "resources", context)
+                        .forEach { result.add(MavenContentRoot(TEST_RESOURCE, it)) }
             }
         }
         return PluginContentRoots(result, emptySet())
     }
 
     private fun getPathList(
-        execution: PluginExecution, paramName: String, context: MavenProjectResolver.ProjectResolverContext
+        execution: PluginExecution,
+        mavenProject: MavenProject,
+        paramName: String,
+        context: MavenProjectResolver.ProjectResolverContext
     ): List<String> {
         val element = parseConfiguration(execution.configuration, context)
         val paths = ArrayList<String>()
         for (sourceElement in element.getChild(paramName)?.children ?: emptyList()) {
             val sourcePath = sourceElement.textTrim
             if (sourcePath != null && sourcePath.isNotEmpty()) {
-                paths.add(sourcePath)
+                paths.add(MavenFullImportPlugin.getAbsoluteContentPath(sourcePath, mavenProject))
             }
         }
         return paths
