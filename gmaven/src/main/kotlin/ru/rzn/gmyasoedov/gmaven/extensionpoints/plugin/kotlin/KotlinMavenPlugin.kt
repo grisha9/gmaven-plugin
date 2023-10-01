@@ -4,6 +4,7 @@ import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceTyp
 import com.intellij.pom.java.LanguageLevel
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin.getAbsoluteContentPath
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin.parseConfiguration
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenContentRoot
@@ -12,9 +13,6 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.PluginExecution
-import java.nio.file.Path
-import java.nio.file.Paths
-import kotlin.io.path.absolutePathString
 
 class KotlinMavenPlugin : MavenFullImportPlugin {
     override fun getGroupId() = "org.jetbrains.kotlin"
@@ -80,12 +78,7 @@ class KotlinMavenPlugin : MavenFullImportPlugin {
             if ("sourceDir" != sourceDirElement.name) continue
             val sourcePath = sourceDirElement.textTrim
             if (sourcePath != null && sourcePath.isNotEmpty()) {
-                val path = Paths.get(sourcePath)
-                if (path.isAbsolute) {
-                    paths.add(sourcePath)
-                } else {
-                    paths.add(Path.of(mavenProject.basedir, sourcePath).absolutePathString())
-                }
+                paths.add(getAbsoluteContentPath(sourcePath, mavenProject))
             }
         }
         return paths

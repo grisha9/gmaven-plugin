@@ -10,6 +10,8 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil;
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 
 public interface MavenFullImportPlugin {
@@ -46,5 +48,15 @@ public interface MavenFullImportPlugin {
         element = MavenJDOMUtil.parseConfiguration(configuration);
         context.getContextElementMap().put(configuration, element);
         return element;
+    }
+
+    @NotNull
+    static String getAbsoluteContentPath(@NotNull String sourcePath, @NotNull MavenProject mavenProject) {
+        var path = Paths.get(sourcePath);
+        if (path.isAbsolute()) {
+            return sourcePath;
+        } else {
+            return Path.of(mavenProject.getBasedir(), sourcePath).toAbsolutePath().toString();
+        }
     }
 }
