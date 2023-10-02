@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [232.11] - 2023-10-02
+
+### Fixed
+- https://github.com/grisha9/gmaven-plugin/issues/4 (support relative path)
+
 ## [232.10] - 2023-09-27
 
 ### Added
