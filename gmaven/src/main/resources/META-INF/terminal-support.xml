@@ -1,0 +1,5 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="ru.rzn.gmyasoedov.gmaven.project.task.TerminalMvndService"/>
+    </extensions>
+</idea-plugin>
