@@ -45,9 +45,11 @@
     <depends>com.intellij.properties</depends>
     <depends optional="true" config-file="groovy-support.xml">org.intellij.groovy</depends>
     <depends optional="true" config-file="kotlin-support.xml">org.jetbrains.kotlin</depends>
+    <depends optional="true" config-file="terminal-support.xml">org.jetbrains.plugins.terminal</depends>
+    <depends optional="true" config-file="sh-support.xml">com.jetbrains.sh</depends>
 
     <extensionPoints>
-        <extensionPoint name="import.full.plugin" dynamic="true"
+        <extensionPoint name="import.full.plugin"
                         interface="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin"/>
     </extensionPoints>
     <extensions defaultExtensionNs="ru.rzn.gmyasoedov.gmaven">
@@ -108,10 +110,12 @@
                      description="Maven bundled wrapper version"/>
         <registryKey key="gmaven.vm.remove.javaagent" defaultValue="true"
                      description="Remove java vm parameter -javaagent for maven import process"/>
-        <registryKey key="GMAVEN.system.in.process" defaultValue="true"
-                     description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
         <registryKey key="gmaven.import.library.sync.sources" defaultValue="false"
                      description="Sync source artifact file on project import. Disable it for best performance"/>
+        <registryKey key="gmaven.mvnd.path" defaultValue="mvnd"
+                     description="Maven daemon integration. Path to mvnd. Default use symlink - mvnd"/>
+        <registryKey key="GMAVEN.system.in.process" defaultValue="true"
+                     description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
 
         <notificationGroup id="GMaven" displayType="BALLOON"/>
 
