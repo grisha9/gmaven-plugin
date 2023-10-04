@@ -63,6 +63,8 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     @Nullable
     private JBCheckBox showPluginNodesCheckBox;
     @Nullable
+    private JBCheckBox useMvndForTasksCheckBox;
+    @Nullable
     private JTextField threadCountField;
     @Nullable
     private JTextField vmOptionsField;
@@ -117,6 +119,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         if (showPluginNodesCheckBox != null) {
             settings.setShowPluginNodes(showPluginNodesCheckBox.isSelected());
         }
+        if (useMvndForTasksCheckBox != null) {
+            settings.setUseMvndForTasks(useMvndForTasksCheckBox.isSelected());
+        }
         if (threadCountField != null) {
             settings.setThreadCount(threadCountField.getText());
         }
@@ -163,6 +168,10 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         }
         if (showPluginNodesCheckBox != null
                 && showPluginNodesCheckBox.isSelected() != projectSettings.getShowPluginNodes()) {
+            return true;
+        }
+        if (useMvndForTasksCheckBox != null
+                && useMvndForTasksCheckBox.isSelected() != projectSettings.getUseMvndForTasks()) {
             return true;
         }
         if (threadCountField != null && !Objects.equals(
@@ -226,6 +235,9 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
         }
         if (showPluginNodesCheckBox != null) {
             showPluginNodesCheckBox.setSelected(projectSettings.getShowPluginNodes());
+        }
+        if (useMvndForTasksCheckBox != null) {
+            useMvndForTasksCheckBox.setSelected(projectSettings.getUseMvndForTasks());
         }
         if (threadCountField != null) {
             threadCountField.setText(projectSettings.getThreadCount());
@@ -316,6 +328,10 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
 
         resolveModulePerSourceSetCheckBox = new JBCheckBox(message("gmaven.settings.project.module.per.source.set"));
         content.add(resolveModulePerSourceSetCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+
+        useMvndForTasksCheckBox = new JBCheckBox(message("gmaven.settings.project.mvnd"));
+        useMvndForTasksCheckBox.setToolTipText(message("gmaven.settings.project.mvnd.tooltip"));
+        content.add(useMvndForTasksCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
 
         showPluginNodesCheckBox = new JBCheckBox(message("gmaven.settings.project.plugins"));
         showPluginNodesCheckBox.setToolTipText(message("gmaven.settings.project.plugins.tooltip"));

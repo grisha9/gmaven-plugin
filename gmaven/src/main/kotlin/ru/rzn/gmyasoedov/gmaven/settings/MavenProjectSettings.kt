@@ -14,6 +14,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
     var nonRecursive  = false
     var useWholeProjectContext = true
     var showPluginNodes = true
+    var useMvndForTasks = false
     var snapshotUpdateType = SnapshotUpdateType.DEFAULT
     var outputLevel = OutputLevelType.DEFAULT
     var threadCount: String? = null
@@ -36,6 +37,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
         result.useWholeProjectContext = useWholeProjectContext
         result.arguments = arguments
         result.argumentsImport = argumentsImport
+        result.useMvndForTasks = useMvndForTasks
         return result
     }
 }
