@@ -25,6 +25,7 @@ fun fillExecutionWorkSpace(
 
     val profilesStateService = ProjectProfilesStateService.getInstance(project)
     val mainModuleNode = ExternalSystemApiUtil.find(projectDataNode, ProjectKeys.MODULE) ?: return
+    workspace.externalProjectPath = projectSettings.externalProjectPath
     if (projectSettings.projectBuildFile != null) {
         workspace.projectBuildFile = projectSettings.projectBuildFile
     } else {
@@ -38,7 +39,7 @@ fun fillExecutionWorkSpace(
     } else {
         addedIgnoredModule(workspace, allModules)
     }
-    for (profileDataNode in ExternalSystemApiUtil.findAll<ProfileData>(
+    for (profileDataNode in ExternalSystemApiUtil.findAll(
         projectDataNode, ProfileData.KEY
     )) {
         val profileExecution = profilesStateService.getProfileExecution(profileDataNode.data)

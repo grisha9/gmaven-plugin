@@ -26,7 +26,14 @@ dependencies {
 intellij {
     version.set(providers.gradleProperty("platformVersion").get())
     type.set("IC") // Target IDE Platform
-    plugins.set(listOf("java", "properties", "org.intellij.groovy", "org.jetbrains.kotlin"))
+    plugins.set(listOf(
+        "java",
+        "properties",
+        "org.intellij.groovy",
+        "org.jetbrains.kotlin",
+        "org.jetbrains.plugins.terminal",
+        "com.jetbrains.sh",
+    ))
 }
 
 changelog {

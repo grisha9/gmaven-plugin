@@ -200,10 +200,10 @@ public final class MavenManager
         MavenExecutionSettings result;
         if (projectSettings == null) {
             result = new MavenExecutionSettings(
-                    DistributionSettings.getBundled(), null, false, settings.isOfflineMode());
+                    DistributionSettings.getBundled(), null, settings.isOfflineMode());
         } else {
             result = new MavenExecutionSettings(projectSettings.getDistributionSettings(),
-                    projectSettings.getVmOptions(), projectSettings.getNonRecursive(), settings.isOfflineMode()
+                    projectSettings.getVmOptions(), settings.isOfflineMode()
             );
             result.setResolveModulePerSourceSet(projectSettings.getResolveModulePerSourceSet());
             result.setUseQualifiedModuleNames(projectSettings.isUseQualifiedModuleNames());
@@ -212,6 +212,7 @@ public final class MavenManager
             result.setThreadCount(projectSettings.getThreadCount());
             result.setOutputLevel(projectSettings.getOutputLevel());
             result.setShowPluginNodes(projectSettings.getShowPluginNodes());
+            result.setUseMvndForTasks(projectSettings.getUseMvndForTasks());
             fillExecutionWorkSpace(project, projectSettings, projectPath, result.getExecutionWorkspace());
             if (projectSettings.getArguments() != null) {
                 result.withArguments(ParametersListUtil.parse(projectSettings.getArguments(), true, true));

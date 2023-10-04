@@ -1,16 +1,22 @@
 package ru.rzn.gmyasoedov.gmaven.project.task
 
+import com.intellij.ide.actions.ShowLogAction
+import com.intellij.notification.NotificationType.WARNING
+import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundException
 import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager
+import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
 import ru.rzn.gmyasoedov.gmaven.project.getMavenHome
 import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.runTasks
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
+import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
+import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 
@@ -25,17 +31,24 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         jvmParametersSetup: String?,
         listener: ExternalSystemTaskNotificationListener
     ) {
-        val sdk = (settings ?: throw ExternalSystemException("settings is empty"))
-            .jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) }
-            ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
-        val mavenHome = getMavenHome(settings.distributionSettings)
-
+        settings ?: throw ExternalSystemException("settings is empty")
         val workspace = settings.executionWorkspace
         val projectBuildFile = workspace.projectBuildFile
             ?: throw ExternalSystemException("project build file is empty")
-        val subProjectBuildFile = workspace.subProjectBuildFile
+        val buildPath = Path.of(workspace.subProjectBuildFile ?: projectBuildFile)
+
+        if (settings.isUseMvndForTasks) {
+            try {
+                MvndTaskManager.task(settings, buildPath, taskNames)
+                return
+            } catch (e: Throwable) {
+                processErrorAndShowNotify(e)
+            }
+        }
+        val sdk = settings.jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) }
+            ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
+        val mavenHome = getMavenHome(settings.distributionSettings)
         try {
-            val buildPath = Path.of(subProjectBuildFile ?: projectBuildFile)
             val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
             runTasks(request, taskNames) { cancellationMap[id] = it }
         } finally {
@@ -46,5 +59,15 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
     override fun cancelTask(id: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
         cancellationMap[id]?.stopAll()
         return true
+    }
+
+    private fun processErrorAndShowNotify(e: Throwable) {
+        MavenLog.LOG.warn(e)
+        GMavenNotification.createNotification(
+            message("gmaven.mvnd.notification.title"),
+            message("gmaven.mvnd.notification.error"),
+            WARNING,
+            listOf(ActionManager.getInstance().getAction("OpenLog"), ShowLogAction.notificationAction())
+        )
     }
 }

@@ -32,6 +32,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private boolean resolveModulePerSourceSet = false;
     private boolean useQualifiedModuleNames = false;
     private boolean nonRecursive = false;
+    private boolean useMvndForTasks = false;
     private boolean showPluginNodes = true;
     @NotNull
     private ProjectSettingsControlBuilder.OutputLevelType outputLevel = DEFAULT;
@@ -41,13 +42,11 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,
                                   @Nullable String vmOptions,
-                                  boolean nonRecursive,
                                   boolean offlineWork) {
         this.distributionSettings = Objects.requireNonNull(distributionSettings);
         if (vmOptions != null) {
             withVmOptions(ParametersListUtil.parse(vmOptions, true, true));
         }
-        this.nonRecursive = nonRecursive;
         this.offlineWork = offlineWork;
     }
 
@@ -159,6 +158,14 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         this.showPluginNodes = showPluginNodes;
     }
 
+    public boolean isUseMvndForTasks() {
+        return useMvndForTasks;
+    }
+
+    public void setUseMvndForTasks(boolean useMvndForTasks) {
+        this.useMvndForTasks = useMvndForTasks;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -170,6 +177,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         if (offlineWork != that.offlineWork) return false;
         if (resolveModulePerSourceSet != that.resolveModulePerSourceSet) return false;
         if (useQualifiedModuleNames != that.useQualifiedModuleNames) return false;
+        if (useMvndForTasks != that.useMvndForTasks) return false;
         if (!executionWorkspace.equals(that.executionWorkspace)) return false;
         if (!distributionSettings.equals(that.distributionSettings)) return false;
         if (!Objects.equals(javaHome, that.javaHome)) return false;
@@ -190,6 +198,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
         result = 31 * result + (argumentsImport != null ? argumentsImport.hashCode() : 0);
         result = 31 * result + (resolveModulePerSourceSet ? 1 : 0);
         result = 31 * result + (useQualifiedModuleNames ? 1 : 0);
+        result = 31 * result + (useMvndForTasks ? 1 : 0);
         return result;
     }
 
