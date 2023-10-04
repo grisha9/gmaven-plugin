@@ -18,6 +18,8 @@ public class MavenExecutionWorkspace implements Serializable {
     private String projectBuildFile;
     @Nullable
     private String subProjectBuildFile;
+    @Nullable
+    private String externalProjectPath;
 
     public void addProfile(@Nullable ProfileExecution data) {
         if (data != null) {
@@ -57,5 +59,13 @@ public class MavenExecutionWorkspace implements Serializable {
 
     public void setSubProjectBuildFile(String subProjectBuildFile) {
         this.subProjectBuildFile = subProjectBuildFile;
+    }
+
+    public String getExternalProjectPath() {
+        return externalProjectPath;
+    }
+
+    public void setExternalProjectPath(String externalProjectPath) {
+        this.externalProjectPath = externalProjectPath;
     }
 }
