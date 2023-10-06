@@ -11,8 +11,8 @@ import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.util.PathUtil
 import com.intellij.util.io.isDirectory
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
-import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
-import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotUpdateType
+import ru.rzn.gmyasoedov.gmaven.settings.OutputLevelType
+import ru.rzn.gmyasoedov.gmaven.settings.SnapshotUpdateType
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
 import ru.rzn.gmyasoedov.gmaven.util.IndicatorUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
@@ -125,8 +125,8 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
     modelRequest.notUpdateSnapshots = request.settings.snapshotUpdateType == SnapshotUpdateType.NEVER
     modelRequest.offline = request.settings.isOfflineWork
     modelRequest.threadCount = request.settings.threadCount
-    modelRequest.quiteLogs = request.settings.outputLevel == ProjectSettingsControlBuilder.OutputLevelType.QUITE
-    modelRequest.debugLog = request.settings.outputLevel == ProjectSettingsControlBuilder.OutputLevelType.DEBUG
+    modelRequest.quiteLogs = request.settings.outputLevel == OutputLevelType.QUITE
+    modelRequest.debugLog = request.settings.outputLevel == OutputLevelType.DEBUG
     if (request.installGMavenPlugin) {
         val clazz = Class.forName("ru.rzn.gmyasoedov.model.reader.DependencyCoordinate")
         modelRequest.gMavenPluginPath = PathUtil.getJarPathForClass(clazz)

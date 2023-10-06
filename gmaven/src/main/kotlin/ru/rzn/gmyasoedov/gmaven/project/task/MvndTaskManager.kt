@@ -14,7 +14,8 @@ import com.intellij.sh.run.ShConfigurationType
 import com.intellij.sh.run.ShRunConfiguration
 import com.intellij.util.io.isDirectory
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
-import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
+import ru.rzn.gmyasoedov.gmaven.settings.OutputLevelType
+import ru.rzn.gmyasoedov.gmaven.settings.SnapshotUpdateType
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import java.nio.file.Path
 
@@ -57,10 +58,10 @@ object MvndTaskManager {
         if (settings.isNonRecursive) {
             parametersList.add("-N")
         }
-        if (settings.snapshotUpdateType == ProjectSettingsControlBuilder.SnapshotUpdateType.FORCE) {
+        if (settings.snapshotUpdateType == SnapshotUpdateType.FORCE) {
             parametersList.add("-U")
         }
-        if (settings.snapshotUpdateType == ProjectSettingsControlBuilder.SnapshotUpdateType.NEVER) {
+        if (settings.snapshotUpdateType == SnapshotUpdateType.NEVER) {
             parametersList.add("-nsu")
         }
         if (settings.isOfflineWork) {
@@ -70,10 +71,10 @@ object MvndTaskManager {
             parametersList.add("-T")
             parametersList.add(settings.threadCount)
         }
-        if (settings.outputLevel == ProjectSettingsControlBuilder.OutputLevelType.QUITE) {
+        if (settings.outputLevel == OutputLevelType.QUITE) {
             parametersList.add("-q")
         }
-        if (settings.outputLevel == ProjectSettingsControlBuilder.OutputLevelType.DEBUG) {
+        if (settings.outputLevel == OutputLevelType.DEBUG) {
             parametersList.add("-X")
         }
 

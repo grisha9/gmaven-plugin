@@ -2,8 +2,6 @@ package ru.rzn.gmyasoedov.gmaven.settings
 
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.openapi.externalSystem.settings.ExternalProjectSettings
-import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.OutputLevelType
-import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotUpdateType
 
 class MavenProjectSettings : ExternalProjectSettings() {
     var projectBuildFile: String? = null

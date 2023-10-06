@@ -9,8 +9,6 @@ import java.io.Serial;
 import java.util.List;
 import java.util.Objects;
 
-import static ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.OutputLevelType.DEFAULT;
-
 public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     @Serial
@@ -35,9 +33,9 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private boolean useMvndForTasks = false;
     private boolean showPluginNodes = true;
     @NotNull
-    private ProjectSettingsControlBuilder.OutputLevelType outputLevel = DEFAULT;
+    private OutputLevelType outputLevel = OutputLevelType.DEFAULT;
     @NotNull
-    private ProjectSettingsControlBuilder.SnapshotUpdateType snapshotUpdateType = ProjectSettingsControlBuilder.SnapshotUpdateType.DEFAULT;
+    private SnapshotUpdateType snapshotUpdateType = SnapshotUpdateType.DEFAULT;
     private List<String> argumentsImport;
 
     public MavenExecutionSettings(@NotNull DistributionSettings distributionSettings,
@@ -125,20 +123,20 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     }
 
     @NotNull
-    public ProjectSettingsControlBuilder.SnapshotUpdateType getSnapshotUpdateType() {
+    public SnapshotUpdateType getSnapshotUpdateType() {
         return snapshotUpdateType;
     }
 
-    public void setSnapshotUpdateType(@NotNull ProjectSettingsControlBuilder.SnapshotUpdateType snapshotUpdateType) {
+    public void setSnapshotUpdateType(@NotNull SnapshotUpdateType snapshotUpdateType) {
         this.snapshotUpdateType = snapshotUpdateType;
     }
 
     @NotNull
-    public ProjectSettingsControlBuilder.OutputLevelType getOutputLevel() {
+    public OutputLevelType getOutputLevel() {
         return outputLevel;
     }
 
-    public void setOutputLevel(@NotNull ProjectSettingsControlBuilder.OutputLevelType outputLevel) {
+    public void setOutputLevel(@NotNull OutputLevelType outputLevel) {
         this.outputLevel = outputLevel;
     }
 
