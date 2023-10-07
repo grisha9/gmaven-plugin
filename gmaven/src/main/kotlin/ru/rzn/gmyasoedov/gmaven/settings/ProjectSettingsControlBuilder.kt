@@ -464,7 +464,7 @@ private class DistributionSettingsComboBoxItem(value: DistributionSettings) : My
         if (settings.type == DistributionType.MVN) {
             text = "Maven home(mvn)"
             try {
-                val mavenVersion = MavenUtils.getMavenVersion(settings.path.toFile())
+                val mavenVersion = MavenUtils.getMavenVersion(settings.path)
                 if (mavenVersion != null) {
                     text += ": $mavenVersion"
                 }

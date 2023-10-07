@@ -26,6 +26,7 @@ import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.firstRun
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
+import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import java.io.File
 import java.nio.file.Path
@@ -78,8 +79,12 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val projectDataNode = getPreviewProjectDataNode(projectPath, settings)
         val distributionPath = settings.distributionSettings.path
         if (sdk != null && distributionPath != null) {
-            val buildPath = Path.of(settings.executionWorkspace.projectBuildFile ?: projectPath)
-            firstRun(GServerRequest(id, buildPath, distributionPath, sdk, settings, listener = listener))
+            try {
+                val buildPath = Path.of(settings.executionWorkspace.projectBuildFile ?: projectPath)
+                firstRun(GServerRequest(id, buildPath, distributionPath, sdk, settings, listener = listener))
+            } catch (e: Exception) {
+                MavenLog.LOG.error("error on first run gmaven model-reader plugin", e)
+            }
         }
         return projectDataNode
     }

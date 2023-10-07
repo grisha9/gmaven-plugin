@@ -11,7 +11,6 @@ import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.extensions.PluginDescriptor;
 import com.intellij.openapi.extensions.PluginId;
@@ -25,7 +24,6 @@ import com.intellij.openapi.projectRoots.JdkUtil;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkType;
-import com.intellij.openapi.projectRoots.ex.JavaSdkUtil;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.util.NlsSafe;
@@ -189,18 +187,8 @@ public class MavenUtils {
         );
     }
 
-    public static void setupProjectSdk(@NotNull Project project) {
-        if (ProjectRootManager.getInstance(project).getProjectSdk() == null) {
-            ApplicationManager.getApplication().runWriteAction(() -> {
-                Sdk projectSdk = suggestProjectSdk();
-                if (projectSdk == null) return;
-                JavaSdkUtil.applyJdkToProject(project, projectSdk);
-            });
-        }
-    }
-
     @Nullable
-    public static Sdk suggestProjectSdk() {
+    public static Sdk suggestProjectSdk(@NotNull Path projectDirectory) {
         Project defaultProject = ProjectManager.getInstance().getDefaultProject();
         ProjectRootManager defaultProjectManager = ProjectRootManager.getInstance(defaultProject);
         Sdk defaultProjectSdk = defaultProjectManager.getProjectSdk();
@@ -213,8 +201,17 @@ public class MavenUtils {
         SdkType sdkType = ExternalSystemJdkUtil.getJavaSdkType();
         return projectJdkTable.getSdksOfType(sdkType).stream()
                 .filter(it -> it.getHomePath() != null && JdkUtil.checkForJre(it.getHomePath()))
+                .filter(it -> checkWsl(it.getHomePath(), projectDirectory))
                 .max(sdkType.versionComparator())
                 .orElse(null);
+    }
+
+    private static boolean checkWsl(@NotNull String jdkHomePath, @NotNull Path projectDirectory) {
+        if (SystemInfo.isUnix) return true;
+        return Objects.equals(
+                WslPath.getDistributionByWindowsUncPath(projectDirectory.toString()),
+                WslPath.getDistributionByWindowsUncPath(jdkHomePath)
+        );
     }
 
     @Nullable
@@ -349,10 +346,17 @@ public class MavenUtils {
     }
 
     @Nullable
-    public static String getMavenVersion(@Nullable File mavenHome) {
-        if (mavenHome == null) return null;
-        File[] libs = new File(mavenHome, "lib").listFiles();
+    public static String getMavenVersion(@Nullable Path mavenHomePath) {
+        if (mavenHomePath == null) return null;
 
+        if (SystemInfo.isWindows && WslPath.isWslUncPath(mavenHomePath.toString())) {
+            WSLDistribution wslDistribution = WslPath.getDistributionByWindowsUncPath(mavenHomePath.toString());
+            if (wslDistribution == null) {
+                throw new IllegalStateException("@sl distribution not found " + mavenHomePath);
+            }
+            mavenHomePath = Path.of(wslDistribution.getWindowsPath(mavenHomePath.toString()));
+        }
+        File[] libs = mavenHomePath.resolve("lib").toFile().listFiles();
 
         if (libs != null) {
             for (File mavenLibFile : libs) {
@@ -372,13 +376,13 @@ public class MavenUtils {
                 }
             }
         }
-        MavenLog.LOG.warn("Cannot resolve maven version for " + mavenHome);
+        MavenLog.LOG.warn("Cannot resolve maven version for " + mavenHomePath);
         return null;
     }
 
     private static String getMavenLibVersion(final File file) {
         WSLDistribution distribution = WslPath.getDistributionByWindowsUncPath(file.getPath());
-        File fileToRead = Optional.ofNullable(distribution)
+        File fileToRead = distribution == null ? file : Optional.of(distribution)
                 .map(it -> distribution.getWslPath(file.getPath()))
                 .map(distribution::resolveSymlink)
                 .map(distribution::getWindowsPath)

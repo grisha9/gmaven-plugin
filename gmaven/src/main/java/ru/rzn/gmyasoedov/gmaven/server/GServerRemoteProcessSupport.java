@@ -3,8 +3,10 @@ package ru.rzn.gmyasoedov.gmaven.server;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.process.ProcessEvent;
-import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.rmi.RemoteProcessSupport;
+import com.intellij.execution.wsl.WSLDistribution;
+import com.intellij.execution.wsl.WslPath;
+import com.intellij.openapi.externalSystem.model.ExternalSystemException;
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -13,18 +15,16 @@ import com.intellij.openapi.util.registry.Registry;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.execution.ParametersListUtil;
 import org.jetbrains.annotations.NotNull;
+import ru.rzn.gmyasoedov.gmaven.server.wsl.WslMavenCmdState;
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
-import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
 import ru.rzn.gmyasoedov.serverapi.GMavenServer;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
+import java.util.Optional;
 
+import static com.intellij.openapi.util.SystemInfo.isWindows;
 import static ru.rzn.gmyasoedov.gmaven.project.wrapper.MvnDotProperties.getJvmConfig;
 
 public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GMavenServer, Object> {
@@ -35,6 +35,7 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
     private final Path workingDirectory;
     private final ExternalSystemTaskNotificationListener systemTaskNotificationListener;
     private final MavenExecutionSettings executionSettings;
+    private final WSLDistribution wslDistribution;
 
     public GServerRemoteProcessSupport(@NotNull GServerRequest request) {
         super(GMavenServer.class);
@@ -48,6 +49,7 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
         String jvmConfig = getJvmConfig(workingDirectory);
         this.jvmConfigOptions = StringUtil.isEmpty(jvmConfig)
                 ? Collections.emptyList() : ParametersListUtil.parse(jvmConfig, true, true);
+        this.wslDistribution = isWindows ? WslPath.getDistributionByWindowsUncPath(workingDirectory.toString()) : null;
     }
 
 
@@ -57,28 +59,16 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
 
     @Override
     protected String getName(@NotNull Object file) {
-        return "GServerRemoteProcessSupport";
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    protected String getRemoteHost() {
+        return wslDistribution == null ? super.getRemoteHost() : wslDistribution.getWslIpAddress().getHostAddress();
     }
 
     public ExternalSystemTaskId getId() {
         return id;
-    }
-
-    @SuppressWarnings("IOResourceOpenedButNotSafelyClosed")
-    @Override
-    protected void sendDataAfterStart(ProcessHandler handler) {
-        if (handler.getProcessInput() == null) {
-            return;
-        }
-        OutputStreamWriter writer = new OutputStreamWriter(handler.getProcessInput(), StandardCharsets.UTF_8);
-        try {
-            writer.write("token=" + UUID.randomUUID());
-            writer.write(System.lineSeparator());
-            writer.flush();
-            MavenLog.LOG.info("Sent token to maven server");
-        } catch (IOException e) {
-            MavenLog.LOG.warn("Cannot send token to maven server", e);
-        }
     }
 
     @Override
@@ -92,13 +82,37 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
         if (systemTaskNotificationListener != null) {
             systemTaskNotificationListener.onTaskOutput(id, text, true);
         }
-
     }
 
     @Override
     protected RunProfileState getRunProfileState(@NotNull Object o,
                                                  @NotNull Object configuration,
                                                  @NotNull Executor executor) {
-        return new MavenServerCmdState(jdk, mavenPath, workingDirectory, jvmConfigOptions, executionSettings);
+        return wslDistribution == null
+                ? new MavenServerCmdState(jdk, mavenPath, workingDirectory, jvmConfigOptions, executionSettings)
+                : getWslMavenCmdState(wslDistribution);
+    }
+
+    @NotNull
+    private WslMavenCmdState getWslMavenCmdState(@NotNull WSLDistribution wslDist) {
+        Path mavenWslPath = Optional.ofNullable(wslDist.getWslPath(mavenPath.toString()))
+                .map(wslDist::getWindowsPath)
+                .map(Path::of)
+                .orElse(null);
+        String jdkWslPath = Optional.ofNullable(jdk.getHomePath())
+                .map(wslDist::getWslPath)
+                .orElse(null);
+
+        if (mavenWslPath == null || jdkWslPath == null) {
+            throw new ExternalSystemException(
+                    "Wsl paths incorrect. All paths should be correctly wsl path" + System.lineSeparator() +
+                            "Project path: " + wslDist.getUserHome() + System.lineSeparator() +
+                            "Maven path: " + mavenWslPath + System.lineSeparator() +
+                            "Jdk path: " + jdkWslPath
+            );
+        }
+        return new WslMavenCmdState(
+                this.wslDistribution, jdk, mavenWslPath, workingDirectory, jvmConfigOptions, executionSettings
+        );
     }
 }

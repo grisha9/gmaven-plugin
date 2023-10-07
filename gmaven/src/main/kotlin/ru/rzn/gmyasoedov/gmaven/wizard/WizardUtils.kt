@@ -19,7 +19,7 @@ fun createMavenProjectSettings(projectFile: VirtualFile, project: Project): Mave
     //only canonicalPath work!!!
     settings.externalProjectPath = projectDirectory.canonicalPath
     settings.projectBuildFile = if (!projectFile.isDirectory) projectFile.toNioPath().absolutePathString() else null
-    settings.jdkName = (MavenUtils.suggestProjectSdk()
+    settings.jdkName = (MavenUtils.suggestProjectSdk(projectDirectory.toNioPath())
         ?: ExternalSystemJdkUtil.getJdk(project, ExternalSystemJdkUtil.USE_INTERNAL_JAVA))?.name
     return settings;
 }
