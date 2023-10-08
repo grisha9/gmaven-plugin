@@ -13,7 +13,6 @@ import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.module.ModuleTypeManager
 import com.intellij.openapi.project.Project
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
@@ -100,7 +99,7 @@ fun populateTasks(
     moduleDataNode: DataNode<ModuleData>, mavenProject: MavenProject,
     context: MavenProjectResolver.ProjectResolverContext
 ) {
-    for (basicPhase in GMavenConstants.BASIC_PHASES) {
+    for (basicPhase in context.lifecycles) {
         moduleDataNode.createChild(LifecycleData.KEY, LifecycleData(SYSTEM_ID, basicPhase, mavenProject.basedir))
     }
     if (!context.settings.isShowPluginNodes) {
