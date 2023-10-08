@@ -9,6 +9,7 @@ import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotifica
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundException
 import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager
+import com.intellij.openapi.util.registry.Registry
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
 import ru.rzn.gmyasoedov.gmaven.project.getMavenHome
 import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
@@ -36,10 +37,11 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         val projectBuildFile = workspace.projectBuildFile
             ?: throw ExternalSystemException("project build file is empty")
         val buildPath = Path.of(workspace.subProjectBuildFile ?: projectBuildFile)
+        val tasks = getTasks(taskNames)
 
         if (settings.isUseMvndForTasks) {
             try {
-                MvndTaskManager.task(settings, buildPath, taskNames)
+                MvndTaskManager.task(settings, buildPath, tasks)
                 return
             } catch (e: Throwable) {
                 processErrorAndShowNotify(e)
@@ -50,9 +52,17 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         val mavenHome = getMavenHome(settings.distributionSettings)
         try {
             val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
-            runTasks(request, taskNames) { cancellationMap[id] = it }
+            runTasks(request, tasks) { cancellationMap[id] = it }
         } finally {
             cancellationMap.remove(id)
+        }
+    }
+
+    private fun getTasks(taskNames: MutableList<String>): List<String> {
+        return if (Registry.stringValue("gmaven.lifecycles").contains(" ")) {
+            taskNames.flatMap { it.split(" ") }
+        } else {
+            taskNames
         }
     }
 
