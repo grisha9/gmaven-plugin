@@ -114,6 +114,9 @@
                      description="Sync source artifact file on project import. Disable it for best performance"/>
         <registryKey key="gmaven.mvnd.path" defaultValue="mvnd"
                      description="Maven daemon integration. Path to mvnd. Default use symlink - mvnd"/>
+        <registryKey key="gmaven.lifecycles"
+                     defaultValue="clean,validate,compile,test,package,verify,install,deploy,site"
+                     description="Maven lifecycles(comma delimiter)"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
 
