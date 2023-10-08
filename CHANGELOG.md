@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [232.12] - 2023-10-08
+
+### Added
+- Mvnd task execution (https://github.com/grisha9/gmaven-plugin/wiki/GMaven-project-settings#delegate-tasks-execution-to-maven-daemon)
+- Custom lifecycles (https://github.com/grisha9/gmaven-plugin/wiki/GMaven-registry-keys#gmavenlifecycles)
+
+
 ## [232.11] - 2023-10-02
 
 ### Fixed
