@@ -112,7 +112,7 @@
         <registryKey key="gmaven.server.debug" defaultValue="false"
                      description="Debug maven server"/>
         <registryKey key="gmaven.boot.jar.prefix" defaultValue="plexus-classworlds"
-                     description="Debug maven server"/>
+                     description="Maven boot file prefix"/>
         <registryKey key="gmaven.support.extensions" defaultValue="pom,xml,scala,groovy,atom,rb,yml,clj"
                      description="Maven support extensions"/>
         <registryKey key="gmaven.bundled.wrapper.version" defaultValue="3.9.1"
