@@ -59,7 +59,7 @@
     <depends optional="true" config-file="sh-support.xml">com.jetbrains.sh</depends>
 
     <extensionPoints>
-        <extensionPoint name="import.full.plugin"
+        <extensionPoint name="import.full.plugin" dynamic="true"
                         interface="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin"/>
     </extensionPoints>
     <extensions defaultExtensionNs="ru.rzn.gmyasoedov.gmaven">
