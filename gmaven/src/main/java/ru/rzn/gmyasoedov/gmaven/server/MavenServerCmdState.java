@@ -10,6 +10,7 @@ import com.intellij.execution.configurations.ParametersList;
 import com.intellij.execution.configurations.SimpleJavaParameters;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.rmi.RemoteServer;
 import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.openapi.application.impl.ApplicationInfoImpl;
 import com.intellij.openapi.diagnostic.Logger;
@@ -205,7 +206,7 @@ public class MavenServerCmdState extends CommandLineState {
 
     protected @NotNull List<String> collectIdeaRTLibraries() {
         return new ArrayList<>(Set.of(
-                PathUtil.getJarPathForClass(StringUtilRt.class),//util-rt
+                PathUtil.getJarPathForClass(RemoteServer.class),//remote-util-rt
                 PathUtil.getJarPathForClass(NotNull.class)));//annotations-java5
     }
 
