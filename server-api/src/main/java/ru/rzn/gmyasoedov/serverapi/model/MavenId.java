@@ -9,7 +9,7 @@ import java.util.Objects;
 
 @SuperBuilder
 public class MavenId implements Serializable {
-    public static final long serialVersionUID = -6113607480882347420L;
+    private static final long serialVersionUID = -6113607480882347420L;
     public static final String UNKNOWN_VALUE = "Unknown";
 
     @NotNull

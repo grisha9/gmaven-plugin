@@ -62,14 +62,12 @@ abstract class GMavenNewProjectWizardStep<ParentStep>(parent: ParentStep) :
             .toList()
     }
 
-    private fun toMavenProject(it: ModuleData): MavenProject =
-        MavenProject.builder()
-            .groupId(it.group!!)
-            .artifactId(it.moduleName)
-            .version(it.version!!)
-            .filePath(it.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) as String)
-            .basedir(it.linkedExternalProjectPath)
-            .build()
+    private fun toMavenProject(it: ModuleData): MavenProject {
+        val mavenProject = MavenProject(it.group, it.moduleName, it.version)
+        mavenProject.filePath = it.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
+        mavenProject.basedir = it.linkedExternalProjectPath
+        return mavenProject;
+    }
 
     override fun ValidationInfoBuilder.validateGroupId(): ValidationInfo? {
         return validateCoordinates()

@@ -11,13 +11,12 @@ public class MavenArtifact extends MavenId {
 
   private static final long serialVersionUID = 6389627095309274357L;
 
-
-  private final String type;
-  private final String classifier;
-  private final String scope;
-  private final boolean optional;
-  private final String filePath;
-  private final boolean resolved;
+  private String type;
+  private String classifier;
+  private String scope;
+  private boolean optional;
+  private String filePath;
+  private boolean resolved;
 
   public MavenArtifact(String groupId,
                        String artifactId,
@@ -41,24 +40,48 @@ public class MavenArtifact extends MavenId {
     return type;
   }
 
+  public void setType(String type) {
+    this.type = type;
+  }
+
   public String getClassifier() {
     return classifier;
+  }
+
+  public void setClassifier(String classifier) {
+    this.classifier = classifier;
   }
 
   public String getScope() {
     return scope;
   }
 
+  public void setScope(String scope) {
+    this.scope = scope;
+  }
+
   public boolean isOptional() {
     return optional;
+  }
+
+  public void setOptional(boolean optional) {
+    this.optional = optional;
+  }
+
+  public String getFilePath() {
+    return filePath;
+  }
+
+  public void setFilePath(String filePath) {
+    this.filePath = filePath;
   }
 
   public boolean isResolved() {
     return resolved;
   }
 
-  public String getFilePath() {
-    return filePath;
+  public void setResolved(boolean resolved) {
+    this.resolved = resolved;
   }
 
   @Override

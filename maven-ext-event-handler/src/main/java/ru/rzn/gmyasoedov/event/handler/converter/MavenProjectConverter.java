@@ -35,33 +35,32 @@ public class MavenProjectConverter {
                 .convert(dependencyResultMap.get(mavenProject.getArtifactId()), convertedArtifactMap);
         List<String> modulesDir = convertModules(mavenProject.getBasedir(), mavenProject.getModules());
 
-        return MavenProject.builder()
-                .groupId(mavenProject.getGroupId())
-                .artifactId(mavenProject.getArtifactId())
-                .version(mavenProject.getVersion())
-                .packaging(mavenProject.getPackaging())
-                .name(mavenProject.getName())
-                .basedir(mavenProject.getBasedir().getAbsolutePath())
-                .filePath(toFilePath(mavenProject.getFile()))
-                .parentFilePath(toFilePath(mavenProject.getParentFile()))
-                .modulesDir(modulesDir)
-                .plugins(plugins)
-                .dependencyTree(dependencyTreeNodes)
-                .sourceRoots(mavenProject.getCompileSourceRoots())
-                .testSourceRoots(mavenProject.getTestCompileSourceRoots())
-                .resourceRoots(convertResource(mavenProject.getResources()))
-                .testResourceRoots(convertResource(mavenProject.getTestResources()))
-                .buildDirectory(mavenProject.getBuild().getDirectory())
-                .outputDirectory(mavenProject.getBuild().getOutputDirectory())
-                .testOutputDirectory(mavenProject.getBuild().getTestOutputDirectory())
-                .resolvedArtifacts(artifacts)
-                .dependencyArtifacts(convertMavenArtifact(mavenProject.getDependencyArtifacts()))
-                .parentArtifact(mavenProject.getParentArtifact() != null
-                        ? MavenArtifactConverter.convert(mavenProject.getParentArtifact()) : null)
-                .properties(getProperties(mavenProject))
-                .remoteRepositories(Collections.<MavenRemoteRepository>emptyList())
-                //.remoteRepositories(RemoteRepositoryConverter.convert(mavenProject.getRemoteArtifactRepositories()))
-                .build();
+        MavenProject result = new MavenProject(
+                mavenProject.getGroupId(), mavenProject.getArtifactId(), mavenProject.getVersion()
+        );
+
+        result.setPackaging(mavenProject.getPackaging());
+        result.setName(mavenProject.getName());
+        result.setBasedir(mavenProject.getBasedir().getAbsolutePath());
+        result.setFilePath(toFilePath(mavenProject.getFile()));
+        result.setParentFilePath(toFilePath(mavenProject.getParentFile()));
+        result.setModulesDir(modulesDir);
+        result.setPlugins(plugins);
+        result.setDependencyTree(dependencyTreeNodes);
+        result.setSourceRoots(mavenProject.getCompileSourceRoots());
+        result.setTestSourceRoots(mavenProject.getTestCompileSourceRoots());
+        result.setResourceRoots(convertResource(mavenProject.getResources()));
+        result.setTestResourceRoots(convertResource(mavenProject.getTestResources()));
+        result.setBuildDirectory(mavenProject.getBuild().getDirectory());
+        result.setOutputDirectory(mavenProject.getBuild().getOutputDirectory());
+        result.setTestOutputDirectory(mavenProject.getBuild().getTestOutputDirectory());
+        result.setResolvedArtifacts(artifacts);
+        result.setDependencyArtifacts(convertMavenArtifact(mavenProject.getDependencyArtifacts()));
+        result.setParentArtifact(mavenProject.getParentArtifact() != null
+                ? MavenArtifactConverter.convert(mavenProject.getParentArtifact()) : null);
+        result.setProperties(getProperties(mavenProject));
+        result.setRemoteRepositories(Collections.<MavenRemoteRepository>emptyList());
+        return result;
     }
 
     private static Map<Object, Object> getProperties(org.apache.maven.project.MavenProject mavenProject) {

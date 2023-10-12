@@ -11,6 +11,7 @@ import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.util.PathUtil
 import com.intellij.util.io.isDirectory
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
+import ru.rzn.gmyasoedov.gmaven.server.wsl.WslPathWrapper
 import ru.rzn.gmyasoedov.gmaven.settings.OutputLevelType
 import ru.rzn.gmyasoedov.gmaven.settings.SnapshotUpdateType
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
@@ -45,13 +46,14 @@ fun getProjectModel(
     var processSupport = GServerRemoteProcessSupport(request)
     val modelRequest = getModelRequest(request, processSupport)
     processConsumer?.let { it(processSupport) }
-    val mavenResult = runMavenTask(processSupport, modelRequest)
+    var mavenResult = runMavenTask(processSupport, modelRequest)
     if (tryInstallGMavenPlugin(request, mavenResult)) {
         firstRun(request)
         processSupport = GServerRemoteProcessSupport(request)
         processConsumer?.let { it(processSupport) }
-        return runMavenTask(processSupport, modelRequest)
+        mavenResult = runMavenTask(processSupport, modelRequest)
     }
+    WslPathWrapper.transformPath(mavenResult, processSupport.wslDistribution)
     return mavenResult;
 }
 
@@ -97,7 +99,9 @@ fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<
             val message = GBundle.message("gmaven.dependency.tree.resolve.warning", artifactGA)
             GMavenNotification.createNotificationDA(message, NotificationType.WARNING)
         }
-        return mavenResult.projectContainer?.modules?.map { it.project } ?: emptyList()
+        val mavenProjects = mavenResult.projectContainer?.modules?.map { it.project } ?: emptyList()
+        WslPathWrapper.transformProjectPath(mavenProjects, processSupport.wslDistribution)
+        return mavenProjects
     } catch (e: Exception) {
         MavenLog.LOG.warn(e)
         GMavenNotification.createNotificationDA(e.localizedMessage, NotificationType.ERROR)
