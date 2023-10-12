@@ -122,26 +122,14 @@ public class MavenServerCmdState extends CommandLineState {
     }
 
     private void processVmOptions(List<String> jvmConfigOptions, SimpleJavaParameters params) {
-        @Nullable String xmxProperty = null;
-        @Nullable String xmsProperty = null;
         List<String> vmOptions = new ArrayList<>(jvmConfigOptions);
         vmOptions.addAll(executionSettings.getJvmArguments());
         for (String param : vmOptions) {
-            if (param.startsWith("-Xmx")) {
-                xmxProperty = param;
-                continue;
-            }
-            if (param.startsWith("-Xms")) {
-                xmsProperty = param;
-                continue;
-            }
             if (Registry.is("gmaven.vm.remove.javaagent") && param.startsWith("-javaagent")) {
                 continue;
             }
             params.getVMParametersList().add(param);
         }
-        params.getVMParametersList().add(xmsProperty);
-        params.getVMParametersList().add(xmxProperty);
     }
 
     private void setupDebugParam(SimpleJavaParameters params) {
