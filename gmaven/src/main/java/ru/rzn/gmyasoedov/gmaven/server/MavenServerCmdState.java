@@ -11,7 +11,6 @@ import com.intellij.execution.configurations.SimpleJavaParameters;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ProgramRunner;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.registry.Registry;
 import com.intellij.openapi.util.text.StringUtil;
@@ -36,12 +35,10 @@ import static java.lang.String.format;
 import static ru.rzn.gmyasoedov.serverapi.GMavenServer.*;
 
 public class MavenServerCmdState extends CommandLineState {
-    private static final Logger LOG = Logger.getInstance(MavenServerCmdState.class);
-    private static final String DEFAULT_XMX = "-Xmx768m";
 
     protected final Sdk jdk;
     protected final Path workingDirectory;
-    private final Path mavenPath;
+    protected final Path mavenPath;
     private final List<String> jvmConfigOptions;
     private final MavenExecutionSettings executionSettings;
     private final Integer debugPort;

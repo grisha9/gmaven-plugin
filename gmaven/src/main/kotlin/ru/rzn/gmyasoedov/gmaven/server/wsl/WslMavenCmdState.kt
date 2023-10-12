@@ -12,6 +12,9 @@ import com.intellij.execution.wsl.target.WslTargetEnvironmentRequest
 import com.intellij.openapi.projectRoots.Sdk
 import ru.rzn.gmyasoedov.gmaven.server.MavenServerCmdState
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
+import ru.rzn.gmyasoedov.serverapi.GMavenServer
+import ru.rzn.gmyasoedov.serverapi.GMavenServer.GMAVEN_HOME
+import ru.rzn.gmyasoedov.serverapi.GMavenServer.MAVEN_EXT_CLASS_PATH_PROPERTY
 import java.nio.file.Path
 
 internal class WslMavenCmdState(
@@ -29,8 +32,12 @@ internal class WslMavenCmdState(
         val hostAddress = wslDistribution.getWslIpAddress().hostAddress
         val parameters = super.createJavaParameters()
         val wslParams = toWslParameters(parameters)
-        wslParams.vmParametersList.add("-D${RemoteServer.SERVER_HOSTNAME}=${hostAddress}")
-        wslParams.vmParametersList.add("-Didea.maven.wsl=true")
+        wslParams.vmParametersList.addProperty(RemoteServer.SERVER_HOSTNAME, hostAddress)
+        wslParams.vmParametersList.addProperty(GMavenServer.SERVER_WSL_PROPERTY, "true")
+        wslParams.vmParametersList.addProperty(GMAVEN_HOME, wslDistribution.getWslPath(mavenPath.toString()))
+        wslParams.vmParametersList.getPropertyValue(MAVEN_EXT_CLASS_PATH_PROPERTY)?.also {
+            wslParams.vmParametersList.addProperty(MAVEN_EXT_CLASS_PATH_PROPERTY, wslDistribution.getWslPath(it))
+        }
         return wslParams
     }
 
@@ -63,7 +70,7 @@ internal class WslMavenCmdState(
         request.configuration.addLanguageRuntime(languageRuntime)
 
         val builder = wslParams.toCommandLine(request)
-        builder.setWorkingDirectory(wslDistribution.userHome?: "/")
+        builder.setWorkingDirectory(wslDistribution.userHome ?: "/")
 
         val wslEnvironment = request.prepareEnvironment(TargetProgressIndicator.EMPTY)
         val commandLine = builder.build()

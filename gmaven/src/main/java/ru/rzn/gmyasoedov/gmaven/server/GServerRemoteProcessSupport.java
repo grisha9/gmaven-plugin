@@ -15,6 +15,7 @@ import com.intellij.openapi.util.registry.Registry;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.execution.ParametersListUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.server.wsl.WslMavenCmdState;
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
 import ru.rzn.gmyasoedov.serverapi.GMavenServer;
@@ -71,6 +72,11 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
         return id;
     }
 
+    @Nullable
+    public WSLDistribution getWslDistribution() {
+        return wslDistribution;
+    }
+
     @Override
     protected void logText(@NotNull Object configuration,
                            @NotNull ProcessEvent event,
@@ -106,7 +112,7 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
         if (mavenWslPath == null || jdkWslPath == null) {
             throw new ExternalSystemException(
                     "Wsl paths incorrect. All paths should be correctly wsl path" + System.lineSeparator() +
-                            "Project path: " + wslDist.getUserHome() + System.lineSeparator() +
+                            "Project path: " + workingDirectory + System.lineSeparator() +
                             "Maven path: " + mavenWslPath + System.lineSeparator() +
                             "Jdk path: " + jdkWslPath
             );

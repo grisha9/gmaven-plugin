@@ -32,9 +32,9 @@ fun firstRun(gServerRequest: GServerRequest): MavenResult {
         gServerRequest.settings,
         installGMavenPlugin = true
     )
-    val modelRequest = getModelRequest(request)
-    modelRequest.importArguments = null
     val processSupport = GServerRemoteProcessSupport(request)
+    val modelRequest = getModelRequest(request, processSupport)
+    modelRequest.importArguments = null
     return runMavenTask(processSupport, modelRequest)
 }
 
@@ -42,8 +42,8 @@ fun getProjectModel(
     request: GServerRequest,
     processConsumer: ((process: GServerRemoteProcessSupport) -> Unit)? = null
 ): MavenResult {
-    val modelRequest = getModelRequest(request)
     var processSupport = GServerRemoteProcessSupport(request)
+    val modelRequest = getModelRequest(request, processSupport)
     processConsumer?.let { it(processSupport) }
     val mavenResult = runMavenTask(processSupport, modelRequest)
     if (tryInstallGMavenPlugin(request, mavenResult)) {
@@ -66,10 +66,10 @@ fun runTasks(
     if (request.installGMavenPlugin) {
         throw ExternalSystemException("no need install gmaven read model plugin on task execution")
     }
-    val modelRequest = getModelRequest(request)
+    val processSupport = GServerRemoteProcessSupport(request)
+    val modelRequest = getModelRequest(request, processSupport)
     modelRequest.tasks = tasks
     modelRequest.importArguments = null
-    val processSupport = GServerRemoteProcessSupport(request)
     processConsumer?.let { it(processSupport) }
     return runMavenTask(processSupport, modelRequest)
 }
@@ -82,9 +82,9 @@ fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<
         gServerRequest.sdk,
         gServerRequest.settings
     )
-    val modelRequest = getModelRequest(request)
-    modelRequest.dependencyAnalyzerGA = artifactGA
     val processSupport = GServerRemoteProcessSupport(request)
+    val modelRequest = getModelRequest(request, processSupport)
+    modelRequest.dependencyAnalyzerGA = artifactGA
     try {
         var taskInfo = IndicatorUtil.getTaskInfo(GBundle.message("gmaven.dependency.tree.title"), false)
         var indicator = BackgroundableProcessIndicator(taskInfo)
@@ -112,7 +112,7 @@ private fun couldNotFindSelectedProject(mavenResult: MavenResult): Boolean {
 private fun tryInstallGMavenPlugin(request: GServerRequest, mavenResult: MavenResult) =
     !request.installGMavenPlugin && mavenResult.pluginNotResolved
 
-private fun getModelRequest(request: GServerRequest): GetModelRequest {
+private fun getModelRequest(request: GServerRequest, process: GServerRemoteProcessSupport?): GetModelRequest {
     val projectPath = request.projectPath
     val directory = projectPath.isDirectory()
     val projectDirectory = if (directory) projectPath else projectPath.parent
@@ -141,6 +141,15 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
         .joinToString(separator = ",")
     modelRequest.additionalArguments = request.settings.arguments
     modelRequest.importArguments = request.settings.argumentsImport
+    process?.wslDistribution?.also {
+        modelRequest.projectPath = it.getWslPath(modelRequest.projectPath)
+        if (modelRequest.alternativePom != null) {
+            modelRequest.alternativePom = it.getWslPath(modelRequest.alternativePom)
+        }
+        if (modelRequest.gMavenPluginPath != null) {
+            modelRequest.gMavenPluginPath = it.getWslPath(modelRequest.gMavenPluginPath)
+        }
+    }
     return modelRequest
 }
 
@@ -159,13 +168,13 @@ private fun runMavenTaskInner(
     indicator: ProgressIndicator = EmptyProgressIndicator(),
     taskInfo: Task.Backgroundable? = null
 ): MavenResult {
-    try {
+    return try {
         val projectModel = processSupport.acquire(processSupport.id, "", indicator)
             .getProjectModel(modelRequest)
-        return GServerUtils.toResult(projectModel)
+        GServerUtils.toResult(projectModel)
     } catch (e: Exception) {
         MavenLog.LOG.error(e)
-        return GServerUtils.toResult(e)
+        GServerUtils.toResult(e)
     } finally {
         processSupport.stopAll()
         if (taskInfo != null && indicator is BackgroundableProcessIndicator) {
