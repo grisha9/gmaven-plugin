@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.File;
 import java.io.Serializable;
 
 @Builder
@@ -23,6 +22,6 @@ public class MavenArtifactNode implements Serializable {
   private  String classifier;
   private  String scope;
   private  boolean optional;
-  private  File file;
+  private  String filePath;
   private  boolean resolved;
 }

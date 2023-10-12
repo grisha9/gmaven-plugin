@@ -9,6 +9,8 @@ import ru.rzn.gmyasoedov.serverapi.model.*;
 import java.io.File;
 import java.util.*;
 
+import static ru.rzn.gmyasoedov.serverapi.GServerUtils.toFilePath;
+
 public class MavenProjectConverter {
 
     public static MavenProject convert(org.apache.maven.project.MavenProject mavenProject,
@@ -40,15 +42,15 @@ public class MavenProjectConverter {
                 .packaging(mavenProject.getPackaging())
                 .name(mavenProject.getName())
                 .basedir(mavenProject.getBasedir().getAbsolutePath())
-                .file(mavenProject.getFile())
-                .parentFile(mavenProject.getParentFile())
+                .filePath(toFilePath(mavenProject.getFile()))
+                .parentFilePath(toFilePath(mavenProject.getParentFile()))
                 .modulesDir(modulesDir)
                 .plugins(plugins)
                 .dependencyTree(dependencyTreeNodes)
                 .sourceRoots(mavenProject.getCompileSourceRoots())
                 .testSourceRoots(mavenProject.getTestCompileSourceRoots())
-                .resourceRoots(convertResorce(mavenProject.getResources()))
-                .testResourceRoots(convertResorce(mavenProject.getTestResources()))
+                .resourceRoots(convertResource(mavenProject.getResources()))
+                .testResourceRoots(convertResource(mavenProject.getTestResources()))
                 .buildDirectory(mavenProject.getBuild().getDirectory())
                 .outputDirectory(mavenProject.getBuild().getOutputDirectory())
                 .testOutputDirectory(mavenProject.getBuild().getTestOutputDirectory())
@@ -82,7 +84,7 @@ public class MavenProjectConverter {
         return result;
     }
 
-    private static List<String> convertResorce(List<Resource> resources) {
+    private static List<String> convertResource(List<Resource> resources) {
         if (resources == null || resources.isEmpty()) return Collections.emptyList();
         ArrayList<String> result = new ArrayList<>(resources.size());
         for (Resource item : resources) {

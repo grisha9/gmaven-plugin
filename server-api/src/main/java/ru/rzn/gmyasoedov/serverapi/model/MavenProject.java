@@ -4,19 +4,18 @@ import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 
 @Getter
 @SuperBuilder
 public class MavenProject extends MavenId {
-    static final long serialVersionUID = -3453607480882347421L;
+    private static final long serialVersionUID = -3453607480882347421L;
 
     private final String name;
     private final String packaging;
-    private final File file;
-    private final File parentFile;
+    private final String filePath;
+    private final String parentFilePath;
     private final String basedir;
     private final MavenArtifact parentArtifact;
     private final List<MavenPlugin> plugins;

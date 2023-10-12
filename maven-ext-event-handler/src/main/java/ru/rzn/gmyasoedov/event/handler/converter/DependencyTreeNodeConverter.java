@@ -12,6 +12,8 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenArtifactState;
 
 import java.util.*;
 
+import static ru.rzn.gmyasoedov.serverapi.GServerUtils.toFilePath;
+
 public class DependencyTreeNodeConverter {
 
     public static List<DependencyTreeNode> convert(
@@ -89,7 +91,7 @@ public class DependencyTreeNodeConverter {
                 artifact.getClassifier(),
                 artifact.getScope(),
                 artifact.isOptional(),
-                artifact.getFile(),
+                toFilePath(artifact.getFile()),
                 artifact.isResolved());
     }
 
@@ -101,7 +103,7 @@ public class DependencyTreeNodeConverter {
                 artifact.getClassifier(),
                 artifact.getScope(),
                 artifact.isOptional(),
-                artifact.getFile(),
+                artifact.getFilePath(),
                 artifact.isResolved());
     }
 }

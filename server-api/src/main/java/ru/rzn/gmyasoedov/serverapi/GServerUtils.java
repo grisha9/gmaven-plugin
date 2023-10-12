@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.serverapi.model.MavenException;
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,5 +24,10 @@ public abstract class GServerUtils {
         List<MavenException> exceptions = Collections
                 .singletonList(new MavenException(SERVER_ERROR_MESSAGE, null, null));
         return new MavenResult(false, null, null, exceptions);
+    }
+
+    @Nullable
+    public static String toFilePath(@Nullable File file) {
+        return file == null ? null : file.getAbsolutePath();
     }
 }

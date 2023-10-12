@@ -116,7 +116,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val container = mavenResult.projectContainer
         val project = container.project
         val projectName = project.displayName
-        val absolutePath = project.file.parent
+        val absolutePath = project.basedir
         val projectData = ProjectData(GMavenConstants.SYSTEM_ID, projectName, absolutePath, absolutePath)
         projectData.version = project.version
         projectData.group = project.groupId

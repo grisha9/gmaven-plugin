@@ -165,8 +165,8 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
             return daModule
         }
         val daArtifact = DAArtifact(artifact.groupId, artifact.artifactId, artifact.version)
-        if (artifact.file != null) {
-            daArtifact.putUserData(BUILD_FILE, artifact.file.absolutePath.replace(".jar", ".pom"))
+        if (artifact.filePath != null) {
+            daArtifact.putUserData(BUILD_FILE, artifact.filePath.replace(".jar", ".pom"))
         }
         return daArtifact
     }

@@ -143,12 +143,11 @@ private fun createLibrary(artifact: MavenArtifact, modulesCount: Int): LibraryDa
     library.artifactId = artifact.artifactId
     library.setGroup(artifact.groupId)
     library.version = artifact.version
-    if (artifact.file == null) return library
-    val artifactAbsolutePath = artifact.file.absolutePath
-    library.addPath(getLibraryPathType(artifact), artifactAbsolutePath)
+    if (artifact.filePath == null) return library
+    library.addPath(getLibraryPathType(artifact), artifact.filePath)
     if (modulesCount <= 10 || Registry.`is`("gmaven.import.library.sync.sources")) {
-        val sourceAbsolutePath = artifactAbsolutePath.replace(".jar", "-sources.jar")
-        if (sourceAbsolutePath != artifactAbsolutePath && Path.of(sourceAbsolutePath).exists()) {
+        val sourceAbsolutePath = artifact.filePath.replace(".jar", "-sources.jar")
+        if (sourceAbsolutePath != artifact.filePath && Path.of(sourceAbsolutePath).exists()) {
             library.addPath(LibraryPathType.SOURCE, sourceAbsolutePath)
         }
     }

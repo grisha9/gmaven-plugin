@@ -26,7 +26,6 @@ import icons.OpenapiIcons
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
-import java.io.File
 import javax.swing.Icon
 
 abstract class GMavenNewProjectWizardStep<ParentStep>(parent: ParentStep) :
@@ -68,10 +67,9 @@ abstract class GMavenNewProjectWizardStep<ParentStep>(parent: ParentStep) :
             .groupId(it.group!!)
             .artifactId(it.moduleName)
             .version(it.version!!)
-            .file(File(it.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) as String))
+            .filePath(it.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) as String)
             .basedir(it.linkedExternalProjectPath)
             .build()
-
 
     override fun ValidationInfoBuilder.validateGroupId(): ValidationInfo? {
         return validateCoordinates()

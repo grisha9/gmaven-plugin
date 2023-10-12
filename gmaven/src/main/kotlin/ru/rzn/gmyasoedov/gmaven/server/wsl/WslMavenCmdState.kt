@@ -70,7 +70,7 @@ internal class WslMavenCmdState(
         request.configuration.addLanguageRuntime(languageRuntime)
 
         val builder = wslParams.toCommandLine(request)
-        builder.setWorkingDirectory(wslDistribution.userHome ?: "/")
+        builder.setWorkingDirectory(wslDistribution.userHome ?: "/") //todo !!! workdir??
 
         val wslEnvironment = request.prepareEnvironment(TargetProgressIndicator.EMPTY)
         val commandLine = builder.build()

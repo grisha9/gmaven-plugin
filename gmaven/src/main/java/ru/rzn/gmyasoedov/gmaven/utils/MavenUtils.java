@@ -75,9 +75,16 @@ public class MavenUtils {
     }
 
     @NotNull
-    public static VirtualFile getVFile(File file) {
+    public static VirtualFile getVFile(@NotNull File file) {
         VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByIoFile(file);
         if (virtualFile == null) throw new RuntimeException("Virtual file not found " + file);
+        return virtualFile;
+    }
+
+    @NotNull
+    public static VirtualFile getVFile(@NotNull String filePath) {
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+        if (virtualFile == null) throw new RuntimeException("Virtual file not found " + filePath);
         return virtualFile;
     }
 

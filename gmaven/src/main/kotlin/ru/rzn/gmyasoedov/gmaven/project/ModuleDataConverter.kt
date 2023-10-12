@@ -46,7 +46,7 @@ fun createModuleData(
     moduleData.setCompileOutputPath(ExternalSystemSourceType.SOURCE, project.outputDirectory)
     moduleData.setCompileOutputPath(ExternalSystemSourceType.TEST, project.testOutputDirectory)
     moduleData.useExternalCompilerOutput(false)
-    moduleData.setProperty(MODULE_PROP_BUILD_FILE, MavenUtils.getBuildFilePath(project.file.absolutePath))
+    moduleData.setProperty(MODULE_PROP_BUILD_FILE, MavenUtils.getBuildFilePath(project.filePath))
 
     val moduleDataNode = parentDataNode.createChild(ProjectKeys.MODULE, moduleData)
 
@@ -165,7 +165,7 @@ private fun createSourceSetModule(
 
     data.isInheritProjectCompileOutputPath = false
     data.useExternalCompilerOutput(false)
-    data.setProperty(MODULE_PROP_BUILD_FILE, MavenUtils.getBuildFilePath(project.file.absolutePath))
+    data.setProperty(MODULE_PROP_BUILD_FILE, MavenUtils.getBuildFilePath(project.filePath))
 
     val basePath = Path.of(project.basedir)
     val rootModulePath = basePath.resolve("src").resolve(moduleSuffix).toString()
