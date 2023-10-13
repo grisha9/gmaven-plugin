@@ -46,6 +46,7 @@ import java.util.Map;
 
 import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_PROJECT_JDK;
 import static ru.rzn.gmyasoedov.gmaven.util.ExecutionSettingsUtil.fillExecutionWorkSpace;
+import static ru.rzn.gmyasoedov.gmaven.util.ExecutionSettingsUtil.getDistributionSettings;
 
 public final class MavenManager
         implements ExternalSystemConfigurableAware,
@@ -202,7 +203,8 @@ public final class MavenManager
             result = new MavenExecutionSettings(
                     DistributionSettings.getBundled(), null, settings.isOfflineMode());
         } else {
-            result = new MavenExecutionSettings(projectSettings.getDistributionSettings(),
+            result = new MavenExecutionSettings(
+                    getDistributionSettings(projectSettings, project),
                     projectSettings.getVmOptions(), settings.isOfflineMode()
             );
             result.setResolveModulePerSourceSet(projectSettings.getResolveModulePerSourceSet());
