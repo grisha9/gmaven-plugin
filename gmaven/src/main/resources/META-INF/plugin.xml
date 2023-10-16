@@ -13,10 +13,10 @@
 
     <change-notes>
         <![CDATA[
-        <h3>Added</h3>
+        <h3>Fixed</h3>
         <ul>
-            <li>Mvnd task execution (<a href="https://github.com/grisha9/gmaven-plugin/wiki/GMaven-project-settings#delegate-tasks-execution-to-maven-daemon" target="_blank" rel="nofollow">Mvnd setting</a>)</li>
-            <li>Custom lifecycles (<a href="https://github.com/grisha9/gmaven-plugin/wiki/GMaven-registry-keys#gmavenlifecycles" target="_blank" rel="nofollow">Lifecycles registry key</a>)</li>
+            <li>Maven wrapper: changing distributionUrl in maven-wrapper.properties is not picked up during import</li>
+            <li>Removed -Xmx and -Xms prediction and optimized firstRun</li>
         </ul>
     ]]>
     </change-notes>
