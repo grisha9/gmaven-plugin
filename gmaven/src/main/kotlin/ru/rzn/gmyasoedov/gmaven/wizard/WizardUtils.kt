@@ -5,6 +5,7 @@ package ru.rzn.gmyasoedov.gmaven.wizard
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MvnDotProperties
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionType
@@ -32,7 +33,12 @@ private fun getDistributionSettings(
     if (settings.distributionSettings.type == DistributionType.CUSTOM) return settings.distributionSettings
 
     val distributionUrl = MvnDotProperties.getDistributionUrl(project, projectDirectory.path)
-    if (distributionUrl.isNotEmpty()) return DistributionSettings.getWrapper(distributionUrl)
+    if (distributionUrl.isNotEmpty()) {
+        val distributionSettings = DistributionSettings.getWrapper(distributionUrl)
+        MavenWrapperDistribution.getCurrentDistribution(distributionUrl)
+            ?.path?.also { distributionSettings.path = it }
+        return distributionSettings
+    }
 
     val mavenHome = MavenUtils.resolveMavenHome()
     if (mavenHome != null) return DistributionSettings.getLocal(mavenHome.toPath())

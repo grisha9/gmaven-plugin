@@ -152,7 +152,6 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         return contextElementMap.getOrCreate(body) { MavenJDOMUtil.parseConfiguration(it) }
     }
 
-
     private fun getDefaultCompilerData(plugin: MavenPlugin, localRepositoryPath: Path): CompilerData {
         val descriptor = MavenArtifactUtil.readPluginDescriptor(localRepositoryPath, plugin)
         if (descriptor == null) {
