@@ -407,7 +407,7 @@ public class MavenUtils {
     }
 
     public static boolean isPomProject(@NotNull MavenProject project) {
-        return "pom".equals(project.getPackaging());
+        return "pom".equalsIgnoreCase(project.getPackaging());
     }
 
     @NotNull

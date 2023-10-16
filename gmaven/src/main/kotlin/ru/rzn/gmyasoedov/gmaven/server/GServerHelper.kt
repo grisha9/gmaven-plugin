@@ -159,13 +159,13 @@ private fun runMavenTaskInner(
     indicator: ProgressIndicator = EmptyProgressIndicator(),
     taskInfo: Task.Backgroundable? = null
 ): MavenResult {
-    try {
+    return try {
         val projectModel = processSupport.acquire(processSupport.id, "", indicator)
             .getProjectModel(modelRequest)
-        return GServerUtils.toResult(projectModel)
+        GServerUtils.toResult(projectModel)
     } catch (e: Exception) {
         MavenLog.LOG.error(e)
-        return GServerUtils.toResult(e)
+        GServerUtils.toResult(e)
     } finally {
         processSupport.stopAll()
         if (taskInfo != null && indicator is BackgroundableProcessIndicator) {
