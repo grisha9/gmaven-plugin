@@ -50,7 +50,7 @@ class MavenWrapperDistribution {
             }
         }
 
-        private fun getCurrentDistribution(urlString: String): WrapperDistribution? {
+        fun getCurrentDistribution(urlString: String): WrapperDistribution? {
             val zipFile = getZipFile(urlString)
             return getCurrentMavenWrapperPath(zipFile.toFile())?.let { WrapperDistribution(it.toPath(), urlString) }
         }

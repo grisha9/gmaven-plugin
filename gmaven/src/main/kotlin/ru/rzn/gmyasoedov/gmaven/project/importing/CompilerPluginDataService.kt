@@ -148,20 +148,17 @@ class CompilerPluginDataService : AbstractProjectDataService<CompilerPluginData,
             .filter { !it.name.equals(IMPORTED_PROFILE_NAME) }
             .flatMap { it.moduleNames }
             .find { it.equals(ideModule.name) }
-        if (moduleExistInUserProfile != null) return null;
+        if (moduleExistInUserProfile != null) return null
 
         val newProfile = createProcessorConfigProfile(data)
-        return ArrayList(this.moduleProcessorProfiles)
-            .find { existing -> existing.matches(newProfile) }
-            ?: newProfile.also { addModuleProcessorProfile(it) }
+        val find = this.moduleProcessorProfiles
+            .find { it.matches(newProfile) }
+        return find ?: newProfile.also { addModuleProcessorProfile(it) }
     }
 
     private fun createProcessorConfigProfile(compilerPluginData: CompilerPluginData): ProcessorConfigProfileImpl {
         val newProfile = ProcessorConfigProfileImpl(IMPORTED_PROFILE_NAME)
         newProfile.setProcessorPath(compilerPluginData.path.joinToString(separator = File.pathSeparator))
-        /*annotationProcessingData.arguments
-            .map { it.removePrefix("-A").split('=', limit = 2) }
-            .forEach { newProfile.setOption(it[0], if (it.size > 1) it[1] else "") }*/
         return newProfile
     }
 
