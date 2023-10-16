@@ -13,18 +13,14 @@ import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.rmi.RemoteServer;
 import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.openapi.application.impl.ApplicationInfoImpl;
-import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.registry.Registry;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.util.text.StringUtilRt;
 import com.intellij.util.PathUtil;
 import com.intellij.util.net.NetUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin;
-import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
 import ru.rzn.gmyasoedov.serverapi.GMavenServer;
 
@@ -32,41 +28,35 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static ru.rzn.gmyasoedov.serverapi.GMavenServer.*;
 
 public class MavenServerCmdState extends CommandLineState {
-    private static final Logger LOG = Logger.getInstance(MavenServerCmdState.class);
     private static final String DEFAULT_XMX = "-Xmx768m";
 
-    private final Sdk jdk;
+    private final @NotNull GServerRequest request;
     private final Path mavenPath;
     private final Path workingDirectory;
     private final List<String> jvmConfigOptions;
-    private final MavenExecutionSettings executionSettings;
+
     private final Integer debugPort;
 
-    public MavenServerCmdState(@NotNull Sdk jdk,
-                               @NotNull Path mavenPath,
+    public MavenServerCmdState(@NotNull GServerRequest request,
                                @NotNull Path workingDirectory,
-                               @NotNull List<String> jvmConfigOptions,
-                               @NotNull MavenExecutionSettings executionSettings) {
+                               @NotNull List<String> jvmConfigOptions) {
         super(null);
-        this.jdk = jdk;
-        this.mavenPath = mavenPath;
+        this.request = request;
+        this.mavenPath = request.getMavenPath();
         this.workingDirectory = workingDirectory;
         this.jvmConfigOptions = jvmConfigOptions;
-        this.executionSettings = executionSettings;
         this.debugPort = getDebugPort();
     }
 
     protected SimpleJavaParameters createJavaParameters() {
         final SimpleJavaParameters params = new SimpleJavaParameters();
-        params.setJdk(jdk);
+        params.setJdk(request.getSdk());
         params.setWorkingDirectory(workingDirectory.toFile());
         setupMavenOpts(params);
         setupDebugParam(params);
@@ -114,7 +104,7 @@ public class MavenServerCmdState extends CommandLineState {
 
         params.getVMParametersList().addProperty(MAVEN_EXT_CLASS_PATH_PROPERTY, mavenExtClassesJarPathString);
         params.getVMParametersList().addProperty(GMAVEN_HOME, mavenPath.toAbsolutePath().toString());
-        executionSettings.getEnv().forEach((k, v) -> addProperty(params, k, v));
+        request.getSettings().getEnv().forEach((k, v) -> addProperty(params, k, v));
     }
 
     private static void addProperty(SimpleJavaParameters params, String k, String v) {
@@ -126,33 +116,26 @@ public class MavenServerCmdState extends CommandLineState {
     }
 
     private void processVmOptions(List<String> jvmConfigOptions, SimpleJavaParameters params) {
-        @Nullable String xmxProperty = null;
-        @Nullable String xmsProperty = null;
+        boolean hasXmxProperty = false;
+        boolean hasXmsProperty = false;
         List<String> vmOptions = new ArrayList<>(jvmConfigOptions);
-        vmOptions.addAll(executionSettings.getJvmArguments());
+        vmOptions.addAll(request.getSettings().getJvmArguments());
         for (String param : vmOptions) {
             if (param.startsWith("-Xmx")) {
-                xmxProperty = param;
-                continue;
+                hasXmxProperty = true;
             }
             if (param.startsWith("-Xms")) {
-                xmsProperty = param;
-                continue;
+                hasXmsProperty = true;
             }
             if (Registry.is("gmaven.vm.remove.javaagent") && param.startsWith("-javaagent")) {
                 continue;
             }
             params.getVMParametersList().add(param);
         }
-
-        String embedderXmx = System.getProperty("idea.maven.embedder.xmx");
-        if (embedderXmx != null) {
-            xmxProperty = "-Xmx" + embedderXmx;
-        } else if (xmxProperty == null) {
-            xmxProperty = getMaxXmxStringValue(DEFAULT_XMX, xmsProperty);
+        if (!hasXmxProperty && !hasXmsProperty
+                && (request.getSettings().isNonRecursive()) || request.getInstallGMavenPlugin()) {
+            params.getVMParametersList().add(DEFAULT_XMX);
         }
-        params.getVMParametersList().add(xmsProperty);
-        params.getVMParametersList().add(xmxProperty);
     }
 
     private void setupDebugParam(SimpleJavaParameters params) {
@@ -259,77 +242,5 @@ public class MavenServerCmdState extends CommandLineState {
     public static String getIdeaVersionToPassToMavenProcess() {
         return ApplicationInfoImpl.getShadowInstance().getMajorVersion() + "."
                 + ApplicationInfoImpl.getShadowInstance().getMinorVersion();
-    }
-
-    @Nullable
-    static String getMaxXmxStringValue(@Nullable String memoryValueA, @Nullable String memoryValueB) {
-        MemoryProperty propertyA = MemoryProperty.valueOf(memoryValueA);
-        MemoryProperty propertyB = MemoryProperty.valueOf(memoryValueB);
-        if (propertyA != null && propertyB != null) {
-            MemoryProperty maxMemoryProperty = propertyA.valueBytes > propertyB.valueBytes ? propertyA : propertyB;
-            return MemoryProperty.of(MemoryProperty.MemoryPropertyType.XMX, maxMemoryProperty.valueBytes)
-                    .toString(maxMemoryProperty.unit);
-        }
-        return Optional
-                .ofNullable(propertyA).or(() -> Optional.ofNullable(propertyB))
-                .map(property -> MemoryProperty.of(MemoryProperty.MemoryPropertyType.XMX, property.valueBytes)
-                        .toString(property.unit))
-                .orElse(null);
-    }
-
-    private static class MemoryProperty {
-        private static final Pattern MEMORY_PROPERTY_PATTERN = Pattern.compile("^(-Xmx|-Xms)(\\d+)([kK]|[mM]|[gG])?$");
-        final String type;
-        final long valueBytes;
-        final MemoryUnit unit;
-
-        private MemoryProperty(@NotNull String type, long value, @Nullable String unit) {
-            this.type = type;
-            this.unit = unit != null ? MemoryUnit.valueOf(unit.toUpperCase()) : MemoryUnit.B;
-            this.valueBytes = value * this.unit.ratio;
-        }
-
-        @NotNull
-        public static MemoryProperty of(@NotNull MemoryPropertyType propertyType, long bytes) {
-            return new MemoryProperty(propertyType.type, bytes, MemoryUnit.B.name());
-        }
-
-        @Nullable
-        public static MemoryProperty valueOf(@Nullable String value) {
-            if (value == null) return null;
-            Matcher matcher = MEMORY_PROPERTY_PATTERN.matcher(value);
-            if (matcher.find()) {
-                return new MemoryProperty(matcher.group(1), Long.parseLong(matcher.group(2)), matcher.group(3));
-            }
-            LOG.warn(value + " not match " + MEMORY_PROPERTY_PATTERN);
-            return null;
-        }
-
-        @Override
-        public String toString() {
-            return toString(unit);
-        }
-
-        public String toString(MemoryUnit unit) {
-            return type + valueBytes / unit.ratio + unit.name().toLowerCase();
-        }
-
-        private enum MemoryUnit {
-            B(1), K(B.ratio * 1024), M(K.ratio * 1024), G(M.ratio * 1024);
-            final int ratio;
-
-            MemoryUnit(int ratio) {
-                this.ratio = ratio;
-            }
-        }
-
-        private enum MemoryPropertyType {
-            XMX("-Xmx"), XMS("-Xms");
-            private final String type;
-
-            MemoryPropertyType(String type) {
-                this.type = type;
-            }
-        }
     }
 }

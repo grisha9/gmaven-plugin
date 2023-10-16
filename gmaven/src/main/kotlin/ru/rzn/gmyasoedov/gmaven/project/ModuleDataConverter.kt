@@ -290,7 +290,7 @@ private fun splitContentRoots(contentRoots: ContentRoots, test: Boolean): Conten
 }
 
 private fun getGeneratedSources(project: MavenProject, excludedRoots: Set<String>): List<MavenGeneratedContentRoot> {
-    if (project.packaging.equals("pom", true)) return emptyList()
+    if (MavenUtils.isPomProject(project)) return emptyList()
     val generatedSourcePath = MavenUtils.getGeneratedSourcesDirectory(project.buildDirectory, false)
     val generatedTestSourcePath = MavenUtils.getGeneratedSourcesDirectory(project.buildDirectory, true)
     return listOfNotNull(
