@@ -30,7 +30,9 @@ object WslPathWrapper {
     ) {
         project.filePath = wslDistribution.getWindowsPath(project.filePath)
         project.basedir = wslDistribution.getWindowsPath(project.basedir)
-        project.parentFilePath = wslDistribution.getWindowsPath(project.parentFilePath)
+        if (project.parentFilePath != null) {
+            project.parentFilePath = wslDistribution.getWindowsPath(project.parentFilePath)
+        }
         for (dependencyArtifact in project.dependencyArtifacts) {
             val filePath = dependencyArtifact.filePath
             if (filePath != null) {

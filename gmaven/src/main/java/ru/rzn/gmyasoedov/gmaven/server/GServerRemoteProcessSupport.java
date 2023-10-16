@@ -101,12 +101,12 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
 
     @NotNull
     private WslMavenCmdState getWslMavenCmdState(@NotNull WSLDistribution wslDist) {
-        Path mavenWslPath = Optional.ofNullable(wslDist.getWslPath(mavenPath.toString()))
+        Path mavenWslPath = Optional.ofNullable(getWslPath(mavenPath.toString()))
                 .map(wslDist::getWindowsPath)
                 .map(Path::of)
                 .orElse(null);
         String jdkWslPath = Optional.ofNullable(jdk.getHomePath())
-                .map(wslDist::getWslPath)
+                .map(this::getWslPath)
                 .orElse(null);
 
         if (mavenWslPath == null || jdkWslPath == null) {
@@ -120,5 +120,13 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
         return new WslMavenCmdState(
                 this.wslDistribution, jdk, mavenWslPath, workingDirectory, jvmConfigOptions, executionSettings
         );
+    }
+
+    @Nullable
+    private String getWslPath(@NotNull String path) {
+        if (WslPath.isWslUncPath(path)) {
+            return wslDistribution.getWslPath(path);
+        }
+        return null;
     }
 }
