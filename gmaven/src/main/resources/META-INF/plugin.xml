@@ -82,6 +82,7 @@
         <externalProjectDataService
                 implementation="ru.rzn.gmyasoedov.gmaven.project.importing.MainJavaCompilerDataService"/>
         <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.SourceSetDataService"/>
+        <externalProjectDataService implementation="ru.rzn.gmyasoedov.gmaven.project.importing.ProjectSettingsLocalRepoDataService"/>
         <externalSystemDependencyAnalyzer
                 implementation="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerExtension"/>
         <externalSystemUnlinkedProjectAware implementation="ru.rzn.gmyasoedov.gmaven.autolink.UnlinkedProjectAware"/>
@@ -90,6 +91,7 @@
         <externalSystemViewContributor id="GMaven"
                                        implementation="ru.rzn.gmyasoedov.gmaven.ui.MavenExternalViewContributor"/>
         <externalIconProvider key="GMAVEN" implementationClass="ru.rzn.gmyasoedov.gmaven.ui.GMavenIconProvider"/>
+        <externalSystemNotificationExtension implementation="ru.rzn.gmyasoedov.gmaven.project.externalSystem.service.GMavenNotificationExtension" order="last"/>
 
         <stepsBeforeRunProvider implementation="ru.rzn.gmyasoedov.gmaven.project.task.GMavenBeforeRunTaskProvider"/>
 
