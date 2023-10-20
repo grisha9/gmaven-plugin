@@ -13,7 +13,9 @@ import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.module.ModuleTypeManager
 import com.intellij.openapi.project.Project
+import com.intellij.util.containers.mapSmartSet
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
+import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin
@@ -21,6 +23,7 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPluginData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.service.OpenGMavenSettingsCallback
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
@@ -39,7 +42,9 @@ fun getMavenHome(distributionSettings: DistributionSettings): Path {
         distributionSettings.path = mavenHome.path
         return mavenHome.path
     }
-    throw ExternalSystemException("maven home is empty")
+    val quickFixId = OpenGMavenSettingsCallback.ID
+    quickFixId.also {  }
+    throw ExternalSystemException(GBundle.message("gmaven.notification.mvn.not.found", quickFixId), quickFixId)
 }
 
 fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.ProjectResolverContext): PluginsData {

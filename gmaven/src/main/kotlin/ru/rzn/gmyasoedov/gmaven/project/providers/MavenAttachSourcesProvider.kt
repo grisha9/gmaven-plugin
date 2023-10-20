@@ -5,14 +5,12 @@ import com.intellij.codeInsight.AttachSourcesProvider.AttachSourcesAction
 import com.intellij.execution.executors.DefaultRunExecutor
 import com.intellij.jarFinder.InternetAttachSourceProvider
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExecutionSettings
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.service.notification.ExternalSystemNotificationManager
 import com.intellij.openapi.externalSystem.service.notification.NotificationCategory
 import com.intellij.openapi.externalSystem.service.notification.NotificationData
 import com.intellij.openapi.externalSystem.service.notification.NotificationSource
-import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.task.TaskCallback
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
@@ -23,9 +21,9 @@ import com.intellij.openapi.util.ActionCallback
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiFile
 import org.jetbrains.annotations.Nls
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
+import ru.rzn.gmyasoedov.gmaven.util.getLocalRepoPath
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import java.io.File
@@ -140,15 +138,6 @@ internal class DownloadSourceAction(
         notification.isBalloonNotification = true
         ExternalSystemNotificationManager.getInstance(project)
             .showNotification(SYSTEM_ID, notification)
-    }
-
-    private fun getLocalRepoPath(project: Project, externalProjectPath: String): String? {
-        val projectDataNode = ProjectDataManager.getInstance()
-            .getExternalProjectData(project, SYSTEM_ID, externalProjectPath)
-            ?.externalProjectStructure ?: return null
-        return ExternalSystemApiUtil.findAll(projectDataNode, ProjectKeys.MODULE)
-            .map { it.data.getProperty(GMavenConstants.MODULE_PROP_LOCAL_REPO) }
-            .firstOrNull()
     }
 
     private fun attachSources(sourcesJar: File, orderEntries: List<LibraryOrderEntry>) {
