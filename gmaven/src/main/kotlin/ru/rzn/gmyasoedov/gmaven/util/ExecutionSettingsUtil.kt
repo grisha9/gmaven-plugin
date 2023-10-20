@@ -24,6 +24,15 @@ fun getDistributionSettings(projectSettings : MavenProjectSettings, project: Pro
     return projectSettings.distributionSettings
 }
 
+fun getLocalRepoPath(project: Project, externalProjectPath: String): String? {
+    val projectDataNode = ProjectDataManager.getInstance()
+        .getExternalProjectData(project, GMavenConstants.SYSTEM_ID, externalProjectPath)
+        ?.externalProjectStructure ?: return null
+    return ExternalSystemApiUtil.findAll(projectDataNode, ProjectKeys.MODULE)
+        .map { it.data.getProperty(GMavenConstants.MODULE_PROP_LOCAL_REPO) }
+        .firstOrNull()
+}
+
 fun fillExecutionWorkSpace(
     project: Project, projectSettings: MavenProjectSettings, projectPath: String, workspace: MavenExecutionWorkspace
 ) {

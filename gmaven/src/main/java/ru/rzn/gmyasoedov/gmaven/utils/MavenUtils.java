@@ -41,6 +41,8 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.xml.XmlFile;
+import com.intellij.psi.xml.XmlTag;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.DisposeAwareRunnable;
 import com.intellij.util.SystemProperties;
@@ -83,6 +85,13 @@ public class MavenUtils {
     public static VirtualFile getVFile(File file) {
         VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByIoFile(file);
         if (virtualFile == null) throw new RuntimeException("Virtual file not found " + file);
+        return virtualFile;
+    }
+
+    @NotNull
+    public static VirtualFile getVFile(Path path) {
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByNioFile(path);
+        if (virtualFile == null) throw new RuntimeException("Virtual file not found " + path);
         return virtualFile;
     }
 
@@ -213,7 +222,7 @@ public class MavenUtils {
             if (project.isDisposed()) return false;
             PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
             if (psiFile == null) return false;
-            return MavenDomUtil.isProjectFile(psiFile);
+            return isProjectFile(psiFile);
         });
     }
 
@@ -484,5 +493,19 @@ public class MavenUtils {
 
     public static boolean groovyPluginEnabled() {
         return pluginEnabled(INTELLIJ_GROOVY_PLUGIN_ID);
+    }
+
+    public static boolean isProjectFile(PsiFile file) {
+        if (!(file instanceof XmlFile)) return false;
+
+        XmlTag rootTag = ((XmlFile) file).getRootTag();
+        if (rootTag == null || !"project".equals(rootTag.getName())) return false;
+
+        String xmlns = rootTag.getAttributeValue("xmlns");
+        if (xmlns != null && xmlns.startsWith("http://maven.apache.org/POM/")) {
+            return true;
+        }
+
+        return MavenUtils.isPomFileName(file.getName());
     }
 }
