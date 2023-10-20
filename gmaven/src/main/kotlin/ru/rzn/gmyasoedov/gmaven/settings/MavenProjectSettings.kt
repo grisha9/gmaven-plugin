@@ -20,6 +20,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
     var threadCount: String? = null
     var arguments: String? = null
     var argumentsImport: String? = null
+    var localRepositoryPath: String? = null
 
     override fun clone(): MavenProjectSettings {
         val result = MavenProjectSettings()
@@ -38,6 +39,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
         result.arguments = arguments
         result.argumentsImport = argumentsImport
         result.useMvndForTasks = useMvndForTasks
+        result.localRepositoryPath = localRepositoryPath
         return result
     }
 }
