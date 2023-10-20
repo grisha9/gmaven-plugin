@@ -13,8 +13,6 @@ import com.intellij.util.xmlb.annotations.XCollection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.nio.file.Path;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -98,10 +96,11 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
         MavenProjectSettings projectSettings = super.getLinkedProjectSettings(projectPath);
         if (projectSettings != null) return projectSettings;
 
-        Path projectAbsolutePath = Path.of(projectPath).toAbsolutePath();
         for (MavenProjectSettings setting : getLinkedProjectsSettings()) {
-            List<Path> linkedExternalPath = getAllModulesLinkedExternalPath(getProject(), setting);
-            if (linkedExternalPath.contains(projectAbsolutePath)) {
+            if (setting.getModules().size() > 1) continue;
+            Set<String> linkedExternalPath = getAllModulesLinkedExternalPath(getProject(), setting);
+            setting.setModules(linkedExternalPath);
+            if (linkedExternalPath.contains(projectPath)) {
                 return setting;
             }
         }
