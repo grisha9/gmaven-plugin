@@ -155,12 +155,12 @@ fun getDefaultModuleTypeId(): String {
     return ModuleTypeManager.getInstance().defaultModuleType.id
 }
 
-fun getAllModulesLinkedExternalPath(project: Project, projectSetting: MavenProjectSettings): List<Path> {
+fun getAllModulesLinkedExternalPath(project: Project, projectSetting: MavenProjectSettings): Set<String> {
     val projectData = ProjectDataManager.getInstance()
         .getExternalProjectData(project, SYSTEM_ID, projectSetting.externalProjectPath)
-        ?.externalProjectStructure ?: return emptyList()
+        ?.externalProjectStructure ?: return emptySet()
     return ExternalSystemApiUtil.findAllRecursively(projectData, ProjectKeys.MODULE)
-        .map { Path.of(it.data.linkedExternalProjectPath) }
+        .mapSmartSet { it.data.linkedExternalProjectPath }
 }
 
 class PluginsData(
