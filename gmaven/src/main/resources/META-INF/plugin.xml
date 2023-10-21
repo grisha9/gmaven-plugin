@@ -70,9 +70,7 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <fileType name="GMaven"
-                  fileNames="pom.xml"
-                  implementationClass="ru.rzn.gmyasoedov.gmaven.ui.MavenFileType" fieldName="INSTANCE"/>
+        <fileIconProvider implementation="ru.rzn.gmyasoedov.gmaven.ui.MavenIconProvider"/>
         <newProjectWizard.java.buildSystem implementation="ru.rzn.gmyasoedov.gmaven.wizard.MavenNewProjectWizard"/>
         <projectOpenProcessor implementation="ru.rzn.gmyasoedov.gmaven.wizard.GProjectOpenProcessor"/>
         <projectImportProvider implementation="ru.rzn.gmyasoedov.gmaven.wizard.GMavenProjectImportProvider"/>
