@@ -69,6 +69,9 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
+        <fileType name="GMaven"
+                  fileNames="pom.xml"
+                  implementationClass="ru.rzn.gmyasoedov.gmaven.ui.MavenFileType" fieldName="INSTANCE"/>
         <newProjectWizard.java.buildSystem implementation="ru.rzn.gmyasoedov.gmaven.wizard.MavenNewProjectWizard"/>
         <projectOpenProcessor implementation="ru.rzn.gmyasoedov.gmaven.wizard.GProjectOpenProcessor"/>
         <projectImportProvider implementation="ru.rzn.gmyasoedov.gmaven.wizard.GMavenProjectImportProvider"/>
@@ -110,7 +113,7 @@
         <consoleFilterProvider implementation="ru.rzn.gmyasoedov.gmaven.project.filter.MavenConsoleFilterProvider"
                                order="first"/>
         <attachSourcesProvider implementation="ru.rzn.gmyasoedov.gmaven.project.providers.MavenAttachSourcesProvider"/>
-
+        <annotator language="XML" implementationClass="ru.rzn.gmyasoedov.gmaven.dom.PomXmlDomGutterAnnotator"/>
 
         <registryKey key="gmaven.server.debug" defaultValue="false"
                      description="Debug maven server"/>
@@ -134,6 +137,7 @@
 
         <notificationGroup id="GMaven" displayType="BALLOON"/>
 
+        <fileType name="XML" extensions="pom"/>
         <!--        <annotator language="XML" implementationClass="ru.rzn.gmyasoedov.gmaven.dom.annotator.MavenDomGutterAnnotator"/>
         <backspaceHandlerDelegate implementation="ru.rzn.gmyasoedov.gmaven.dom.code.MavenBackspaceHandlerDelegate"/>
         <typedHandler implementation="ru.rzn.gmyasoedov.gmaven.dom.code.MavenTypedHandlerDelegate"/>-->
