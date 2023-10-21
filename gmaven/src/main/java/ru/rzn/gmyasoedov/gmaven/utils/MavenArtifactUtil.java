@@ -26,7 +26,20 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public final class MavenArtifactUtil {
-    public static final String[] DEFAULT_GROUPS = new String[]{"org.apache.maven.plugins", "org.codehaus.mojo"};
+    public static final String GROUP_ID = "groupId";
+    public static final String VERSION = "version";
+    public static final String ARTIFACT_ID="artifactId";
+    public static final String RELATIVE_PATH = "relativePath";
+    public static final String PARENT = "parent";
+    public static final String MODULE = "module";
+    public static final String BUILD = "build";
+    public static final String PROPERTIES = "properties";
+    public static final String DEPENDENCY_MANAGEMENT = "dependencyManagement";
+    public static final String DEPENDENCIES = "dependencies";
+    public static final String DEPENDENCY = "dependency";
+    public static final String PLUGIN_MANAGEMENT = "pluginManagement";
+    public static final String PLUGINS = "plugins";
+    public static final String PLUGIN = "plugin";
     public static final String MAVEN_PLUGIN_DESCRIPTOR = "META-INF/maven/plugin.xml";
 
     private static final Map<MavenId, MavenPluginDescription> PLUGIN_DESCRIPTOR_CACHE = new ConcurrentHashMap<>();
