@@ -12,7 +12,11 @@ class MavenIconProvider : DumbAware, FileIconProvider {
 
     override fun getIcon(file: VirtualFile, flags: Int, project: Project?): Icon? {
         project ?: return null
-        val path = file.toNioPath().toString()
-        return if (CachedModuleData.getAllConfigPaths(project).contains(path)) RepositoryLibraryLogo else null
+        return try {
+            val path = file.toNioPath().toString()
+            if (CachedModuleData.getAllConfigPaths(project).contains(path)) RepositoryLibraryLogo else null
+        } catch (e: Exception) {
+            null
+        }
     }
 }
