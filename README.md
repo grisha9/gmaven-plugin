@@ -5,7 +5,7 @@ The lightweight Maven plugin that gets the project model through maven task exec
 This provides greater simplicity and original build tool behavior in obtaining project data.
 
 ### IntelliJ Plugin - https://plugins.jetbrains.com/plugin/22370-gmaven
-### Plugin home page - https://github.com/grisha9/gmaven-plugin
+### Plugin wiki page - https://github.com/grisha9/gmaven-plugin/wiki
 
 
 ### Maven Plugin for IntelliJ IDEA
