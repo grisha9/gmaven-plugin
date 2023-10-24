@@ -5,6 +5,7 @@ import com.intellij.icons.AllIcons
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.psi.PsiElement
@@ -30,6 +31,7 @@ class PomXmlDomGutterAnnotator : Annotator {
 
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         if (MavenUtils.pluginEnabled(MavenUtils.INTELLIJ_MAVEN_PLUGIN_ID)) return
+        if (!Registry.`is`("gmaven.gutter.annotation")) return
         val xmlTag = element as? XmlTag ?: return
         val project = element.project
         val xmlFile = xmlTag.containingFile as? XmlFile ?: return
@@ -43,7 +45,7 @@ class PomXmlDomGutterAnnotator : Annotator {
         } else if (tagName == MODULE) {
             val moduleName = xmlTag.value.text
             val modulePath = xmlTag.containingFile.parent?.virtualFile?.toNioPath()?.resolve(moduleName) ?: return
-            addGutterIcon(modulePath, xmlTag, holder, GMavenIcons.ChildrenProjects, "GMaven:module")
+            addGutterIcon(modulePath, xmlTag, holder, AllIcons.Gutter.OverridenMethod, "GMaven:module")
         } else if (tagName == DEPENDENCY && xmlTag.parentTag?.parentTag?.name != DEPENDENCY_MANAGEMENT) {
             val management = getDependencyManagement(xmlFile, settingsHolder)
             addGutterIcon(xmlTag, management, holder, false)
