@@ -1,6 +1,7 @@
 package ru.rzn.gmyasoedov.gmaven.project.action
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ToggleAction
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
@@ -17,6 +18,10 @@ class OfflineModeAction : ToggleAction() {
         val project = e.project ?: return
         val settings = MavenSettings.getInstance(project)
         settings.isOfflineMode = !settings.isOfflineMode
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.EDT
     }
 
     init {

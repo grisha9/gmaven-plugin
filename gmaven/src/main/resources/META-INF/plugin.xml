@@ -112,6 +112,7 @@
                                order="first"/>
         <attachSourcesProvider implementation="ru.rzn.gmyasoedov.gmaven.project.providers.MavenAttachSourcesProvider"/>
         <annotator language="XML" implementationClass="ru.rzn.gmyasoedov.gmaven.dom.PomXmlDomGutterAnnotator"/>
+        <standardResourceProvider implementation="ru.rzn.gmyasoedov.gmaven.dom.GMavenSchemaProvider"/>
 
         <registryKey key="gmaven.server.debug" defaultValue="false"
                      description="Debug maven server"/>
@@ -130,6 +131,8 @@
         <registryKey key="gmaven.lifecycles"
                      defaultValue="clean,validate,compile,test,package,verify,install,deploy,site"
                      description="Maven lifecycles(comma delimiter)"/>
+        <registryKey key="gmaven.gutter.annotation" defaultValue="true"
+                     description="Disable/Enable gutter icon for navigation"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
 
