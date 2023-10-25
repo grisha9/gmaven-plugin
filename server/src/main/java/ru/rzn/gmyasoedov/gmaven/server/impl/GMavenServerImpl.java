@@ -84,7 +84,7 @@ public class GMavenServerImpl implements GMavenServer {
             mvnArgs.add("-Dfile=" + request.gMavenPluginPath);
             mvnArgs.add("-DgroupId=ru.rzn.gmyasoedov");
             mvnArgs.add("-DartifactId=model-reader");
-            mvnArgs.add("-Dversion=1.0-SNAPSHOT");
+            mvnArgs.add("-Dversion=" + RESOLVE_TASK_VERSION);
             mvnArgs.add("-Dpackaging=jar");
         } else if (request.tasks != null && !request.tasks.isEmpty()) {
             mvnArgs.addAll(request.tasks);
