@@ -13,7 +13,8 @@ public interface GMavenServer extends Remote {
     String GMAVEN_HOME = "gmaven.maven.home";
     String GMAVEN_PLUGINS = "gmaven.plugins";
     String GMAVEN_PLUGIN_ANNOTATION_PROCESSOR = "gmaven.plugin.annotation.paths.%s";
-    String RESOLVE_TASK = "ru.rzn.gmyasoedov:model-reader:1.0-SNAPSHOT:resolve";
+    String RESOLVE_TASK_VERSION = "1.0";
+    String RESOLVE_TASK = "ru.rzn.gmyasoedov:model-reader:" + RESOLVE_TASK_VERSION + ":resolve";
     String GMAVEN_DEPENDENCY_TREE = "gmaven.event.dependency.tree";
 
     MavenResult getProjectModel(GetModelRequest request) throws RemoteException;
