@@ -140,6 +140,12 @@
         <notificationGroup id="GMaven" displayType="BALLOON"/>
 
         <fileType name="XML" extensions="pom"/>
+        <completion.contributor language="XML"
+                                implementationClass="ru.rzn.gmyasoedov.gmaven.dom.completion.MavenCoordinateCompletionContributor"/>
+        <completion.contributor language="XML"
+                                implementationClass="ru.rzn.gmyasoedov.gmaven.dom.completion.PomXmlCompletionTagListenerContributor"
+                                order="first"/>
+
         <!--        <annotator language="XML" implementationClass="ru.rzn.gmyasoedov.gmaven.dom.annotator.MavenDomGutterAnnotator"/>
         <backspaceHandlerDelegate implementation="ru.rzn.gmyasoedov.gmaven.dom.code.MavenBackspaceHandlerDelegate"/>
         <typedHandler implementation="ru.rzn.gmyasoedov.gmaven.dom.code.MavenTypedHandlerDelegate"/>-->
