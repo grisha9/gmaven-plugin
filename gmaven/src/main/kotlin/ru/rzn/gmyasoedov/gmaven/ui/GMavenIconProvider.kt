@@ -7,6 +7,4 @@ import javax.swing.Icon
 class GMavenIconProvider : ExternalSystemIconProvider {
 
   override val reloadIcon: Icon = GMavenIcons.MavenLoadChanges
-
-  override val projectIcon: Icon = GMavenIcons.MavenProject
 }

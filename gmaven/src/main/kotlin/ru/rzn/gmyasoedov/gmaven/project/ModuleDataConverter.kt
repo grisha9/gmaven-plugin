@@ -12,7 +12,10 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants.*
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPluginData
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver.ModuleContextHolder
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenContentRoot
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenGeneratedContentRoot
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
@@ -71,10 +74,6 @@ fun createModuleData(
     moduleDataNode.createChild(
         JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, sourceLanguageLevel, targetBytecodeVersion)
     )
-
-    if (!MavenUtils.isPomProject(project)) {
-        moduleDataNode.createChild(DependencyAnalyzerData.KEY, DependencyAnalyzerData(SYSTEM_ID, project.artifactId))
-    }
 
     populateAnnotationProcessorData(project, moduleDataNode, compilerData)
     populateTasks(moduleDataNode, project, context)

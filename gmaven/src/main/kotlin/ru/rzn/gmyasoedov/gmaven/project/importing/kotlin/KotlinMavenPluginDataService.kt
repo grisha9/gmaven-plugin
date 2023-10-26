@@ -10,8 +10,6 @@ import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.parseCommandLineArguments
 import org.jetbrains.kotlin.compilerRunner.ArgumentUtils
 import org.jetbrains.kotlin.config.createArguments
-import org.jetbrains.kotlin.idea.compiler.configuration.IdeKotlinVersion
-import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayout
 import org.jetbrains.kotlin.idea.facet.configureFacet
 import org.jetbrains.kotlin.idea.facet.getOrCreateFacet
 import org.jetbrains.kotlin.idea.facet.noVersionAutoAdvance
@@ -36,8 +34,7 @@ class KotlinMavenPluginDataService : AbstractProjectDataService<KotlinMavenPlugi
             val ideModule = modifiableModelsProvider.findIdeModule(moduleData) ?: continue
 
             val kotlinData = kotlinNode.data
-            val compilerVersion = kotlinData.kotlinVersion.let(IdeKotlinVersion::opt)
-                ?: KotlinPluginLayout.instance.standaloneCompilerVersion
+            val compilerVersion = kotlinData.kotlinVersion
 
             val kotlinFacet = ideModule.getOrCreateFacet(
                 modifiableModelsProvider,

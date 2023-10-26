@@ -11,6 +11,7 @@ import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.externalSystem.util.ExternalSystemBundle
 import com.intellij.openapi.externalSystem.util.ui.DataView
 import com.intellij.openapi.module.StdModuleTypes
+import com.intellij.openapi.observable.properties.GraphPropertyImpl.Companion.graphProperty
 import com.intellij.openapi.projectRoots.JavaSdkType
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.projectRoots.SdkTypeId
@@ -33,13 +34,11 @@ abstract class GMavenNewProjectWizardStep<ParentStep>(parent: ParentStep) :
         where ParentStep : NewProjectWizardStep,
               ParentStep : NewProjectWizardBaseData {
 
-    // used externally
-    @Suppress("MemberVisibilityCanBePrivate")
-    val sdkProperty = propertyGraph.property<Sdk?>(null)
+    private val sdkProperty = propertyGraph.graphProperty<Sdk?> { null }
 
     val sdk by sdkProperty
 
-    override fun setupSettingsUI(builder: Panel) {
+    override fun setupUI(builder: Panel) {
         with(builder) {
             row(JavaUiBundle.message("label.project.wizard.new.project.jdk")) {
                 val sdkTypeFilter = { it: SdkTypeId -> it is JavaSdkType && it !is DependentSdkType }
@@ -47,7 +46,7 @@ abstract class GMavenNewProjectWizardStep<ParentStep>(parent: ParentStep) :
                     .columns(COLUMNS_MEDIUM)
             }
         }
-        super.setupSettingsUI(builder)
+        super.setupUI(builder)
     }
 
     override fun createView(data: MavenProject) = MavenDataView(data)

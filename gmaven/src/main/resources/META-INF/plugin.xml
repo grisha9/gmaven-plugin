@@ -130,7 +130,7 @@
         <registryKey key="gmaven.mvnd.path" defaultValue="mvnd"
                      description="Maven daemon integration. Path to mvnd. Default use symlink - mvnd"/>
         <registryKey key="gmaven.lifecycles"
-                     defaultValue="clean,validate,compile,test,package,verify,install,deploy,site"
+                     defaultValue="clean,validate,compile,test,package,install,dependency:tree"
                      description="Maven lifecycles(comma delimiter)"/>
         <registryKey key="gmaven.gutter.annotation" defaultValue="true"
                      description="Disable/Enable gutter icon for navigation"/>
@@ -148,22 +148,6 @@
     </extensions>
 
     <actions>
-        <action id="GMaven.DependencyAnalyzer.GoTo"
-                class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerGoToAction">
-            <add-to-group group-id="ExternalSystem.DependencyAnalyzer.DependencyListGroup"/>
-            <add-to-group group-id="ExternalSystem.DependencyAnalyzer.DependencyTreeGroup"/>
-            <add-to-group group-id="ExternalSystem.DependencyAnalyzer.UsagesTreeGroup"/>
-        </action>
-        <action id="GMaven.DependencyAnalyzer.OpenConfig"
-                class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.MavenDependencyAnalyzerOpenConfigAction">
-            <add-to-group group-id="ExternalSystem.DependencyAnalyzer.DependencyListGroup"/>
-            <add-to-group group-id="ExternalSystem.DependencyAnalyzer.DependencyTreeGroup"/>
-            <add-to-group group-id="ExternalSystem.DependencyAnalyzer.UsagesTreeGroup"/>
-        </action>
-        <action id="GMaven.ViewDependencyAnalyzer"
-                class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ViewDependencyAnalyzerAction"/>
-        <action id="GMaven.ToolbarDependencyAnalyzer"
-                class="ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer.ToolbarDependencyAnalyzerAction"/>
         <action id="GMaven.ExternalSystem.ChangeProfile"
                 class="ru.rzn.gmyasoedov.gmaven.project.action.ChangeProfileStateAction"/>
         <action id="GMaven.Toolbar.SkipTests" class="ru.rzn.gmyasoedov.gmaven.project.action.SkipTestsAction"/>
@@ -171,7 +155,6 @@
 
         <group id="GMaven.View.ActionsToolbar.CenterPanel">
             <separator/>
-            <reference id="GMaven.ToolbarDependencyAnalyzer"/>
             <reference id="GMaven.Toolbar.Offline"/>
             <reference id="GMaven.Toolbar.SkipTests"/>
             <separator/>

@@ -2,7 +2,7 @@ package ru.rzn.gmyasoedov.gmaven.project.importing.kotlin
 
 import org.jetbrains.kotlin.allopen.AllOpenCommandLineProcessor
 import org.jetbrains.kotlin.idea.artifacts.KotlinArtifacts
-import org.jetbrains.kotlin.idea.compilerPlugin.CompilerPluginSetup
+import org.jetbrains.kotlin.idea.compilerPlugin.AnnotationBasedCompilerPluginSetup
 
 
 object AllOpenMavenProjectImportHandler : AbstractMavenImportHandler() {
@@ -36,7 +36,7 @@ object AllOpenMavenProjectImportHandler : AbstractMavenImportHandler() {
     override fun getOptions(
         enabledCompilerPlugins: List<String>,
         compilerPluginOptions: List<String>
-    ): List<CompilerPluginSetup.PluginOption>? {
+    ): List<AnnotationBasedCompilerPluginSetup.PluginOption>? {
         if ("all-open" !in enabledCompilerPlugins && "spring" !in enabledCompilerPlugins) {
             return null
         }
@@ -55,7 +55,7 @@ object AllOpenMavenProjectImportHandler : AbstractMavenImportHandler() {
         })
 
         return annotations.map {
-            CompilerPluginSetup.PluginOption(
+            AnnotationBasedCompilerPluginSetup.PluginOption(
                 AllOpenCommandLineProcessor.ANNOTATION_OPTION.optionName,
                 it
             )

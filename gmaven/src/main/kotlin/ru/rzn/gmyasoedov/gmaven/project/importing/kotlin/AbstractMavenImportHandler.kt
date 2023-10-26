@@ -1,6 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven.project.importing.kotlin
 
-import org.jetbrains.kotlin.idea.compilerPlugin.CompilerPluginSetup
+import org.jetbrains.kotlin.idea.compilerPlugin.AnnotationBasedCompilerPluginSetup
 import org.jetbrains.kotlin.idea.compilerPlugin.modifyCompilerArgumentsForPlugin
 import org.jetbrains.kotlin.idea.facet.KotlinFacet
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPluginData
@@ -20,13 +20,13 @@ abstract class AbstractMavenImportHandler {
     abstract fun getOptions(
         enabledCompilerPlugins: List<String>,
         compilerPluginOptions: List<String>
-    ): List<CompilerPluginSetup.PluginOption>?
+    ): List<AnnotationBasedCompilerPluginSetup.PluginOption>?
 
-    private fun getPluginSetup(kotlinMavenPluginData: KotlinMavenPluginData): CompilerPluginSetup? {
+    private fun getPluginSetup(kotlinMavenPluginData: KotlinMavenPluginData): AnnotationBasedCompilerPluginSetup? {
         val enabledCompilerPlugins = kotlinMavenPluginData.compilerPlugins
         val compilerPluginOptions = kotlinMavenPluginData.pluginOptions
         val classpath = listOf(pluginJarFileFromIdea.absolutePath)
         val options = getOptions(enabledCompilerPlugins, compilerPluginOptions) ?: return null
-        return CompilerPluginSetup(options, classpath)
+        return AnnotationBasedCompilerPluginSetup(options, classpath)
     }
 }

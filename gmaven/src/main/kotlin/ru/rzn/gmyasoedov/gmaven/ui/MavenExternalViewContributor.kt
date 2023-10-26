@@ -10,11 +10,9 @@ import com.intellij.openapi.externalSystem.view.ExternalSystemViewContributor
 import com.intellij.util.SmartList
 import com.intellij.util.containers.MultiMap
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.DependencyAnalyzerData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.LifecycleData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.DependencyAnalyzerNode
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.LifecycleNodes
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.PluginNodes
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.ProfileNodes
@@ -23,7 +21,7 @@ class MavenExternalViewContributor : ExternalSystemViewContributor() {
     override fun getSystemId() = GMavenConstants.SYSTEM_ID
 
     override fun getKeys(): List<Key<*>> = listOf(
-        LifecycleData.KEY, PluginData.KEY, ProfileData.KEY, DependencyAnalyzerData.KEY
+        LifecycleData.KEY, PluginData.KEY, ProfileData.KEY
     )
 
     override fun createNodes(
@@ -50,11 +48,6 @@ class MavenExternalViewContributor : ExternalSystemViewContributor() {
             result.add(PluginNodes(externalProjectsView, replacePluginDataOnTaskData(pluginsNode)))
         }
 
-        // add DA node
-        val dependencyAnalyzerNodes = dataNodes[DependencyAnalyzerData.KEY]
-        if (!dependencyAnalyzerNodes.isEmpty()) {
-            result.add(DependencyAnalyzerNode(externalProjectsView))
-        }
         return result
     }
 

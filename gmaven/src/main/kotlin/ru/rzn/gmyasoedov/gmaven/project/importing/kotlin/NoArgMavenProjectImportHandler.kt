@@ -1,7 +1,7 @@
 package ru.rzn.gmyasoedov.gmaven.project.importing.kotlin
 
 import org.jetbrains.kotlin.idea.artifacts.KotlinArtifacts
-import org.jetbrains.kotlin.idea.compilerPlugin.CompilerPluginSetup
+import org.jetbrains.kotlin.idea.compilerPlugin.AnnotationBasedCompilerPluginSetup
 import org.jetbrains.kotlin.noarg.NoArgCommandLineProcessor
 
 object NoArgMavenProjectImportHandler : AbstractMavenImportHandler() {
@@ -23,7 +23,7 @@ object NoArgMavenProjectImportHandler : AbstractMavenImportHandler() {
     override fun getOptions(
         enabledCompilerPlugins: List<String>,
         compilerPluginOptions: List<String>
-    ): List<CompilerPluginSetup.PluginOption>? {
+    ): List<AnnotationBasedCompilerPluginSetup.PluginOption>? {
         if ("no-arg" !in enabledCompilerPlugins && "jpa" !in enabledCompilerPlugins) {
             return null
         }
@@ -41,7 +41,7 @@ object NoArgMavenProjectImportHandler : AbstractMavenImportHandler() {
         })
 
         val options = annotations.mapTo(mutableListOf()) {
-            CompilerPluginSetup.PluginOption(
+            AnnotationBasedCompilerPluginSetup.PluginOption(
                 NoArgCommandLineProcessor.ANNOTATION_OPTION.optionName,
                 it
             )
@@ -53,7 +53,7 @@ object NoArgMavenProjectImportHandler : AbstractMavenImportHandler() {
 
         if (invokeInitializerOptionValue) {
             options.add(
-                CompilerPluginSetup.PluginOption(
+                AnnotationBasedCompilerPluginSetup.PluginOption(
                     NoArgCommandLineProcessor.INVOKE_INITIALIZERS_OPTION.optionName,
                     "true"
                 )

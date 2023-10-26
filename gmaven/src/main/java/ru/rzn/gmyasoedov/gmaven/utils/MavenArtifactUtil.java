@@ -1,7 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven.utils;
 
 import com.intellij.openapi.util.JDOMUtil;
-import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
@@ -131,9 +130,8 @@ public final class MavenArtifactUtil {
                 }
 
                 try (InputStream is = jar.getInputStream(entry)) {
-                    byte[] bytes = FileUtil.loadBytes(is);
                     try {
-                        Element pluginDescriptionElement = JDOMUtil.load(bytes);
+                        Element pluginDescriptionElement = JDOMUtil.load(is);
                         return new MavenPluginDescription(pluginDescriptionElement);
                     } catch (Exception e) {
                         MavenLog.LOG.error("repository.plugin.corrupt " + file, e);

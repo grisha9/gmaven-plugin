@@ -6,7 +6,6 @@ import com.intellij.openapi.externalSystem.service.ui.command.line.CompletionTab
 import com.intellij.openapi.externalSystem.service.ui.completion.TextCompletionInfo
 import com.intellij.openapi.externalSystem.service.ui.project.path.WorkingDirectoryField
 import com.intellij.openapi.observable.properties.AtomicLazyProperty
-import com.intellij.openapi.observable.util.whenTextChanged
 import com.intellij.openapi.project.Project
 import org.apache.commons.cli.Option
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
@@ -48,9 +47,7 @@ class GMavenCommandLineInfo(project: Project, workingDirectoryField: WorkingDire
     }
 
     init {
-      workingDirectoryField.whenTextChanged {
         completionInfoProperty.set(emptyList())
-      }
     }
   }
 
