@@ -2,10 +2,10 @@
 
 ## [Unreleased]
 
-## [232.14] - 2023-10-16
+## [232.14] - 2023-10-26
 ### Added
 - Quick fix for Maven distribution
-- Gutter icons for configuration files (go to parent/go to dependency management end etc. Need disable bundled Maven-plugin)  
+- Gutter icons for configuration files. [Wiki](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-registry-keys#gmavengutterannotation)   
 - Icon for Maven project configuration files
 
 ## [232.13] - 2023-10-16
