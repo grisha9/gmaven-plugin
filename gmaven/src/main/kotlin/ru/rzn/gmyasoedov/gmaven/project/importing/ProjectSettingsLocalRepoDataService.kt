@@ -8,7 +8,7 @@ import com.intellij.openapi.externalSystem.service.project.manage.AbstractProjec
 import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
 import com.intellij.openapi.externalSystem.util.Order
 import com.intellij.openapi.project.Project
-import org.jetbrains.kotlin.idea.base.externalSystem.findAll
+import org.jetbrains.kotlin.idea.roots.findAll
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_LOCAL_REPO
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 

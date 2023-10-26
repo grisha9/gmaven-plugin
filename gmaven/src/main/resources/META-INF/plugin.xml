@@ -13,14 +13,14 @@
 
     <change-notes>
         <![CDATA[
-        <h3>Fixed</h3>
+        <h3>Added</h3>
         <ul>
-            <li>Maven wrapper: changing distributionUrl in maven-wrapper.properties is not picked up during import</li>
-            <li>Removed -Xmx and -Xms prediction and optimized firstRun</li>
+            <li>Quick fix for Maven distribution</li>
+            <li>Gutter icons for configuration files. (<a href="https://github.com/grisha9/gmaven-plugin/wiki/GMaven-registry-keys#gmavengutterannotation" target="_blank" rel="nofollow">Wiki</a>)</li>
+            <li>Icon for Maven project configuration files</li>
         </ul>
     ]]>
     </change-notes>
-
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
