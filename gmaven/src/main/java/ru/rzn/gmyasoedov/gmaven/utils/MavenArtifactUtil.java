@@ -36,6 +36,7 @@ public final class MavenArtifactUtil {
     public static final String DEPENDENCY_MANAGEMENT = "dependencyManagement";
     public static final String DEPENDENCIES = "dependencies";
     public static final String DEPENDENCY = "dependency";
+    public static final String EXCLUSION = "exclusion";
     public static final String PLUGIN_MANAGEMENT = "pluginManagement";
     public static final String PLUGINS = "plugins";
     public static final String PLUGIN = "plugin";
