@@ -12,7 +12,6 @@ import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
-import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
@@ -30,6 +29,7 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 import ru.rzn.gmyasoedov.serverapi.model.MavenId;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -38,6 +38,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+
+import static com.intellij.openapi.vfs.VfsUtilCore.findRelativePath;
 
 public class GMavenModuleBuilderHelper {
     private final MavenId myProjectId;
@@ -57,7 +59,7 @@ public class GMavenModuleBuilderHelper {
         myInheritVersion = inheritVersion;
     }
 
-    public static @NotNull VirtualFile createExternalProjectConfigFile(@NotNull Path parent)
+    public static @NotNull VirtualFile createExternalProjectConfigFile(@NotNull Path parent, boolean addSampleCode)
             throws ConfigurationException {
         Path file = parent.resolve(GMavenConstants.POM_XML);
         try {
@@ -67,10 +69,12 @@ public class GMavenModuleBuilderHelper {
                 Files.createFile(file);
             } catch (FileAlreadyExistsException ignore) {
             }
-            createDirectory(parent.resolve("src").resolve("main").resolve("java"));
-            createDirectory(parent.resolve("src").resolve("main").resolve("resources"));
-            createDirectory(parent.resolve("src").resolve("test").resolve("java"));
-            createDirectory(parent.resolve("src").resolve("test").resolve("resources"));
+            if (addSampleCode) {
+                createDirectory(parent.resolve("src").resolve("main").resolve("java"));
+                createDirectory(parent.resolve("src").resolve("main").resolve("resources"));
+                createDirectory(parent.resolve("src").resolve("test").resolve("java"));
+                createDirectory(parent.resolve("src").resolve("test").resolve("resources"));
+            }
 
             VirtualFile virtualFile = VfsUtil.findFile(file, true);
             if (virtualFile == null) {
@@ -120,8 +124,8 @@ public class GMavenModuleBuilderHelper {
             XmlTag rootTag = ((XmlFile) psiFile).getRootTag();
             if (rootTag == null) return;
             XmlTag modules = getOrCreateTag(rootTag, "modules", null);
-            String moduleDirectoryName = buildScriptFile.getParent().getName();
-            XmlTag module = modules.createChildTag("module", null, moduleDirectoryName, true);
+            String relativePath = findRelativePath(parentBuildFile, buildScriptFile.getParent(), File.separatorChar);
+            XmlTag module = modules.createChildTag("module", null, relativePath, true);
             modules.addSubTag(module, false);
 
             XmlTag packaging = getOrCreateTag(rootTag, "packaging", "pom");
@@ -217,7 +221,7 @@ public class GMavenModuleBuilderHelper {
 
             if (!Comparing.equal(modulePath.getParent(), parentModulePath) ||
                     !FileUtil.namesEqual(GMavenConstants.POM_XML, parentBuildFile.getName())) {
-                String relativePath = VfsUtilCore.findRelativePath(file, parentModulePath, '/');
+                String relativePath = findRelativePath(file, parentModulePath, File.separatorChar);
                 if (relativePath != null) {
                     properties.setProperty("HAS_RELATIVE_PATH", "true");
                     properties.setProperty("PARENT_RELATIVE_PATH", relativePath);
