@@ -62,7 +62,7 @@ class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
             var buildFile: VirtualFile? = null
             runWriteAction {
                 val moduleDir = Path.of(parentStep.path, parentStep.name)
-                buildFile = GMavenModuleBuilderHelper.createExternalProjectConfigFile(moduleDir)
+                buildFile = GMavenModuleBuilderHelper.createExternalProjectConfigFile(moduleDir, addSampleCode)
             }
 
             MavenUtils.runWhenInitialized(project) {
