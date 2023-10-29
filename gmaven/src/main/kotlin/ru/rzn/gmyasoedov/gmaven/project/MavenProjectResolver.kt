@@ -14,7 +14,6 @@ import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotifica
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
-import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.util.io.isDirectory
@@ -24,7 +23,6 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
 import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
-import ru.rzn.gmyasoedov.gmaven.server.firstRun
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
@@ -54,7 +52,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         settings ?: throw ExternalSystemException("settings is empty")
         val sdk = settings.jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) }
         if (isPreviewMode) {
-            return getPreviewProjectDataNode(settings, id, projectPath, sdk, listener)
+            return getPreviewProjectDataNode(projectPath, settings)
         }
 
         sdk ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
@@ -67,22 +65,6 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         } finally {
             cancellationMap.remove(id)
         }
-    }
-
-    private fun getPreviewProjectDataNode(
-        settings: MavenExecutionSettings,
-        id: ExternalSystemTaskId,
-        projectPath: String,
-        sdk: Sdk?,
-        listener: ExternalSystemTaskNotificationListener
-    ): DataNode<ProjectData> {
-        val projectDataNode = getPreviewProjectDataNode(projectPath, settings)
-        val distributionPath = settings.distributionSettings.path
-        if (sdk != null && distributionPath != null) {
-            val buildPath = Path.of(settings.executionWorkspace.projectBuildFile ?: projectPath)
-            firstRun(GServerRequest(id, buildPath, distributionPath, sdk, settings, listener = listener))
-        }
-        return projectDataNode
     }
 
     private fun getPreviewProjectDataNode(
@@ -134,10 +116,6 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val context = ProjectResolverContext(settings, absolutePath, ideProjectPath, mavenResult, languageLevel)
 
         val moduleNode = createModuleData(container, projectDataNode, context)
-
-        for (childContainer in container.modules) {
-            createModuleData(childContainer, moduleNode, context)
-        }
         addDependencies(container, projectDataNode, context)
         populateProfiles(projectDataNode, context.mavenResult.settings)
         moduleNode.data.setProperty(GMavenConstants.MODULE_PROP_LOCAL_REPO, mavenResult.settings.localRepository)
