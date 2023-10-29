@@ -245,7 +245,7 @@ public class GMavenModuleBuilderHelper {
             srcMainJavaPath.toFile().mkdirs();
             LocalFileSystem.getInstance().refreshAndFindFileByPath(srcMainJavaPath.toString());
         } catch (Exception e) {
-            MavenLog.LOG.error(e);
+            MavenLog.LOG.warn(e);
         }
     }
 
