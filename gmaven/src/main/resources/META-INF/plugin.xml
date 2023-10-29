@@ -183,5 +183,18 @@
             <separator/>
             <add-to-group group-id="ExternalSystemView.ActionsToolbar.CenterPanel" anchor="last"/>
         </group>
+
+        <action id="Gmaven.ImportExternalProject"
+                class="ru.rzn.gmyasoedov.gmaven.project.action.ImportProjectFromBuildFIleAction"
+                icon="GMavenIcons.ExecuteMavenGoal">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ProjectViewPopupMenu"/>
+        </action>
+        <action id="Gmaven.IgnoreExternalProject"
+                class="ru.rzn.gmyasoedov.gmaven.project.action.IgnoreMavenProjectAction"
+                icon="GMavenIcons.ExecuteMavenGoal">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ProjectViewPopupMenu"/>
+        </action>
     </actions>
 </idea-plugin>
