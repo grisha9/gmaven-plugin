@@ -635,7 +635,7 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
                         text += ": " + mavenVersion;
                     }
                 } catch (Exception e) {
-                    MavenLog.LOG.error(e);
+                    MavenLog.LOG.warn(e);
                 }
             }
             if (settings.getType() == DistributionType.WRAPPER) {

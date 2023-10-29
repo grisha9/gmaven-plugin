@@ -164,7 +164,7 @@ private fun runMavenTaskInner(
             .getProjectModel(modelRequest)
         GServerUtils.toResult(projectModel)
     } catch (e: Exception) {
-        MavenLog.LOG.error(e)
+        MavenLog.LOG.warn(e)
         GServerUtils.toResult(e)
     } finally {
         processSupport.stopAll()
