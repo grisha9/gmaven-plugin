@@ -55,7 +55,7 @@ abstract class GMavenNewProjectWizardStep<ParentStep>(parent: ParentStep) :
         return projectsData.asSequence()
             .map { it.externalProjectStructure }
             .filterNotNull()
-            .flatMap { ExternalSystemApiUtil.findAllRecursively(it, ProjectKeys.MODULE) }
+            .flatMap { ExternalSystemApiUtil.findAll(it, ProjectKeys.MODULE) }
             .map { it.data }
             .sortedBy { !MavenUtils.equalsPaths(it.linkedExternalProjectPath, parentStep.path) }
             .filter { it.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) is String }

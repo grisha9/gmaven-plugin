@@ -41,7 +41,7 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
 
         if (settings.isUseMvndForTasks) {
             try {
-                MvndTaskManager.task(settings, buildPath, tasks)
+                MvndTaskManager.executeTasks(settings, buildPath, tasks)
                 return
             } catch (e: Throwable) {
                 processErrorAndShowNotify(e)

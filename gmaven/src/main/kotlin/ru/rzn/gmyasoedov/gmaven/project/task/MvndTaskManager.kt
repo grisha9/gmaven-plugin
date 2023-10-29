@@ -21,7 +21,7 @@ import java.nio.file.Path
 object MvndTaskManager {
 
     @Throws(IllegalStateException::class, ExecutionException::class)
-    fun task(settings: MavenExecutionSettings, buildPath: Path, tasks: List<String>) {
+    fun executeTasks(settings: MavenExecutionSettings, buildPath: Path, tasks: List<String>) {
         val projectDirectory = if (buildPath.isDirectory()) buildPath else buildPath.parent
         val parametersList = getParametersList(buildPath, settings, tasks)
         val project = getProject(settings)
