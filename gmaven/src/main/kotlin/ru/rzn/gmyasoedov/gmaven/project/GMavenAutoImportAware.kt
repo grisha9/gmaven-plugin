@@ -42,9 +42,8 @@ class GMavenAutoImportAware : ExternalSystemAutoImportAware {
         val projectSettings = systemSettings.getLinkedProjectSettings(projectPath) ?: return mutableListOf()
         val projectData = ProjectDataManager.getInstance()
             .getExternalProjectData(project, SYSTEM_ID, projectSettings.externalProjectPath)
-        if (projectData == null || projectData.externalProjectStructure == null) return mutableListOf()
-        return ExternalSystemApiUtil
-            .findAllRecursively(projectData.externalProjectStructure, ProjectKeys.MODULE)
+        val parentDataNode = projectData?.externalProjectStructure ?: return mutableListOf()
+        return ExternalSystemApiUtil.findAll(parentDataNode, ProjectKeys.MODULE)
             .asSequence()
             .map { it.data }
             .filter { it.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) is String }

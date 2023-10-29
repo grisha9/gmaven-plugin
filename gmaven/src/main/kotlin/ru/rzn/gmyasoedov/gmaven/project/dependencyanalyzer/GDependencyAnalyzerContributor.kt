@@ -120,7 +120,7 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
 
     private fun getModulesData(projectsData: Collection<ExternalProjectInfo>): List<ModuleData> {
         return projectsData.asSequence().map { it.externalProjectStructure }.filterNotNull()
-            .flatMap { ExternalSystemApiUtil.findAllRecursively(it, ProjectKeys.MODULE) }.map { it.data }.toList()
+            .flatMap { ExternalSystemApiUtil.findAll(it, ProjectKeys.MODULE) }.map { it.data }.toList()
     }
 
     private fun createDependencyList(

@@ -16,8 +16,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static ru.rzn.gmyasoedov.gmaven.project.ProjectResolverUtils.getAllModulesLinkedExternalPath;
-
 @State(name = "MavenSettings", storages = @Storage("gmaven.xml"))
 public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings, MavenProjectSettings, MavenSettingsListener>
         implements PersistentStateComponent<MavenSettings.MyState> {
@@ -93,22 +91,6 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
 
     @Override
     protected void checkSettings(@NotNull MavenProjectSettings old, @NotNull MavenProjectSettings current) {
-    }
-
-    @Override
-    public @Nullable MavenProjectSettings getLinkedProjectSettings(@NotNull String projectPath) {
-        MavenProjectSettings projectSettings = super.getLinkedProjectSettings(projectPath);
-        if (projectSettings != null) return projectSettings;
-
-        for (MavenProjectSettings setting : getLinkedProjectsSettings()) {
-            if (setting.getModules().size() > 1) continue;
-            Set<String> linkedExternalPath = getAllModulesLinkedExternalPath(getProject(), setting);
-            setting.setModules(linkedExternalPath);
-            if (linkedExternalPath.contains(projectPath)) {
-                return setting;
-            }
-        }
-        return null;
     }
 
     public static class MyState implements State<MavenProjectSettings> {

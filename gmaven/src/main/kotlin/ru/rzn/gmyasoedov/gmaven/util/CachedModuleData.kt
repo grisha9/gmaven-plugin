@@ -25,7 +25,7 @@ object CachedModuleData {
         return ProjectDataManager.getInstance().getExternalProjectsData(project, SYSTEM_ID)
             .asSequence()
             .mapNotNull { it.externalProjectStructure }
-            .flatMap { ExternalSystemApiUtil.findAllRecursively(it, ProjectKeys.MODULE) }
+            .flatMap { ExternalSystemApiUtil.findAll(it, ProjectKeys.MODULE) }
             .map { it.data }
             .mapNotNull { it.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) }
             .toImmutableSet()
