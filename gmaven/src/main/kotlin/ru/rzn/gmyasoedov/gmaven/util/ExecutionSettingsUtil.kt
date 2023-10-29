@@ -5,6 +5,7 @@ package ru.rzn.gmyasoedov.gmaven.util
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.project.ModuleData
+import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.project.Project
@@ -14,8 +15,9 @@ import ru.rzn.gmyasoedov.gmaven.project.profile.ProjectProfilesStateService
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MvnDotProperties
 import ru.rzn.gmyasoedov.gmaven.settings.*
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
+import java.util.*
 
-fun getDistributionSettings(projectSettings : MavenProjectSettings, project: Project): DistributionSettings {
+fun getDistributionSettings(projectSettings: MavenProjectSettings, project: Project): DistributionSettings {
     val settings = projectSettings.distributionSettings
     if (settings.type != DistributionType.WRAPPER) return settings
     val distributionUrl = MvnDotProperties.getDistributionUrl(project, projectSettings.externalProjectPath)
@@ -40,42 +42,47 @@ fun fillExecutionWorkSpace(
         .getExternalProjectData(project, GMavenConstants.SYSTEM_ID, projectSettings.externalProjectPath)
         ?.externalProjectStructure ?: return
 
-    val profilesStateService = ProjectProfilesStateService.getInstance(project)
-    val mainModuleNode = ExternalSystemApiUtil.find(projectDataNode, ProjectKeys.MODULE) ?: return
+    val allModules = ExternalSystemApiUtil.findAll(projectDataNode, ProjectKeys.MODULE)
+    val mainModuleNode = allModules.first { it.data.linkedExternalProjectPath == projectSettings.externalProjectPath }
     workspace.externalProjectPath = projectSettings.externalProjectPath
-    if (projectSettings.projectBuildFile != null) {
-        workspace.projectBuildFile = projectSettings.projectBuildFile
-    } else {
-        workspace.projectBuildFile = mainModuleNode.data.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
-    }
-    val allModules = ExternalSystemApiUtil.findAllRecursively(mainModuleNode, ProjectKeys.MODULE)
+    workspace.projectBuildFile = if (projectSettings.projectBuildFile != null) projectSettings.projectBuildFile else
+        mainModuleNode.data.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
+
     val isRootPath = MavenUtils.equalsPaths(projectSettings.externalProjectPath, projectPath)
+    var targetModuleNode: DataNode<ModuleData>? = null
     if (!isRootPath) {
-        allModules.find { MavenUtils.equalsPaths(it.data.linkedExternalProjectPath, projectPath) }
-            ?.let { fillProjectBuildFiles(it, workspace, projectSettings) }
-    } else {
-        addedIgnoredModule(workspace, allModules)
+        val contextPair = getTargetModuleAndContextMap(projectPath, allModules)
+        targetModuleNode = contextPair.first
+        targetModuleNode?.let { fillProjectBuildFiles(it, workspace, projectSettings, contextPair.second) }
     }
-    for (profileDataNode in ExternalSystemApiUtil.findAll(
-        projectDataNode, ProfileData.KEY
-    )) {
-        val profileExecution = profilesStateService.getProfileExecution(profileDataNode.data)
-        if (profileExecution != null) {
-            workspace.addProfile(profileExecution)
+    addedIgnoredModule(workspace, allModules, targetModuleNode)
+    addedProfiles(projectDataNode, ProjectProfilesStateService.getInstance(project), workspace)
+}
+
+private fun getTargetModuleAndContextMap(
+    projectPath:String, allModules: Collection<DataNode<ModuleData>>
+): Pair<DataNode<ModuleData>?, TreeMap<String, DataNode<ModuleData>>> {
+    val moduleByInternalName = TreeMap<String, DataNode<ModuleData>>()
+    var targetModuleNode: DataNode<ModuleData>? = null
+    for (each in allModules) {
+        moduleByInternalName[each.data.internalName] = each
+        if (targetModuleNode == null && MavenUtils.equalsPaths(each.data.linkedExternalProjectPath, projectPath)) {
+            targetModuleNode = each;
         }
     }
+    return targetModuleNode to moduleByInternalName
 }
 
 private fun fillProjectBuildFiles(
     node: DataNode<ModuleData>,
     workspace: MavenExecutionWorkspace,
-    projectSettings: MavenProjectSettings
+    projectSettings: MavenProjectSettings,
+    moduleByInternalName: TreeMap<String, DataNode<ModuleData>>
 ) {
     val module = node.data
     workspace.subProjectBuildFile = module.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
-    addedIgnoredModule(workspace, ExternalSystemApiUtil.findAllRecursively(node, ProjectKeys.MODULE))
     if (projectSettings.useWholeProjectContext) {
-        val parentBuildFile = getParentBuildFile(node)
+        val parentBuildFile = getParentBuildFile(node, moduleByInternalName)
         if (parentBuildFile != null) {
             workspace.projectBuildFile = parentBuildFile
             if (MavenUtils.equalsPaths(workspace.projectBuildFile, workspace.subProjectBuildFile)) {
@@ -89,21 +96,45 @@ private fun fillProjectBuildFiles(
     }
 }
 
-private fun getParentBuildFile(node: DataNode<ModuleData>): String? {
+private fun getParentBuildFile(
+    node: DataNode<ModuleData>, moduleByInternalName: TreeMap<String, DataNode<ModuleData>>
+): String? {
     val parentGA = node.data.getProperty(GMavenConstants.MODULE_PROP_PARENT_GA)
-    val parent = ExternalSystemApiUtil.findParent(node, ProjectKeys.MODULE)
-    if (parentGA != null && parent != null) {
-        return getParentBuildFile(parent)
+    if (parentGA != null) {
+        val parentModule = node.data.ideParentGrouping?.let { moduleByInternalName[it] }
+        if (parentModule != null) {
+            return getParentBuildFile(parentModule, moduleByInternalName)
+        }
     }
     return node.data.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
 }
 
 private fun addedIgnoredModule(
     workspace: MavenExecutionWorkspace,
-    allModules: Collection<DataNode<ModuleData>>
+    allModules: Collection<DataNode<ModuleData>>,
+    targetModuleNode: DataNode<ModuleData>?
 ) {
+    val basePrefixInternalName = if (targetModuleNode != null) {
+        targetModuleNode.data.internalName
+    } else {
+        val buildFile = workspace.subProjectBuildFile ?: workspace.projectBuildFile ?: return
+        val parentNode = allModules
+            .find { it.data.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) == buildFile } ?: return
+        parentNode.data.internalName
+    }  + "."
     allModules.asSequence()
         .filter { it.isIgnored }
+        .filter { it.data.internalName.startsWith(basePrefixInternalName) }
         .map { ProjectExecution(MavenUtils.toGAString(it.data), false) }
         .forEach { data: ProjectExecution? -> workspace.addProject(data) }
+}
+
+private fun addedProfiles(
+    projectDataNode: DataNode<ProjectData>,
+    profilesStateService: ProjectProfilesStateService,
+    workspace: MavenExecutionWorkspace
+) {
+    for (profileDataNode in ExternalSystemApiUtil.findAll(projectDataNode, ProfileData.KEY)) {
+        profilesStateService.getProfileExecution(profileDataNode.data)?.let { workspace.addProfile(it) }
+    }
 }

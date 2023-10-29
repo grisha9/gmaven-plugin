@@ -5,15 +5,10 @@ package ru.rzn.gmyasoedov.gmaven.project
 import com.intellij.externalSystem.MavenRepositoryData
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
-import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.model.project.ProjectData
-import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
-import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.module.ModuleTypeManager
-import com.intellij.openapi.project.Project
-import com.intellij.util.containers.mapSmartSet
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin
@@ -26,7 +21,6 @@ import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.service.OpenGMavenSettingsCallback
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
-import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
@@ -154,14 +148,6 @@ fun populateAnnotationProcessorData(
 
 fun getDefaultModuleTypeId(): String {
     return ModuleTypeManager.getInstance().defaultModuleType.id
-}
-
-fun getAllModulesLinkedExternalPath(project: Project, projectSetting: MavenProjectSettings): Set<String> {
-    val projectData = ProjectDataManager.getInstance()
-        .getExternalProjectData(project, SYSTEM_ID, projectSetting.externalProjectPath)
-        ?.externalProjectStructure ?: return emptySet()
-    return ExternalSystemApiUtil.findAllRecursively(projectData, ProjectKeys.MODULE)
-        .mapSmartSet { it.data.linkedExternalProjectPath }
 }
 
 class PluginsData(

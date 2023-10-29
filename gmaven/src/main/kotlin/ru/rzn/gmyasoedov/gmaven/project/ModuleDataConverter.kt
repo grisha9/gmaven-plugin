@@ -24,12 +24,14 @@ private const val TEST = "test"
 
 fun createModuleData(
     container: MavenProjectContainer,
-    parentDataNode: DataNode<*>,
-    context: MavenProjectResolver.ProjectResolverContext
+    projectDataNode: DataNode<ProjectData>,
+    context: MavenProjectResolver.ProjectResolverContext,
+    parentModuleDataNode: DataNode<ModuleData>? = null,
 ): DataNode<ModuleData> {
+    val parentNode = parentModuleDataNode ?: projectDataNode
     val project = container.project
-    val parentExternalName = getModuleName(parentDataNode.data, true)
-    val parentInternalName = getModuleName(parentDataNode.data, false)
+    val parentExternalName = getModuleName(parentNode.data, true)
+    val parentInternalName = getModuleName(parentNode.data, false)
     val id = if (parentExternalName == null) project.artifactId else ":" + project.artifactId
     val projectPath = project.basedir
     val moduleFileDirectoryPath: String = getIdeaModulePath(context, projectPath)
@@ -48,7 +50,7 @@ fun createModuleData(
     moduleData.useExternalCompilerOutput(false)
     moduleData.setProperty(MODULE_PROP_BUILD_FILE, MavenUtils.getBuildFilePath(project.file.absolutePath))
 
-    val moduleDataNode = parentDataNode.createChild(ProjectKeys.MODULE, moduleData)
+    val moduleDataNode = projectDataNode.createChild(ProjectKeys.MODULE, moduleData)
 
     val pluginsData = getPluginsData(project, context)
     val pluginContentRoots = pluginsData.contentRoots
@@ -85,13 +87,12 @@ fun createModuleData(
     context.moduleDataByArtifactId[project.id] = ModuleContextHolder(moduleDataNode, perSourceSetModules)
 
     setParentGA(project, context, moduleData)
-    if (parentDataNode.data is ModuleData) {
-        for (childContainer in container.modules) {
-            createModuleData(childContainer, moduleDataNode, context)
-        }
+    for (childContainer in container.modules) {
+        createModuleData(childContainer, projectDataNode, context, moduleDataNode)
     }
-    if (parentDataNode.data is ProjectData) {
-        parentDataNode.createChild(
+
+    if (parentModuleDataNode == null) {
+        projectDataNode.createChild(
             MainJavaCompilerData.KEY,
             getMainJavaCompilerData(pluginsData.compilerPlugin, project, compilerData, context)
         )
