@@ -17,7 +17,7 @@ public final class MavenJDOMUtil {
             if (it == null) return JDOM_ELEMENT_EMPTY;
             return JDOMUtil.load(it);
         } catch (Exception e) {
-            MavenLog.LOG.error(e);
+            MavenLog.LOG.warn(e);
             return JDOM_ELEMENT_EMPTY;
         }
     }
