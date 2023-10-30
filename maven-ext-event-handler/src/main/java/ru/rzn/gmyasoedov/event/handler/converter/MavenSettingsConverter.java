@@ -29,7 +29,7 @@ public class MavenSettingsConverter {
         Collection<String> activeProfiles = source.settingsActiveProfiles;
         Collection<MavenRemoteRepository> repositories = RemoteRepositoryConverter
                 .convert(session.getRequest().getRemoteRepositories());
-        return new MavenSettings(session.getAllProjects().size(),
+        return new MavenSettings(session.getAllProjects() == null ? 0 : session.getAllProjects().size(),
                 localRepository, settingsFilePath, getMavenProfiles(session, activeProfiles), repositories
         );
     }
