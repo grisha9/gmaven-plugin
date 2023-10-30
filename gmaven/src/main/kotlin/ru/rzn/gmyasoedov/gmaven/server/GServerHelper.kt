@@ -94,7 +94,9 @@ fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<
             indicator = BackgroundableProcessIndicator(taskInfo)
             modelRequest.dependencyAnalyzerGA = GMavenServer.RESOLVE_TASK
             mavenResult = runMavenTask(GServerRemoteProcessSupport(request), modelRequest, indicator, taskInfo)
-            val message = GBundle.message("gmaven.dependency.tree.resolve.warning", artifactGA)
+            val message = GBundle.message(
+                "gmaven.dependency.tree.resolve.warning", GMavenServer.RESOLVE_TASK_VERSION, artifactGA
+            )
             GMavenNotification.createNotificationDA(message, NotificationType.WARNING)
         }
         return mavenResult.projectContainer?.modules?.map { it.project } ?: emptyList()
@@ -144,10 +146,12 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
     return modelRequest
 }
 
-private fun runMavenTask(processSupport: GServerRemoteProcessSupport,
-                         modelRequest: GetModelRequest,
-                         indicator: ProgressIndicator = EmptyProgressIndicator(),
-                         taskInfo: Task.Backgroundable? = null): MavenResult {
+private fun runMavenTask(
+    processSupport: GServerRemoteProcessSupport,
+    modelRequest: GetModelRequest,
+    indicator: ProgressIndicator = EmptyProgressIndicator(),
+    taskInfo: Task.Backgroundable? = null
+): MavenResult {
     val mavenResult = runMavenTaskInner(processSupport, modelRequest, indicator, taskInfo)
     processExceptions(mavenResult.exceptions)
     return mavenResult

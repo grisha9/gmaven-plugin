@@ -18,13 +18,7 @@ import org.apache.maven.repository.RepositorySystem;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static java.lang.String.format;
 import static org.apache.maven.plugins.annotations.LifecyclePhase.NONE;
@@ -53,6 +47,7 @@ public class ResolveProjectMojo extends AbstractMojo {
         resolveArtifactErrors = new ArrayList<>();
         Set<String> gPluginSet = getPluginForBodyProcessing();
         getLog().info("ResolveProjectMojo: " + gPluginSet);
+        if (session.getAllProjects() == null) return;
         for (MavenProject mavenProject : session.getAllProjects()) {
             resolvePluginBody(mavenProject, gPluginSet);
         }
