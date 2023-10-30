@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [232.15] - 2023-11-09
+### Added
+- optimize external project model structure
+- completions for dependency(groupId/artifactId/version). Required disable bundled maven plugin that logic not intersected (Otherwise, the completions from the bundled maven plugin will work).
+- ignore/unignore maven projects with submodules (Right click on pom.xnl file or module directory).
+
+### Fixed
+- https://github.com/grisha9/gmaven-plugin/issues/2
+
 ## [232.14] - 2023-10-26
 ### Added
 - Quick fix for Maven distribution
