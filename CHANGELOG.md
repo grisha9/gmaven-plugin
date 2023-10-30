@@ -10,6 +10,7 @@
 
 ### Fixed
 - https://github.com/grisha9/gmaven-plugin/issues/2
+- NPE for maven 4.0.0-alpha8
 
 ## [232.14] - 2023-10-26
 ### Added
