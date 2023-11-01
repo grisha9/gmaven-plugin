@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [232.15] - 2023-11-09
+## [232.15] - 2023-11-01
 ### Added
 - Optimize external project model structure
 - Completions for groupId/artifactId/version [Wiki](https://github.com/grisha9/gmaven-plugin/wiki/Completions). Via perform HTTP request to https://search.maven.org/. Requires disabling bundled maven plugin that logic not intersected (Otherwise, the completions from the bundled maven plugin will work).
