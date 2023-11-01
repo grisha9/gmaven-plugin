@@ -150,8 +150,10 @@ class PomXmlDomGutterAnnotator : Annotator {
     }
 
     private fun fillDependencyManagement(
-        xmlFile: XmlFile, dependencyManagement: DependencyManagement, projectSettings: ProjectSettings
+        xmlFile: XmlFile, dependencyManagement: DependencyManagement, projectSettings: ProjectSettings,
+        deepCount: Int = 0
     ) {
+        if (deepCount > 100) return
         val dependencies = xmlFile.rootTag?.findFirstSubTag(DEPENDENCY_MANAGEMENT)
             ?.findFirstSubTag(DEPENDENCIES)?.findSubTags(DEPENDENCY) ?: emptyArray()
         val plugins = xmlFile.rootTag?.findFirstSubTag(BUILD)?.findFirstSubTag(PLUGIN_MANAGEMENT)
@@ -167,9 +169,10 @@ class PomXmlDomGutterAnnotator : Annotator {
             dependencyManagement.properties.putIfAbsent(property.name, property.value.text)
         }
         val parentTag = xmlFile.rootTag?.findFirstSubTag(PARENT) ?: return
-        val parentPath = parentTag.let { getParentPath(it, projectSettings) } ?: return
+        val parentPath = getParentPath(parentTag, projectSettings) ?: return
         val parentXmlFile = getXmlFile(parentPath, xmlFile.project) ?: return
-        fillDependencyManagement(parentXmlFile, dependencyManagement, projectSettings)
+        if (xmlFile.virtualFile == parentXmlFile.virtualFile) return
+        fillDependencyManagement(parentXmlFile, dependencyManagement, projectSettings, deepCount + 1)
     }
 
     private fun dependencyToString(xmlTag: XmlTag): String? {
