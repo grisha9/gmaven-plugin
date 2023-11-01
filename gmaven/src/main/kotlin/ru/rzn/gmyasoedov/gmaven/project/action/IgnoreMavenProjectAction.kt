@@ -60,7 +60,7 @@ class IgnoreMavenProjectAction : ExternalSystemToggleAction() {
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, e.presentation.text, false) {
             override fun run(indicator: ProgressIndicator) {
                 ApplicationManager.getApplication()
-                    .getService(ProjectDataManager::class.java).importData(projectDataNode, project)
+                    .getService(ProjectDataManager::class.java).importData(projectDataNode, project, false)
             }
         })
     }
