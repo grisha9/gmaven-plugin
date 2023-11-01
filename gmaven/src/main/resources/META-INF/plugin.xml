@@ -15,9 +15,14 @@
         <![CDATA[
         <h3>Added</h3>
         <ul>
-            <li>Quick fix for Maven distribution</li>
-            <li>Gutter icons for configuration files. (<a href="https://github.com/grisha9/gmaven-plugin/wiki/GMaven-registry-keys#gmavengutterannotation" target="_blank" rel="nofollow">Wiki</a>)</li>
-            <li>Icon for Maven project configuration files</li>
+            <li>Optimize external project model structure</li>
+            <li>Completions for groupId/artifactId/version. (<a href="https://github.com/grisha9/gmaven-plugin/wiki/Completions" target="_blank" rel="nofollow">Wiki</a>)</li></li>
+            <li>Ignore/Unignore maven projects with submodules (Right click on pom.xnl file or module directory).</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+            <li>https://github.com/grisha9/gmaven-plugin/issues/2</li>
+            <li>NPE for maven 4.0.0-alpha8</li>
         </ul>
     ]]>
     </change-notes>
