@@ -74,7 +74,7 @@ fun createModuleData(
         JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, sourceLanguageLevel, targetBytecodeVersion)
     )
 
-    if (!MavenUtils.isPomProject(project)) {
+    if (project.resolvedArtifacts.isNotEmpty()) {
         moduleDataNode.createChild(DependencyAnalyzerData.KEY, DependencyAnalyzerData(SYSTEM_ID, project.artifactId))
     }
 
