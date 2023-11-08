@@ -6,6 +6,7 @@ This provides greater simplicity and original build tool behavior in obtaining p
 
 ### IntelliJ Plugin - https://plugins.jetbrains.com/plugin/22370-gmaven
 ### Plugin wiki page - https://github.com/grisha9/gmaven-plugin/wiki
+#### Article about GMaven https://dev.to/grisha9/my-intellij-idea-plugin-for-maven-support-gmaven-cn9
 
 
 ### Maven Plugin for IntelliJ IDEA
@@ -41,13 +42,7 @@ The plugin adds support for the Maven for Java language projects:
 ### Issues
 If you found a bug, please report it on https://github.com/grisha9/gmaven-plugin/issues
 
-If your problem is related to importing a project model or executing a maven task,
-then please compare the behavior of the plugin with the original behavior of Maven.
-To do this, take the following output from the logs (Build or Run IDEA window),
-for example: "mvn: [-f, /home/IdeaProjects/untitled/pom.xml, compile"
-And run from command line: mvn -f /home/IdeaProjects/untitled/pom.xml compile
-If the behavior of the plugin and Maven are the same, then the problem is not with the plugin.
+Wiki about issues: https://github.com/grisha9/gmaven-plugin/wiki/Issues
 
-![issue-import.png](issue-import.png)
 
 
