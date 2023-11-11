@@ -8,7 +8,7 @@
     <name>Gmaven</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="grisha0909@gmail.com">gmyasoedov</vendor>
+    <vendor email="grisha0909@gmail.com">Grigoriy.Myasoedov</vendor>
     <category>Build</category>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
@@ -163,12 +163,14 @@
                 class="ru.rzn.gmyasoedov.gmaven.project.action.ChangeProfileStateAction"/>
         <action id="GMaven.Toolbar.SkipTests" class="ru.rzn.gmyasoedov.gmaven.project.action.SkipTestsAction"/>
         <action id="GMaven.Toolbar.Offline" class="ru.rzn.gmyasoedov.gmaven.project.action.OfflineModeAction"/>
+        <action id="GMaven.Toolbar.Snapshot" class="ru.rzn.gmyasoedov.gmaven.project.action.UpdateSnapshotAction"/>
 
         <group id="GMaven.View.ActionsToolbar.CenterPanel">
             <separator/>
             <reference id="GMaven.ToolbarDependencyAnalyzer"/>
             <reference id="GMaven.Toolbar.Offline"/>
             <reference id="GMaven.Toolbar.SkipTests"/>
+            <reference id="GMaven.Toolbar.Snapshot"/>
             <separator/>
             <add-to-group group-id="ExternalSystemView.ActionsToolbar.CenterPanel" anchor="last"/>
         </group>

@@ -5,6 +5,7 @@ import com.intellij.util.io.HttpRequests
 import com.intellij.util.io.HttpRequests.JSON_CONTENT_TYPE
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 object MavenCentralClient {
@@ -16,8 +17,9 @@ object MavenCentralClient {
 
     private val errorCount = AtomicLong()
     private val gson = Gson()
-    private val connectTimeoutMillis: Int = Duration.ofSeconds(2).toMillis().toInt()
-    private val readTimeoutMillis: Int = Duration.ofSeconds(3).toMillis().toInt()
+    private val connectTimeoutMillis: Int = Duration.ofSeconds(4).toMillis().toInt()
+    private val readTimeoutMillis: Int = Duration.ofSeconds(4).toMillis().toInt()
+    private val isPerform = AtomicBoolean(false)
 
     @JvmStatic
     fun find(group: String, artifact: String): List<MavenCentralArtifactInfo> {
@@ -34,6 +36,8 @@ object MavenCentralClient {
     private fun findByUrl(url: String): List<MavenCentralArtifactInfo> {
         if (errorCount.get() > 30) return emptyList()
         return try {
+            if (isPerform.get()) return emptyList()
+            isPerform.set(true)
             val string = HttpRequests.request(url)
                 .readTimeout(readTimeoutMillis)
                 .connectTimeout(connectTimeoutMillis)
@@ -47,6 +51,8 @@ object MavenCentralClient {
             errorCount.incrementAndGet()
             MavenLog.LOG.debug(e)
             emptyList()
+        } finally {
+            isPerform.set(false)
         }
     }
 }
