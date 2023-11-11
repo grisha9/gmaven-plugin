@@ -21,7 +21,7 @@ import java.util.function.Consumer
 
 
 private const val TIMEOUT_PROMISE_MS = 10_000
-private const val TIMEOUT_REQUEST_MS = 2_000
+private const val TIMEOUT_REQUEST_MS = 1_000
 
 class MavenCoordinateCompletionContributor : CompletionContributor() {
     private val supportTagNames = setOf(ARTIFACT_ID, GROUP_ID, VERSION)
