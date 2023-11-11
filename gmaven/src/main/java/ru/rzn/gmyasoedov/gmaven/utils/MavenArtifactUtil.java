@@ -41,6 +41,8 @@ public final class MavenArtifactUtil {
     public static final String PLUGIN_MANAGEMENT = "pluginManagement";
     public static final String PLUGINS = "plugins";
     public static final String PLUGIN = "plugin";
+    public static final String TYPE = "type";
+    public static final String CLASSIFIER = "classifier";
     public static final String MAVEN_PLUGIN_DESCRIPTOR = "META-INF/maven/plugin.xml";
 
     private static final Map<MavenId, MavenPluginDescription> PLUGIN_DESCRIPTOR_CACHE = new ConcurrentHashMap<>();
