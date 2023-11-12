@@ -17,16 +17,6 @@ class UpdateSnapshotAction : ToggleAction() {
         return settings.snapshotUpdateType != SnapshotUpdateType.DEFAULT
     }
 
-    override fun update(e: AnActionEvent) {
-        super.update(e)
-        val p = e.presentation
-        p.setVisible(true)
-        p.setEnabled(true)
-        val project = e.project ?: return
-        val settings = MavenSettings.getInstance(project).linkedProjectsSettings.firstOrNull() ?: return
-        updateState(settings.snapshotUpdateType)
-    }
-
     override fun setSelected(e: AnActionEvent, state: Boolean) {
         val project = e.project ?: return
         val settings = MavenSettings.getInstance(project).linkedProjectsSettings.firstOrNull() ?: return
