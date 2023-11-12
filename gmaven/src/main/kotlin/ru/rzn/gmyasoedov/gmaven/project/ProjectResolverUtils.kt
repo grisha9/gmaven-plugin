@@ -37,7 +37,6 @@ fun getMavenHome(distributionSettings: DistributionSettings): Path {
         return mavenHome.path
     }
     val quickFixId = OpenGMavenSettingsCallback.ID
-    quickFixId.also {  }
     throw ExternalSystemException(GBundle.message("gmaven.notification.mvn.not.found", quickFixId), quickFixId)
 }
 
