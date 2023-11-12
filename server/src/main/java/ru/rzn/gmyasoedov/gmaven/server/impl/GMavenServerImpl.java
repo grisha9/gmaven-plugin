@@ -91,8 +91,20 @@ public class GMavenServerImpl implements GMavenServer {
         } else {
             mvnArgs.add(RESOLVE_TASK);
         }
-        System.out.println("mvn: " + mvnArgs);
+        System.out.println("mvn" + getMvnArgs(mvnArgs));
         return mvnArgs.toArray(new String[0]);
+    }
+
+    private static String getMvnArgs(List<String> mvnArgs) {
+        try {
+            StringBuilder result = new StringBuilder();
+            for (String arg : mvnArgs) {
+                result.append(" ").append(arg);
+            }
+            return result.toString();
+        } catch (Exception ignore) {
+            return "";
+        }
     }
 
     private static void fillSystemProperties(GetModelRequest request) {
