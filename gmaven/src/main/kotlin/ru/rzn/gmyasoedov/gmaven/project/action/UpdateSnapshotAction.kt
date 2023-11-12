@@ -47,7 +47,7 @@ class UpdateSnapshotAction : ToggleAction() {
 
     private fun updateState(type: SnapshotUpdateType) {
         when (type) {
-            SnapshotUpdateType.DEFAULT -> templatePresentation.icon = AllIcons.General.InlineRefreshHover
+            SnapshotUpdateType.DEFAULT -> templatePresentation.icon = AllIcons.Actions.FindEntireFile
             SnapshotUpdateType.NEVER -> templatePresentation.icon = AllIcons.General.InspectionsTrafficOff
             else -> templatePresentation.icon = AllIcons.Actions.ForceRefresh
         }
