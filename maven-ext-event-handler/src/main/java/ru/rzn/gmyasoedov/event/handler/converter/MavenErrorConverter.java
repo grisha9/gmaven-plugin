@@ -52,7 +52,9 @@ public class MavenErrorConverter {
                     }
                 }
             } else {
-                mavenExceptions.add(new MavenException(each.getMessage(), null, null));
+                String rootMessage = rootCause != null ? rootCause.getMessage() : null;
+                String message = rootMessage != null ? rootMessage : each.getMessage();
+                mavenExceptions.add(new MavenException(message, null, null));
             }
         }
         return new BuildErrors(pluginNotResolved, mavenExceptions);
