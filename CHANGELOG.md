@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [232.16] - 2023-11-12
+### Added
+- Quick access to maven snapshot setting [wiki](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-project-settings#update-snapshot-mode).
+- clearer error messages in build/run windows
+### Fixed
+- do not use Kotlin deprecated versions
+
 ## [232.15] - 2023-11-01
 ### Added
 - Optimize external project model structure
