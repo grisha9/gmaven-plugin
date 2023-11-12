@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.parseCommandLineArguments
 import org.jetbrains.kotlin.compilerRunner.ArgumentUtils
+import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.createArguments
 import org.jetbrains.kotlin.idea.facet.configureFacet
 import org.jetbrains.kotlin.idea.facet.getOrCreateFacet
@@ -64,8 +65,8 @@ class KotlinMavenPluginDataService : AbstractProjectDataService<KotlinMavenPlugi
     ): List<String> {
         val arguments = platform.createArguments()
 
-        arguments.apiVersion = kotlinData.apiVersion
-        arguments.languageVersion = kotlinData.languageVersion
+        arguments.apiVersion = getSupportedKotlinVersion(kotlinData.apiVersion)?.versionString
+        arguments.languageVersion = getSupportedKotlinVersion(kotlinData.languageVersion)?.versionString
         arguments.multiPlatform = false
         arguments.suppressWarnings = kotlinData.noWarn
 
@@ -78,5 +79,11 @@ class KotlinMavenPluginDataService : AbstractProjectDataService<KotlinMavenPlugi
 
         parseCommandLineArguments(kotlinData.arguments, arguments)
         return ArgumentUtils.convertArgumentsToStringList(arguments)
+    }
+
+    private fun getSupportedKotlinVersion(apiVersion: String?): LanguageVersion? {
+        apiVersion ?: return null
+        val kotlinVersion = LanguageVersion.fromVersionString(apiVersion) ?: LanguageVersion.FIRST_SUPPORTED
+        return if (kotlinVersion.isUnsupported) LanguageVersion.FIRST_SUPPORTED else kotlinVersion
     }
 }
