@@ -15,14 +15,12 @@
         <![CDATA[
         <h3>Added</h3>
         <ul>
-            <li>Optimize external project model structure</li>
-            <li>Completions for groupId/artifactId/version. (<a href="https://github.com/grisha9/gmaven-plugin/wiki/Completions" target="_blank" rel="nofollow">Wiki</a>)</li></li>
-            <li>Ignore/Unignore maven projects with submodules (Right click on pom.xnl file or module directory).</li>
+            <li>Quick access to maven snapshot setting. (<a href="https://github.com/grisha9/gmaven-plugin/wiki/GMaven-project-settings#update-snapshot-mode" target="_blank" rel="nofollow">Wiki</a>)</li></li>
+            <li>Clearer error messages in build/run windows</li>
         </ul>
         <h3>Fixed</h3>
         <ul>
-            <li>https://github.com/grisha9/gmaven-plugin/issues/2</li>
-            <li>NPE for maven 4.0.0-alpha8</li>
+            <li>Do not use Kotlin deprecated versions</li>
         </ul>
     ]]>
     </change-notes>
