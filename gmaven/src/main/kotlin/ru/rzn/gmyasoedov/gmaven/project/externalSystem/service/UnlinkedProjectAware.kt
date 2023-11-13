@@ -1,4 +1,4 @@
-package ru.rzn.gmyasoedov.gmaven.autolink
+package ru.rzn.gmyasoedov.gmaven.project.externalSystem.service
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.externalSystem.autolink.ExternalSystemProjectLinkListener

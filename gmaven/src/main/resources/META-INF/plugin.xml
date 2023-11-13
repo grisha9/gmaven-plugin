@@ -94,6 +94,7 @@
                                        implementation="ru.rzn.gmyasoedov.gmaven.ui.MavenExternalViewContributor"/>
         <externalIconProvider key="GMAVEN" implementationClass="ru.rzn.gmyasoedov.gmaven.ui.GMavenIconProvider"/>
         <externalSystemNotificationExtension implementation="ru.rzn.gmyasoedov.gmaven.project.externalSystem.service.GMavenNotificationExtension" order="last"/>
+        <externalSystemConfigLocator implementation="ru.rzn.gmyasoedov.gmaven.project.externalSystem.service.GMavenSystemConfigLocator"/>
 
         <stepsBeforeRunProvider implementation="ru.rzn.gmyasoedov.gmaven.project.task.GMavenBeforeRunTaskProvider"/>
 
@@ -101,7 +102,7 @@
                     factoryClass="ru.rzn.gmyasoedov.gmaven.ui.MavenToolWindowFactory"/>
         <consoleFilterProvider implementation="ru.rzn.gmyasoedov.gmaven.project.filter.MavenConsoleFilterProvider"
                                order="first"/>
-        <attachSourcesProvider implementation="ru.rzn.gmyasoedov.gmaven.project.providers.MavenAttachSourcesProvider"/>
+        <attachSourcesProvider implementation="ru.rzn.gmyasoedov.gmaven.project.externalSystem.service.MavenAttachSourcesProvider"/>
         <annotator language="XML" implementationClass="ru.rzn.gmyasoedov.gmaven.dom.PomXmlDomGutterAnnotator"/>
         <standardResourceProvider implementation="ru.rzn.gmyasoedov.gmaven.dom.GMavenSchemaProvider"/>
 
@@ -109,7 +110,7 @@
                      description="Debug maven server"/>
         <registryKey key="gmaven.boot.jar.prefix" defaultValue="plexus-classworlds"
                      description="Maven boot file prefix"/>
-        <registryKey key="gmaven.support.extensions" defaultValue="pom,xml,scala,groovy,atom,rb,yml,clj"
+        <registryKey key="gmaven.support.extensions" defaultValue="pom,xml,scala,groovy,atom,rb,yml,yaml,clj"
                      description="Maven support extensions"/>
         <registryKey key="gmaven.bundled.wrapper.version" defaultValue="3.9.1"
                      description="Maven bundled wrapper version"/>
