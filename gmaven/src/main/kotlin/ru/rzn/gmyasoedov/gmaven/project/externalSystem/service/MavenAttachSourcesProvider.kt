@@ -1,4 +1,4 @@
-package ru.rzn.gmyasoedov.gmaven.project.providers
+package ru.rzn.gmyasoedov.gmaven.project.externalSystem.service
 
 import com.intellij.codeInsight.AttachSourcesProvider
 import com.intellij.codeInsight.AttachSourcesProvider.AttachSourcesAction

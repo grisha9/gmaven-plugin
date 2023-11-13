@@ -129,14 +129,20 @@ public class MavenUtils {
     }
 
     public static boolean isPotentialPomFile(String nameOrPath) {
-        String[] split;
+        String[] split = getConfigFileExtensions();
+        return ArrayUtil.contains(FileUtilRt.getExtension(nameOrPath), split);
+    }
+
+    @NotNull
+    public static String[] getConfigFileExtensions() {
+        String[] result;
         try {
             String extensions = Registry.stringValue("gmaven.support.extensions");
-            split = extensions.split(",");
+            result = extensions.split(",");
         } catch (Exception e) {
-            split = new String[]{"pom"};
+            result = new String[]{"pom"};
         }
-        return ArrayUtil.contains(FileUtilRt.getExtension(nameOrPath), split);
+        return result;
     }
 
     public static boolean isPomFile(@Nullable Project project, @Nullable VirtualFile file) {
