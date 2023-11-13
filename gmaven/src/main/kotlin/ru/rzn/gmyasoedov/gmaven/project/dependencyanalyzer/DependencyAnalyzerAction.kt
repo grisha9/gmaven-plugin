@@ -15,15 +15,16 @@ class ToolbarDependencyAnalyzerAction : DependencyAnalyzerAction() {
 
     private val viewAction = ViewDependencyAnalyzerAction()
 
-    override fun getSystemId(e: AnActionEvent) = GMavenConstants.SYSTEM_ID
+    override fun getSystemId(e: AnActionEvent) = e.getData(ExternalSystemDataKeys.EXTERNAL_SYSTEM_ID)
 
-    override fun isEnabledAndVisible(e: AnActionEvent) = true
+    override fun isEnabledAndVisible(e: AnActionEvent) = getSystemId(e) == GMavenConstants.SYSTEM_ID
 
     override fun setSelectedState(view: DependencyAnalyzerView, e: AnActionEvent) {
         viewAction.setSelectedState(view, e)
     }
 }
 
+//todo not used?
 class ViewDependencyAnalyzerAction : AbstractDependencyAnalyzerAction<ExternalSystemNode<*>>() {
 
     override fun getSystemId(e: AnActionEvent) = GMavenConstants.SYSTEM_ID
