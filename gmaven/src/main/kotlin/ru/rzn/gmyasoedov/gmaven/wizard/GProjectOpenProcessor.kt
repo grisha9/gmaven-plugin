@@ -1,9 +1,9 @@
 package ru.rzn.gmyasoedov.gmaven.wizard
 
-import com.intellij.openapi.progress.ModalTaskOwner
-import com.intellij.openapi.progress.runBlockingModal
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.platform.ide.progress.ModalTaskOwner
+import com.intellij.platform.ide.progress.runWithModalProgressBlocking
 import com.intellij.projectImport.ProjectOpenProcessor
 import icons.OpenapiIcons
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
@@ -18,7 +18,7 @@ internal class GProjectOpenProcessor : ProjectOpenProcessor() {
         projectToClose: Project?,
         forceOpenInNewFrame: Boolean
     ): Project? {
-        return runBlockingModal(ModalTaskOwner.guess(), "") {
+        return runWithModalProgressBlocking(ModalTaskOwner.guess(), "") {
             importProvider.openProject(virtualFile, projectToClose, forceOpenInNewFrame)
         }
     }

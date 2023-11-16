@@ -2,7 +2,11 @@ package ru.rzn.gmyasoedov.gmaven.project.task
 
 import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExecutionSettings
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
-import com.intellij.openapi.externalSystem.service.execution.configuration.*
+import com.intellij.openapi.externalSystem.service.execution.configuration.ExternalSystemReifiedRunConfigurationExtension
+import com.intellij.openapi.externalSystem.service.execution.configuration.addBeforeRunFragment
+import com.intellij.openapi.externalSystem.service.execution.configuration.addCommandLineFragment
+import com.intellij.openapi.externalSystem.service.execution.configuration.addWorkingDirectoryFragment
+import com.intellij.openapi.externalSystem.service.execution.configuration.fragments.SettingsEditorFragmentContainer
 import com.intellij.openapi.externalSystem.service.ui.project.path.ExternalSystemWorkingDirectoryInfo
 import com.intellij.openapi.externalSystem.service.ui.project.path.WorkingDirectoryField
 import com.intellij.openapi.project.Project
@@ -16,7 +20,7 @@ class GMavenRunConfigurationExtension :
         ExternalSystemRunConfiguration::class.java
     ) {
 
-    override fun SettingsFragmentsContainer<ExternalSystemRunConfiguration>.configureFragments(
+    override fun SettingsEditorFragmentContainer<ExternalSystemRunConfiguration>.configureFragments(
         configuration: ExternalSystemRunConfiguration
     ) {
         val project = configuration.project
@@ -25,7 +29,7 @@ class GMavenRunConfigurationExtension :
         addCommandLineFragment(project, workingDirectoryField)
     }
 
-    private fun SettingsFragmentsContainer<ExternalSystemRunConfiguration>.addWorkingDirectoryFragment(
+    private fun SettingsEditorFragmentContainer<ExternalSystemRunConfiguration>.addWorkingDirectoryFragment(
         project: Project
     ) = addWorkingDirectoryFragment(
         project,
@@ -48,7 +52,7 @@ class GMavenRunConfigurationExtension :
         settings.taskNames = ParametersListUtil.parse(commandLine, true, true)
     }
 
-    private fun SettingsFragmentsContainer<ExternalSystemRunConfiguration>.addCommandLineFragment(
+    private fun SettingsEditorFragmentContainer<ExternalSystemRunConfiguration>.addCommandLineFragment(
         project: Project,
         workingDirectoryField: WorkingDirectoryField
     ) = addCommandLineFragment(
