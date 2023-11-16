@@ -4,12 +4,31 @@ import com.intellij.execution.wsl.WSLDistribution
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
+import ru.rzn.gmyasoedov.serverapi.model.MavenSettings
 
 object WslPathWrapper {
-    fun transformPath(mavenResult: MavenResult, wslDistribution: WSLDistribution?) {
-        wslDistribution ?: return
-        val container = mavenResult.projectContainer ?: return
+    fun transformPath(mavenResult: MavenResult, wslDistribution: WSLDistribution?): MavenResult {
+        wslDistribution ?: return mavenResult
+
+        val wslMavenResult = MavenResult(
+            mavenResult.pluginNotResolved,
+            transformSettingsPath(mavenResult.settings, wslDistribution),
+            mavenResult.projectContainer,
+            mavenResult.exceptions
+        )
+        val container = wslMavenResult.projectContainer ?: return wslMavenResult
         transformPath(container, wslDistribution)
+        return wslMavenResult
+    }
+
+    private fun transformSettingsPath(settings: MavenSettings, wslDistribution: WSLDistribution): MavenSettings {
+        return MavenSettings(
+            settings.modulesCount,
+            wslDistribution.getWindowsPath(settings.localRepository),
+            wslDistribution.getWindowsPath(settings.settingsPath),
+            settings.profiles,
+            settings.remoteRepositories
+        )
     }
 
     private fun transformPath(container: MavenProjectContainer, wslDistribution: WSLDistribution) {

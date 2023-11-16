@@ -53,8 +53,7 @@ fun getProjectModel(
         processConsumer?.let { it(processSupport) }
         mavenResult = runMavenTask(processSupport, modelRequest)
     }
-    WslPathWrapper.transformPath(mavenResult, processSupport.wslDistribution)
-    return mavenResult;
+    return WslPathWrapper.transformPath(mavenResult, processSupport.wslDistribution)
 }
 
 fun runTasks(
