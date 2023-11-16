@@ -115,15 +115,19 @@ class PomXmlDomGutterAnnotator : Annotator {
     }
 
     private fun getParentPath(xmlParentTag: XmlTag, projectSettings: ProjectSettings): Path? {
-        val relativePath = xmlParentTag.getSubTagText(RELATIVE_PATH)
-        return if (relativePath == null) {
-            val parentPath = xmlParentTag.containingFile.virtualFile?.parent?.parent?.toNioPath() ?: return null
-            val isProjectModule = projectSettings.modules.contains(parentPath.toString())
-            if (isProjectModule) parentPath else getParentInLocalRepo(xmlParentTag, projectSettings)
-        } else if (relativePath.isEmpty() && projectSettings.localRepos.isNotEmpty()) {
-            getParentInLocalRepo(xmlParentTag, projectSettings)
-        } else {
-            xmlParentTag.containingFile.virtualFile.parent.toNioPath().resolve(relativePath)
+        try {
+            val relativePath = xmlParentTag.getSubTagText(RELATIVE_PATH)
+            return if (relativePath == null) {
+                val parentPath = xmlParentTag.containingFile.virtualFile?.parent?.parent?.toNioPath() ?: return null
+                val isProjectModule = projectSettings.modules.contains(parentPath.toString())
+                if (isProjectModule) parentPath else getParentInLocalRepo(xmlParentTag, projectSettings)
+            } else if (relativePath.isEmpty() && projectSettings.localRepos.isNotEmpty()) {
+                getParentInLocalRepo(xmlParentTag, projectSettings)
+            } else {
+                xmlParentTag.containingFile.virtualFile.parent?.toNioPath()?.resolve(relativePath)
+            }
+        } catch (e: Exception) {
+            return null
         }
     }
 
