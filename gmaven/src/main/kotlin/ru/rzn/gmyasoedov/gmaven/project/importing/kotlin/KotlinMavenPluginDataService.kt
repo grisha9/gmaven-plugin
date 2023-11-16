@@ -40,18 +40,10 @@ class KotlinMavenPluginDataService : AbstractProjectDataService<KotlinMavenPlugi
             val compilerVersion = kotlinData.kotlinVersion.let(IdeKotlinVersion::opt)
                 ?: KotlinPluginLayout.standaloneCompilerVersion
 
-            val kotlinFacet = ideModule.getOrCreateFacet(
-                modifiableModelsProvider,
-                false,
-                SYSTEM_ID.id
-            )
+            val kotlinFacet = ideModule.getOrCreateFacet(modifiableModelsProvider, false, SYSTEM_ID.id)
 
             val defaultPlatform = JvmIdePlatformKind.defaultPlatform
-            kotlinFacet.configureFacet(
-                compilerVersion,
-                defaultPlatform,
-                modifiableModelsProvider
-            )
+            kotlinFacet.configureFacet(compilerVersion, defaultPlatform, modifiableModelsProvider)
 
             val sharedArguments = getCompilerArgumentsByConfigurationElement(kotlinData, defaultPlatform)
             parseCompilerArgumentsToFacet(sharedArguments, emptyList(), kotlinFacet, modifiableModelsProvider)
