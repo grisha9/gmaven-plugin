@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [232.17] - 2023-11-18
+### Added
+- Navigate to config file from GMaven-tool window/Module (F4 or Right click/Open External Config)
+### Fixed
+- IgnoreMavenProjectAction unexpected exceptions
+
 ## [232.16] - 2023-11-12
 ### Added
 - Quick access to maven snapshot setting [wiki](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-project-settings#update-snapshot-mode).
