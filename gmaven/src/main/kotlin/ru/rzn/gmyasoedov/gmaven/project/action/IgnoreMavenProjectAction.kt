@@ -21,6 +21,7 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.util.CachedModuleData
+import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import java.nio.file.Path
 import kotlin.io.path.isDirectory
 
@@ -38,10 +39,15 @@ class IgnoreMavenProjectAction : ExternalSystemToggleAction() {
     override fun isVisible(e: AnActionEvent): Boolean {
         val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return false
         val project = e.getData(CommonDataKeys.PROJECT) ?: return false
+        val nioPath = try {
+            virtualFile.toNioPath().toString()
+        } catch (e: Exception) {
+            return false
+        }
         return if (virtualFile.isDirectory)
-            MavenSettings.getInstance(project).getLinkedProjectSettings(virtualFile.toNioPath().toString()) != null
+            MavenSettings.getInstance(project).getLinkedProjectSettings(nioPath) != null
         else
-            CachedModuleData.getAllConfigPaths(project).contains(virtualFile.toNioPath().toString())
+            CachedModuleData.getAllConfigPaths(project).contains(nioPath)
     }
 
     override fun setSelected(e: AnActionEvent, state: Boolean) {
@@ -52,25 +58,34 @@ class IgnoreMavenProjectAction : ExternalSystemToggleAction() {
         val currentModuleNode = allModuleNodes.find { isSelectedModuleNode(it, nioPath) } ?: return
         val basePrefixName = currentModuleNode.data.internalName + "."
         ExternalProjectsManager.getInstance(project).setIgnored(currentModuleNode, state)
-        allModuleNodes
-            .filter { it.data.internalName.startsWith(basePrefixName) }
-            .forEach { ExternalProjectsManager.getInstance(project).setIgnored(it, state) }
+        try {
+            allModuleNodes
+                .filter { it.data.internalName.startsWith(basePrefixName) }
+                .forEach { ExternalProjectsManager.getInstance(project).setIgnored(it, state) }
 
-        // async import to not block UI on big projects
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, e.presentation.text, false) {
-            override fun run(indicator: ProgressIndicator) {
-                ApplicationManager.getApplication()
-                    .getService(ProjectDataManager::class.java).importData(projectDataNode, project, false)
-            }
-        })
+            // async import to not block UI on big projects
+            ProgressManager.getInstance().run(object : Task.Backgroundable(project, e.presentation.text, false) {
+                override fun run(indicator: ProgressIndicator) {
+                    ApplicationManager.getApplication()
+                        .getService(ProjectDataManager::class.java).importData(projectDataNode, project, false)
+                }
+            })
+        } catch (e: Exception) {
+            MavenLog.LOG.warn(e)
+        }
     }
 
     override fun doIsSelected(e: AnActionEvent): Boolean {
-        val nioPath = e.getData(CommonDataKeys.VIRTUAL_FILE)?.toNioPath() ?: return false
-        val project = e.getData(CommonDataKeys.PROJECT) ?: return false
-        val projectDataNode = getProjectDataNode(project, nioPath) ?: return false
-        val allModuleNodes = ExternalSystemApiUtil.findAll(projectDataNode, ProjectKeys.MODULE)
-        return allModuleNodes.find { isSelectedModuleNode(it, nioPath) }?.isIgnored ?: return false
+        try {
+            val nioPath = e.getData(CommonDataKeys.VIRTUAL_FILE)?.toNioPath() ?: return false
+            val project = e.getData(CommonDataKeys.PROJECT) ?: return false
+            val projectDataNode = getProjectDataNode(project, nioPath) ?: return false
+            val allModuleNodes = ExternalSystemApiUtil.findAll(projectDataNode, ProjectKeys.MODULE)
+            return allModuleNodes.find { isSelectedModuleNode(it, nioPath) }?.isIgnored ?: return false
+        } catch (e: Exception) {
+            MavenLog.LOG.warn(e)
+            return false
+        }
     }
 
     private fun isSelectedModuleNode(moduleNode: DataNode<ModuleData>, path: Path): Boolean {
