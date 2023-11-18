@@ -15,12 +15,11 @@
         <![CDATA[
         <h3>Added</h3>
         <ul>
-            <li>Quick access to maven snapshot setting. (<a href="https://github.com/grisha9/gmaven-plugin/wiki/GMaven-project-settings#update-snapshot-mode" target="_blank" rel="nofollow">Wiki</a>)</li></li>
-            <li>Clearer error messages in build/run windows</li>
+            <li>Navigate to config file from GMaven-tool window/Module (F4 or Right click/Open External Config)</li>
         </ul>
         <h3>Fixed</h3>
         <ul>
-            <li>Do not use Kotlin deprecated versions</li>
+            <li>IgnoreMavenProjectAction unexpected exceptions</li>
         </ul>
     ]]>
     </change-notes>
