@@ -66,8 +66,11 @@ class IgnoreMavenProjectAction : ExternalSystemToggleAction() {
             // async import to not block UI on big projects
             ProgressManager.getInstance().run(object : Task.Backgroundable(project, e.presentation.text, false) {
                 override fun run(indicator: ProgressIndicator) {
-                    ApplicationManager.getApplication()
-                        .getService(ProjectDataManager::class.java).importData(projectDataNode, project)
+                    try {
+                        ApplicationManager.getApplication()
+                            .getService(ProjectDataManager::class.java).importData(projectDataNode, project)
+                    } catch (ignored: Exception) {
+                    }
                 }
             })
         } catch (e: Exception) {
