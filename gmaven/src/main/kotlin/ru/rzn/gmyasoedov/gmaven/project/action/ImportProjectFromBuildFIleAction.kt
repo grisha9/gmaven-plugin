@@ -4,7 +4,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.externalSystem.action.ExternalSystemAction
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
-import ru.rzn.gmyasoedov.gmaven.util.CachedModuleData
+import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.gmaven.wizard.GOpenProjectProvider
 
@@ -20,7 +20,7 @@ class ImportProjectFromBuildFIleAction : ExternalSystemAction() {
     override fun isVisible(e: AnActionEvent): Boolean {
         val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return false
         val project = e.getData(CommonDataKeys.PROJECT) ?: return false
-        if (CachedModuleData.getAllConfigPaths(project).contains(virtualFile.path)) return false
+        if (CachedModuleDataService.getDataHolder(project).allConfigPaths.contains(virtualFile.path)) return false
         return MavenUtils.isPomFileName(virtualFile.name) || MavenUtils.isPotentialPomFile(virtualFile.name)
     }
 

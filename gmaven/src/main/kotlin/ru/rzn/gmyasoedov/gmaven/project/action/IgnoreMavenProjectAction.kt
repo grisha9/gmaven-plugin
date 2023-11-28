@@ -20,7 +20,7 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
-import ru.rzn.gmyasoedov.gmaven.util.CachedModuleData
+import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import java.nio.file.Path
 import kotlin.io.path.isDirectory
@@ -47,7 +47,7 @@ class IgnoreMavenProjectAction : ExternalSystemToggleAction() {
         return if (virtualFile.isDirectory)
             MavenSettings.getInstance(project).getLinkedProjectSettings(nioPath) != null
         else
-            CachedModuleData.getAllConfigPaths(project).contains(nioPath)
+            CachedModuleDataService.getDataHolder(project).allConfigPaths.contains(nioPath)
     }
 
     override fun setSelected(e: AnActionEvent, state: Boolean) {
@@ -62,7 +62,7 @@ class IgnoreMavenProjectAction : ExternalSystemToggleAction() {
             allModuleNodes
                 .filter { it.data.internalName.startsWith(basePrefixName) }
                 .forEach { ExternalProjectsManager.getInstance(project).setIgnored(it, state) }
-
+            CachedModuleDataService.invalidate()
             // async import to not block UI on big projects
             ProgressManager.getInstance().run(object : Task.Backgroundable(project, e.presentation.text, false) {
                 override fun run(indicator: ProgressIndicator) {
