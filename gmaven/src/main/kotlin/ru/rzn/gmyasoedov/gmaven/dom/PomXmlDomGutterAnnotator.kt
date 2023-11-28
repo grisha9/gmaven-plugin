@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import com.intellij.psi.xml.XmlFile
@@ -44,7 +45,7 @@ class PomXmlDomGutterAnnotator : Annotator {
             addGutterIcon(parentPath, xmlTag, holder, GMavenIcons.ParentProject, "GMaven:parent")
         } else if (tagName == MODULE) {
             val moduleName = xmlTag.value.text
-            val modulePath = xmlTag.containingFile.parent?.virtualFile?.toNioPath()?.resolve(moduleName) ?: return
+            val modulePath = xmlTag.containingFile.parent?.virtualFile?.toNioPathOrNull()?.resolve(moduleName) ?: return
             addGutterIcon(modulePath, xmlTag, holder, AllIcons.Gutter.OverridenMethod, "GMaven:module")
         } else if (tagName == DEPENDENCY && xmlTag.parentTag?.parentTag?.name != DEPENDENCY_MANAGEMENT) {
             val management = getDependencyManagement(xmlFile, settingsHolder)

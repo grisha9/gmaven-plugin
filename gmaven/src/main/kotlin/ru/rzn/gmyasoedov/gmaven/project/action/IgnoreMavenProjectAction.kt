@@ -16,6 +16,7 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.toNioPathOrNull
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
@@ -39,11 +40,8 @@ class IgnoreMavenProjectAction : ExternalSystemToggleAction() {
     override fun isVisible(e: AnActionEvent): Boolean {
         val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return false
         val project = e.getData(CommonDataKeys.PROJECT) ?: return false
-        val nioPath = try {
-            virtualFile.toNioPath().toString()
-        } catch (e: Exception) {
-            return false
-        }
+        val nioPath = virtualFile.toNioPathOrNull()?.toString() ?: return false
+
         return if (virtualFile.isDirectory)
             MavenSettings.getInstance(project).getLinkedProjectSettings(nioPath) != null
         else
@@ -51,7 +49,7 @@ class IgnoreMavenProjectAction : ExternalSystemToggleAction() {
     }
 
     override fun setSelected(e: AnActionEvent, state: Boolean) {
-        val nioPath = e.getData(CommonDataKeys.VIRTUAL_FILE)?.toNioPath() ?: return
+        val nioPath = e.getData(CommonDataKeys.VIRTUAL_FILE)?.toNioPathOrNull() ?: return
         val project = e.getData(CommonDataKeys.PROJECT) ?: return
         val projectDataNode = getProjectDataNode(project, nioPath) ?: return
         val allModuleNodes = ExternalSystemApiUtil.findAll(projectDataNode, ProjectKeys.MODULE)
@@ -77,7 +75,7 @@ class IgnoreMavenProjectAction : ExternalSystemToggleAction() {
 
     override fun doIsSelected(e: AnActionEvent): Boolean {
         try {
-            val nioPath = e.getData(CommonDataKeys.VIRTUAL_FILE)?.toNioPath() ?: return false
+            val nioPath = e.getData(CommonDataKeys.VIRTUAL_FILE)?.toNioPathOrNull() ?: return false
             val project = e.getData(CommonDataKeys.PROJECT) ?: return false
             val projectDataNode = getProjectDataNode(project, nioPath) ?: return false
             val allModuleNodes = ExternalSystemApiUtil.findAll(projectDataNode, ProjectKeys.MODULE)
