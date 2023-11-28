@@ -4,7 +4,7 @@ import com.intellij.openapi.externalSystem.service.settings.ExternalSystemConfig
 import com.intellij.openapi.externalSystem.settings.ExternalProjectSettings
 import com.intellij.openapi.vfs.VirtualFile
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
-import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil.ARTIFACT_ID
+import ru.rzn.gmyasoedov.gmaven.util.CachedModuleData
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 
 class GMavenSystemConfigLocator : ExternalSystemConfigLocator {
@@ -13,17 +13,11 @@ class GMavenSystemConfigLocator : ExternalSystemConfigLocator {
     override fun adjust(configPath: VirtualFile): VirtualFile? {
         if (!configPath.isDirectory) return configPath
 
-        val result = configPath.findChild(GMavenConstants.POM_XML)
-        if (result != null) return result
-
-        val configFileExtensions = MavenUtils.getConfigFileExtensions().toSet()
+        val configPaths = CachedModuleData.getAllConfigPaths()
         for (child in configPath.children) {
             if (child.isDirectory) continue
-            val extension = child.extension ?: continue
-            if (configFileExtensions.contains(extension)
-                && String(child.contentsToByteArray()).contains(ARTIFACT_ID, true)) {
-                return child
-            }
+            val nioPath = MavenUtils.toNioPathOrNull(child)?.toString() ?: continue
+            if (configPaths.contains(nioPath)) return child
         }
         return null
     }
