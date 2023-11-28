@@ -89,11 +89,13 @@ public class MavenUtils {
         return virtualFile;
     }
 
-    @NotNull
-    public static VirtualFile getVFile(Path path) {
-        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByNioFile(path);
-        if (virtualFile == null) throw new RuntimeException("Virtual file not found " + path);
-        return virtualFile;
+    @Nullable
+    public static Path toNioPathOrNull(VirtualFile file) {
+        try {
+            return file.toNioPath();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static void runWhenInitialized(@NotNull Project project, @NotNull Runnable runnable) {

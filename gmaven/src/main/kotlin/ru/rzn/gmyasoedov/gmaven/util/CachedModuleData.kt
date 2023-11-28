@@ -10,16 +10,30 @@ import com.intellij.psi.util.CachedValuesManager
 import kotlinx.collections.immutable.toImmutableSet
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 object CachedModuleData {
+    private val isPerform = AtomicBoolean(false)
+    private val lastResult = AtomicReference<Set<String>>(emptySet())
+
     fun getAllConfigPaths(project: Project): Set<String> {
-        return CachedValuesManager.getManager(project).getCachedValue(project)
-        {
-            CachedValueProvider.Result.create(
-                allConfigPaths(project), ExternalProjectsDataStorage.getInstance(project)
-            )
+        if (!isPerform.compareAndSet(false, true)) {
+            return lastResult.get()
+        }
+        try {
+            val cachedValue = CachedValuesManager.getManager(project).getCachedValue(project) {
+                CachedValueProvider.Result
+                    .create(allConfigPaths(project), ExternalProjectsDataStorage.getInstance(project))
+            }
+            lastResult.set(cachedValue)
+            return cachedValue
+        } finally {
+            isPerform.set(false)
         }
     }
+
+    fun getAllConfigPaths(): Set<String> = lastResult.get()
 
     private fun allConfigPaths(project: Project): Set<String> {
         return ProjectDataManager.getInstance().getExternalProjectsData(project, SYSTEM_ID)

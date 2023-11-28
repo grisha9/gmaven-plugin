@@ -44,7 +44,8 @@ class PomXmlDomGutterAnnotator : Annotator {
             addGutterIcon(parentPath, xmlTag, holder, GMavenIcons.ParentProject, "GMaven:parent")
         } else if (tagName == MODULE) {
             val moduleName = xmlTag.value.text
-            val modulePath = xmlTag.containingFile.parent?.virtualFile?.toNioPath()?.resolve(moduleName) ?: return
+            val virtualFile = xmlTag.containingFile.parent?.virtualFile ?: return
+            val modulePath = MavenUtils.toNioPathOrNull(virtualFile)?.resolve(moduleName) ?: return
             addGutterIcon(modulePath, xmlTag, holder, AllIcons.Gutter.OverridenMethod, "GMaven:module")
         } else if (tagName == DEPENDENCY && xmlTag.parentTag?.parentTag?.name != DEPENDENCY_MANAGEMENT) {
             val management = getDependencyManagement(xmlFile, settingsHolder)
