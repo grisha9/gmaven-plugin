@@ -12,7 +12,7 @@ import com.intellij.codeInsight.template.TemplateManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.xml.XmlFile
 import com.intellij.psi.xml.XmlTag
-import ru.rzn.gmyasoedov.gmaven.util.CachedModuleData
+import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils.INTELLIJ_MAVEN_PLUGIN_ID
@@ -27,7 +27,7 @@ class PomXmlCompletionTagListenerContributor : CompletionContributor() {
             return // Don't brake the template.
         }
         val psiFile = parameters.originalFile as? XmlFile ?: return
-        if (!CachedModuleData.getAllConfigPaths(psiFile.project).contains(psiFile.virtualFile.path)) return
+        if (!CachedModuleDataService.getDataHolder(psiFile.project).allConfigPaths.contains(psiFile.virtualFile.path)) return
 
         result.runRemainingContributors(parameters) { r ->
             val lookupElement = r.lookupElement
