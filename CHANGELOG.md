@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [232.18] - 2023-12-02
+### Fixed
+- optimized modules cache data
+- tool window actions visibility
+
 ## [232.17] - 2023-11-18
 ### Added
 - Navigate to config file from GMaven-tool window/Module (F4 or Right click/Open External Config)
