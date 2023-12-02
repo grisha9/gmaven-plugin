@@ -45,7 +45,7 @@ class IgnoreMavenProjectAction : ExternalSystemToggleAction() {
         return if (virtualFile.isDirectory)
             MavenSettings.getInstance(project).getLinkedProjectSettings(nioPath) != null
         else
-            CachedModuleDataService.getDataHolder(project).allConfigPaths.contains(nioPath)
+            CachedModuleDataService.getDataHolder(project).isConfigPath(nioPath)
     }
 
     override fun setSelected(e: AnActionEvent, state: Boolean) {
