@@ -13,11 +13,11 @@ class GMavenSystemConfigLocator : ExternalSystemConfigLocator {
     override fun adjust(configPath: VirtualFile): VirtualFile? {
         if (!configPath.isDirectory) return configPath
 
-        val configPaths = CachedModuleDataService.getCurrentData().allConfigPaths
+        val cachedDataHolder = CachedModuleDataService.getCurrentData()
         for (child in configPath.children) {
             if (child.isDirectory) continue
             val nioPath = MavenUtils.toNioPathOrNull(child)?.toString() ?: continue
-            if (configPaths.contains(nioPath)) return child
+            if (cachedDataHolder.isConfigPath(nioPath)) return child
         }
         return null
     }
