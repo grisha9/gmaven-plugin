@@ -27,7 +27,7 @@ class PomXmlCompletionTagListenerContributor : CompletionContributor() {
             return // Don't brake the template.
         }
         val psiFile = parameters.originalFile as? XmlFile ?: return
-        if (!CachedModuleDataService.getDataHolder(psiFile.project).allConfigPaths.contains(psiFile.virtualFile.path)) return
+        if (!CachedModuleDataService.getDataHolder(psiFile.project).isConfigPath(psiFile.virtualFile.path)) return
 
         result.runRemainingContributors(parameters) { r ->
             val lookupElement = r.lookupElement
