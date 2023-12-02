@@ -45,7 +45,6 @@ object CachedModuleDataService {
     fun getCurrentData(): CachedDataHolder = lastResult.get()
 
     private fun getCacheDataHolder(project: Project): CachedDataHolder {
-        println("zzzz")
         val cachedModuleDataList = ProjectDataManager.getInstance().getExternalProjectsData(project, SYSTEM_ID)
             .asSequence()
             .mapNotNull { it.externalProjectStructure }
@@ -53,15 +52,13 @@ object CachedModuleDataService {
             .mapNotNull { mapToCachedModuleData(it) }
             .toList()
 
-        val allConfigPaths = HashSet<String>(cachedModuleDataList.size)
         val activeConfigPaths = HashSet<String>(cachedModuleDataList.size)
         val ignoredConfigPaths = HashSet<String>()
         for (each in cachedModuleDataList) {
-            allConfigPaths += each.configPath
             if (each.ignored) ignoredConfigPaths += each.configPath else activeConfigPaths += each.configPath
         }
 
-        return CachedDataHolder(cachedModuleDataList, allConfigPaths, activeConfigPaths, ignoredConfigPaths)
+        return CachedDataHolder(cachedModuleDataList, activeConfigPaths, ignoredConfigPaths)
     }
 
     private fun mapToCachedModuleData(moduleNode: DataNode<ModuleData>): CachedModuleData? {
@@ -75,10 +72,11 @@ object CachedModuleDataService {
 
 data class CachedDataHolder(
     val modules: List<CachedModuleData> = emptyList(),
-    val allConfigPaths: Set<String> = emptySet(),
     val activeConfigPaths: Set<String> = emptySet(),
     val ignoredConfigPaths: Set<String> = emptySet()
-)
+) {
+    fun isConfigPath(path: String) = activeConfigPaths.contains(path) || ignoredConfigPaths.contains(path)
+}
 
 data class CachedModuleData(
     val artifactId: String, val groupId: String, val version: String, val ignored: Boolean, val configPath: String
