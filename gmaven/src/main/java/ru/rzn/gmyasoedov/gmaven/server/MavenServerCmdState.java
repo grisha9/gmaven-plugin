@@ -12,7 +12,6 @@ import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.rmi.RemoteServer;
 import com.intellij.execution.runners.ProgramRunner;
-import com.intellij.openapi.application.impl.ApplicationInfoImpl;
 import com.intellij.openapi.util.registry.Registry;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.util.text.StringUtilRt;
@@ -172,7 +171,6 @@ public class MavenServerCmdState extends CommandLineState {
         for (Map.Entry<String, String> each : mavenOptsMap.entrySet()) {
             params.getVMParametersList().defineProperty(each.getKey(), each.getValue());
         }
-        params.getVMParametersList().defineProperty("GMAVEN", getIdeaVersionToPassToMavenProcess());
     }
 
 
@@ -237,10 +235,5 @@ public class MavenServerCmdState extends CommandLineState {
         OSProcessHandler processHandler = new OSProcessHandler.Silent(commandLine);
         processHandler.setShouldDestroyProcessRecursively(false);
         return processHandler;
-    }
-
-    public static String getIdeaVersionToPassToMavenProcess() {
-        return ApplicationInfoImpl.getShadowInstance().getMajorVersion() + "."
-                + ApplicationInfoImpl.getShadowInstance().getMinorVersion();
     }
 }
