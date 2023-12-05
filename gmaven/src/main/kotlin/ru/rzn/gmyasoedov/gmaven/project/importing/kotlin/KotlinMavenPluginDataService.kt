@@ -50,7 +50,10 @@ class KotlinMavenPluginDataService : AbstractProjectDataService<KotlinMavenPlugi
 
             NoArgMavenProjectImportHandler.invoke(kotlinFacet, kotlinData)
             AllOpenMavenProjectImportHandler.invoke(kotlinFacet, kotlinData)
-            kotlinFacet.noVersionAutoAdvance()
+
+            with(kotlinFacet.configuration.settings) {
+                noVersionAutoAdvance()
+            }
         }
     }
 

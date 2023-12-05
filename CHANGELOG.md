@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [232.18] - 2023-12-02
+## [233.18] - 2023-12-02
 ### Fixed
 - optimized modules cache data
 - tool window actions visibility
