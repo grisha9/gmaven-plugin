@@ -54,8 +54,8 @@ public class MavenProjectConverter {
                 .testOutputDirectory(mavenProject.getBuild().getTestOutputDirectory())
                 .resolvedArtifacts(artifacts)
                 .dependencyArtifacts(convertMavenArtifact(mavenProject.getDependencyArtifacts()))
-                .parentArtifact(mavenProject.getParentArtifact() != null
-                        ? MavenArtifactConverter.convert(mavenProject.getParentArtifact()) : null)
+                .parentArtifact(mavenProject.getParent() != null
+                        ? MavenArtifactConverter.convert(mavenProject.getParent()) : null)
                 .properties(getProperties(mavenProject))
                 .remoteRepositories(Collections.<MavenRemoteRepository>emptyList())
                 //.remoteRepositories(RemoteRepositoryConverter.convert(mavenProject.getRemoteArtifactRepositories()))
