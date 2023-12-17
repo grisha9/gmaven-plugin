@@ -129,7 +129,6 @@ public class MavenServerCmdState extends CommandLineState {
             if (param.startsWith("-Xms")) {
                 hasXmsProperty = true;
             }
-            //todo agent exclude only for import
             if (isImport && Registry.is("gmaven.vm.remove.javaagent") && param.startsWith("-javaagent")) {
                 continue;
             }

@@ -138,6 +138,8 @@
         <completion.contributor language="XML"
                                 implementationClass="ru.rzn.gmyasoedov.gmaven.dom.completion.PomXmlCompletionTagListenerContributor"
                                 order="first"/>
+        <psi.referenceContributor language="XML"
+                                  implementation="ru.rzn.gmyasoedov.gmaven.dom.MavenArtifactIdXmlPsiReferenceContributor"/>
 
         <!--        <annotator language="XML" implementationClass="ru.rzn.gmyasoedov.gmaven.dom.annotator.MavenDomGutterAnnotator"/>
         <backspaceHandlerDelegate implementation="ru.rzn.gmyasoedov.gmaven.dom.code.MavenBackspaceHandlerDelegate"/>
