@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [232.19] - 2023-12-17
+### Added
+- Navigation from dependency/artifactId tag to module or local repository pom file
+### Fixed
+- key="gmaven.subtask.args" for sub additional task arguments
+- fixed '--javaagent param' for task execution
+
 ## [232.18] - 2023-12-02
 ### Fixed
 - optimized modules cache data
