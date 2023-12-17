@@ -70,8 +70,9 @@ public class GMavenServerImpl implements GMavenServer {
         } else if (!StringUtilRt.isEmpty(request.projectList)) {
             mvnArgs.add("-pl");
             mvnArgs.add(request.projectList);
-            mvnArgs.add("-am");
-            mvnArgs.add("-amd");
+            if (request.subTaskArguments != null) {
+                mvnArgs.addAll(request.subTaskArguments);
+            }
         }
         if (request.additionalArguments != null && !request.additionalArguments.isEmpty()) {
             mvnArgs.addAll(request.additionalArguments);
