@@ -8,9 +8,10 @@ import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
+import com.intellij.openapi.util.registry.Registry
 import com.intellij.util.PathUtil
-import com.intellij.util.io.isDirectory
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
+import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotUpdateType
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
@@ -22,6 +23,10 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenException
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.Path
+import kotlin.io.path.exists
 
 fun firstRun(gServerRequest: GServerRequest): MavenResult {
     val request = GServerRequest(
@@ -34,7 +39,7 @@ fun firstRun(gServerRequest: GServerRequest): MavenResult {
     )
     val modelRequest = getModelRequest(request)
     modelRequest.importArguments = null
-    val processSupport = GServerRemoteProcessSupport(request)
+    val processSupport = GServerRemoteProcessSupport(request, true)
     return runMavenTask(processSupport, modelRequest)
 }
 
@@ -69,7 +74,7 @@ fun runTasks(
     val modelRequest = getModelRequest(request)
     modelRequest.tasks = tasks
     modelRequest.importArguments = null
-    val processSupport = GServerRemoteProcessSupport(request)
+    val processSupport = GServerRemoteProcessSupport(request, false)
     processConsumer?.let { it(processSupport) }
     return runMavenTask(processSupport, modelRequest)
 }
@@ -116,7 +121,7 @@ private fun tryInstallGMavenPlugin(request: GServerRequest, mavenResult: MavenRe
 
 private fun getModelRequest(request: GServerRequest): GetModelRequest {
     val projectPath = request.projectPath
-    val directory = projectPath.isDirectory()
+    val directory = Files.isDirectory(projectPath)
     val projectDirectory = if (directory) projectPath else projectPath.parent
 
     val modelRequest = GetModelRequest()
@@ -141,6 +146,8 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
     modelRequest.projectList = request.settings.executionWorkspace.projectData.asSequence()
         .map { it.toRawName() }
         .joinToString(separator = ",")
+    setSubtaskArgs(modelRequest)
+    //setMultiModuleProjectDirectory(modelRequest, request.settings)
     modelRequest.additionalArguments = request.settings.arguments
     modelRequest.importArguments = request.settings.argumentsImport
     return modelRequest
@@ -182,4 +189,45 @@ private fun processExceptions(exceptions: MutableList<MavenException>) {
     if (exceptions.isEmpty()) return
     val errorString = exceptions.joinToString(System.lineSeparator()) { it.message }
     throw ExternalSystemException(errorString)
+}
+
+private fun setSubtaskArgs(modelRequest: GetModelRequest) {
+    if (modelRequest.projectList.isNotEmpty()) {
+        modelRequest.subTaskArguments = getSubTaskArgs()
+    }
+}
+
+fun setMultiModuleProjectDirectory(modelRequest: GetModelRequest, settings: MavenExecutionSettings) {
+    if (modelRequest.projectList.isEmpty() && modelRequest.projectPath != null) {
+        modelRequest.multiModuleProjectDirectory =
+            getMultiModuleProjectDirectory(Path(modelRequest.projectPath), settings).toString()
+    }
+}
+
+fun getSubTaskArgs(): List<String> {
+    return try {
+        Registry.stringValue("gmaven.subtask.args").split(",").map { it.trim() }
+    } catch (ignored: Exception) {
+        emptyList()
+    }
+}
+
+fun getMultiModuleProjectDirectory(projectPath: Path, settings: MavenExecutionSettings): Path {
+    val workingDirectory = if (projectPath.toFile().isDirectory()) projectPath else projectPath.getParent();
+    if (!Registry.`is`("gmaven.multiModuleProjectDirectory", true)) return workingDirectory
+    val mainProjectPath = settings.executionWorkspace.externalProjectPath?.let { Path(it) } ?: return workingDirectory
+    var projectPathTmp = workingDirectory
+    try {
+        while (projectPathTmp != mainProjectPath) {
+            if (projectPathTmp.resolve(".mvn").exists()) {
+                return projectPathTmp
+            }
+            projectPathTmp = projectPathTmp.parent
+        }
+        if (projectPathTmp.resolve(".mvn").exists()) {
+            return projectPathTmp
+        }
+    } catch (ignored: Exception) {
+    }
+    return workingDirectory;
 }

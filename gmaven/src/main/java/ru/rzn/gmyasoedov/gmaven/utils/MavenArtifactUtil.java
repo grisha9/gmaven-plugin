@@ -66,6 +66,14 @@ public final class MavenArtifactUtil {
     }
 
     @NotNull
+    public static Path getArtifactNioPathPom(@NotNull Path localRepository,
+                                          @NotNull String groupId,
+                                          @NotNull String artifactId,
+                                          @NotNull String version) {
+        return getArtifactNioPath(localRepository, groupId, artifactId, version, "pom", null);
+    }
+
+    @NotNull
     public static Path getArtifactNioPath(@NotNull Path localRepository,
                                           @NotNull String groupId,
                                           @NotNull String artifactId,
