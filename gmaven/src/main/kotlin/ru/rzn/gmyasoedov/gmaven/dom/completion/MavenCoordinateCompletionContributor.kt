@@ -12,6 +12,7 @@ import com.intellij.psi.xml.XmlTag
 import com.intellij.psi.xml.XmlText
 import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
+import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
 import ru.rzn.gmyasoedov.gmaven.util.MavenCentralArtifactInfo
 import ru.rzn.gmyasoedov.gmaven.util.MavenCentralClient.find
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil.*
@@ -85,10 +86,14 @@ private class VersionContributor(val artifactId: String, val groupId: String) :
 private class GAVContributor(val artifactOrGroupTag: XmlTag) : Consumer<CompletionResultSet> {
     override fun accept(result: CompletionResultSet) {
         val queryText = result.prefixMatcher.prefix
+        val isArtifact = artifactOrGroupTag.name == ARTIFACT_ID
         val promise = AsyncPromise<List<MavenCentralArtifactInfo>>()
         ApplicationManager.getApplication().executeOnPooledThread {
             promise.setResult(find(queryText))
         }
+        val findInModules = findInModule(artifactOrGroupTag, isArtifact, queryText)
+        setLookupResult(findInModules, isArtifact, result)
+
         val startMillis = System.currentTimeMillis()
         while (promise.getState() == Promise.State.PENDING && System.currentTimeMillis() - startMillis < TIMEOUT_PROMISE_MS) {
             ProgressManager.checkCanceled()
@@ -97,14 +102,31 @@ private class GAVContributor(val artifactOrGroupTag: XmlTag) : Consumer<Completi
         if (!promise.isDone()) return
 
         val artifactInfoList = promise.get() ?: return
+        setLookupResult(artifactInfoList, isArtifact, result)
+    }
+
+    private fun setLookupResult(
+        artifactInfoList: List<MavenCentralArtifactInfo>, isArtifact: Boolean, result: CompletionResultSet
+    ) {
         artifactInfoList.forEach {
-            val lookupString = if (artifactOrGroupTag.name == ARTIFACT_ID) it.a else it.g
+            val lookupString = if (isArtifact) it.a else it.g
             result.addElement(
                 LookupElementBuilder.create(it, lookupString)
                     .withPresentableText(it.id)
                     .withInsertHandler(GAVInsertHandler)
             )
         }
+    }
+
+    private fun findInModule(
+        artifactOrGroupTag: XmlTag, isArtifact: Boolean, query: String
+    ): List<MavenCentralArtifactInfo> {
+        if (!isArtifact || query.length < 2) return emptyList()
+        return CachedModuleDataService
+            .getDataHolder(artifactOrGroupTag.project).modules.asSequence()
+            .filter { it.artifactId.contains(query, true) }
+            .map { MavenCentralArtifactInfo(it.groupId + ":" + it.artifactId, it.groupId, it.artifactId, it.version) }
+            .toList()
     }
 }
 
