@@ -15,11 +15,11 @@
         <![CDATA[
         <h3>Added</h3>
         <ul>
-            <li>Navigation from dependency/artifactId tag to module or local repository pom file (<a href="https://github.com/grisha9/gmaven-plugin/wiki/GMaven-registry-keys#gmavensubtaskargs" target="_blank" rel="nofollow">Wiki</a>)</li>
+            <li>Navigation from dependency/artifactId tag to module or local repository pom file</li>
         </ul>
         <h3>Fixed</h3>
         <ul>
-            <li>key="gmaven.subtask.args" for sub task additional arguments</li>
+            <li>key="gmaven.subtask.args" for sub task additional arguments (<a href="https://github.com/grisha9/gmaven-plugin/wiki/GMaven-registry-keys#gmavensubtaskargs" target="_blank" rel="nofollow">wiki</a>)</li>
             <li>fixed '--javaagent param' for task execution</li>
         </ul>
     ]]>
