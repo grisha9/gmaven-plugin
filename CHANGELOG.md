@@ -8,6 +8,7 @@
 ### Fixed
 - key="gmaven.subtask.args" for sub task additional arguments [wiki](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-registry-keys#gmavensubtaskargs)
 - fixed '--javaagent param' for task execution
+- find get parent for task execution
 
 ## [233.18] - 2023-12-02
 ### Fixed
