@@ -7,13 +7,12 @@ import com.intellij.openapi.externalSystem.service.ui.completion.TextCompletionI
 import com.intellij.openapi.externalSystem.service.ui.project.path.WorkingDirectoryField
 import com.intellij.openapi.observable.util.createTextModificationTracker
 import com.intellij.openapi.progress.blockingContext
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.ModificationTracker
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import javax.swing.Icon
 
-class GMavenCommandLineInfo(project: Project, workingDirectoryField: WorkingDirectoryField) : CommandLineInfo {
+class GMavenCommandLineInfo(workingDirectoryField: WorkingDirectoryField) : CommandLineInfo {
     override val settingsName: String = GBundle.message("gmaven.run.configuration.command.line.name")
     override val settingsHint: String = GBundle.message("gmaven.run.configuration.command.line.hint")
 

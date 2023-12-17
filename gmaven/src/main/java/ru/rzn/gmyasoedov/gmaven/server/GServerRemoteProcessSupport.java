@@ -28,9 +28,15 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
     private final @NotNull GServerRequest request;
     private final List<String> jvmConfigOptions;
     private final Path workingDirectory;
+    private final boolean isImport;
 
     public GServerRemoteProcessSupport(@NotNull GServerRequest request) {
+        this(request, true);
+    }
+
+    public GServerRemoteProcessSupport(@NotNull GServerRequest request, boolean isImport) {
         super(GMavenServer.class);
+        this.isImport = isImport;
         this.request = request;
         this.workingDirectory = request.getProjectPath().toFile().isDirectory()
                 ? request.getProjectPath() : request.getProjectPath().getParent();
@@ -88,6 +94,6 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
     protected RunProfileState getRunProfileState(@NotNull Object o,
                                                  @NotNull Object configuration,
                                                  @NotNull Executor executor) {
-        return new MavenServerCmdState(request, workingDirectory, jvmConfigOptions);
+        return new MavenServerCmdState(request, workingDirectory, jvmConfigOptions, isImport);
     }
 }

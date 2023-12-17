@@ -57,7 +57,7 @@ class GMavenRunConfigurationExtension :
         workingDirectoryField: WorkingDirectoryField
     ) = addCommandLineFragment(
         project,
-        GMavenCommandLineInfo(project, workingDirectoryField),
+        GMavenCommandLineInfo(workingDirectoryField),
         { getRawCommandLine(settings) },
         { parseCommandLine(settings, it) }
     )
