@@ -42,27 +42,30 @@ public class MavenServerCmdState extends CommandLineState {
     private final List<String> jvmConfigOptions;
 
     private final Integer debugPort;
+    private final boolean isImport;
 
     public MavenServerCmdState(@NotNull GServerRequest request,
                                @NotNull Path workingDirectory,
-                               @NotNull List<String> jvmConfigOptions) {
+                               @NotNull List<String> jvmConfigOptions,
+                               boolean isImport) {
         super(null);
         this.request = request;
         this.mavenPath = request.getMavenPath();
         this.workingDirectory = workingDirectory;
         this.jvmConfigOptions = jvmConfigOptions;
         this.debugPort = getDebugPort();
+        this.isImport = isImport;
     }
 
     protected SimpleJavaParameters createJavaParameters() {
         final SimpleJavaParameters params = new SimpleJavaParameters();
         params.setJdk(request.getSdk());
         params.setWorkingDirectory(workingDirectory.toFile());
-        setupMavenOpts(params);
         setupDebugParam(params);
         setupClasspath(params);
         setupGmavenPluginsProperty(params);
         processVmOptions(jvmConfigOptions, params);
+        setupMavenOpts(params);
         params.setMainClass("ru.rzn.gmyasoedov.gmaven.server.RemoteGMavenServer");
         return params;
     }
@@ -127,7 +130,8 @@ public class MavenServerCmdState extends CommandLineState {
             if (param.startsWith("-Xms")) {
                 hasXmsProperty = true;
             }
-            if (Registry.is("gmaven.vm.remove.javaagent") && param.startsWith("-javaagent")) {
+            //todo agent exclude only for import
+            if (isImport && Registry.is("gmaven.vm.remove.javaagent") && param.startsWith("-javaagent")) {
                 continue;
             }
             params.getVMParametersList().add(param);
