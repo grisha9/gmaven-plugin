@@ -13,6 +13,7 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.sh.run.ShConfigurationType
 import com.intellij.sh.run.ShRunConfiguration
 import com.intellij.util.io.isDirectory
+import ru.rzn.gmyasoedov.gmaven.server.getSubTaskArgs
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
@@ -90,8 +91,7 @@ object MvndTaskManager {
         if (StringUtil.isNotEmpty(projectList)) {
             parametersList.add("-pl")
             parametersList.add(projectList)
-            parametersList.add("-am")
-            parametersList.add("-amd")
+            parametersList.addAll(getSubTaskArgs())
         }
         settings.arguments.forEach { parametersList.add(it) }
         tasks.forEach { parametersList.add(it) }

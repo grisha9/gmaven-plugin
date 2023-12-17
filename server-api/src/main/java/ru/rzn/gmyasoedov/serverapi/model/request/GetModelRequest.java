@@ -5,12 +5,14 @@ import java.util.List;
 
 public class GetModelRequest implements Serializable {
     public String projectPath;
+    public String multiModuleProjectDirectory;
     public String dependencyAnalyzerGA;
     public String alternativePom;
     public String gMavenPluginPath;
     public List<String> tasks;
     public List<String> additionalArguments;
     public List<String> importArguments;
+    public List<String> subTaskArguments;
     public String projectList;
     public String profiles;
     public String threadCount;
