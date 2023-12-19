@@ -19,6 +19,7 @@ import ru.rzn.gmyasoedov.gmaven.util.CachedModuleData
 import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
+import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.io.path.Path
 
@@ -39,7 +40,7 @@ class MavenArtifactIdXmlPsiReferenceContributor : PsiReferenceContributor() {
 
 private class MavenArtifactIdXmlPsiReferenceProvider : PsiReferenceProvider() {
     private val currentModuleName = AtomicReference("")
-    private val currentDependencies = AtomicReference<List<LibraryData>>(emptyList())
+    private var currentDependencies = SoftReference<List<LibraryData>>(null)
 
     override fun getReferencesByElement(element: PsiElement, context: ProcessingContext): Array<PsiReference> {
         val xmlTag = element as? XmlTag ?: return emptyArray()
@@ -106,20 +107,33 @@ private class MavenArtifactIdXmlPsiReferenceProvider : PsiReferenceProvider() {
         project: Project, moduleName: String, artifactId: String, projectPath: String
     ): Pair<String, String>? {
         if (currentModuleName.get() != moduleName) {
-            val projectStructure = ProjectDataManager.getInstance()
-                .getExternalProjectData(project, GMavenConstants.SYSTEM_ID, projectPath)
-                ?.externalProjectStructure ?: return null
-            val dependencyNodes = ExternalSystemApiUtil.findAll(projectStructure, ProjectKeys.MODULE)
-                .find { it.data.moduleName == moduleName }
-                ?.let { ExternalSystemApiUtil.findAll(it, ProjectKeys.LIBRARY_DEPENDENCY) }
-                ?.map { it.data.target }
-                ?: emptyList()
+            val dependencyNodes = getDependencyNodes(project, moduleName, projectPath)
+            currentDependencies = SoftReference(dependencyNodes)
             currentModuleName.set(moduleName)
-            currentDependencies.set(dependencyNodes)
         }
 
-        val dependency = currentDependencies.get().find { it.artifactId == artifactId } ?: return null
+        var libraryData = currentDependencies.get()
+        if (libraryData == null) {
+            val dependencyNodes = getDependencyNodes(project, moduleName, projectPath)
+            libraryData = dependencyNodes
+            currentDependencies = SoftReference(dependencyNodes)
+            currentModuleName.set(moduleName)
+        }
+        val dependency = libraryData.find { it.artifactId == artifactId } ?: return null
         return if (dependency.groupId != null && dependency.version != null)
             dependency.groupId!! to dependency.version!! else null
+    }
+
+    private fun getDependencyNodes(
+        project: Project, moduleName: String, projectPath: String
+    ): List<LibraryData> {
+        val projectStructure = ProjectDataManager.getInstance()
+            .getExternalProjectData(project, GMavenConstants.SYSTEM_ID, projectPath)
+            ?.externalProjectStructure ?: return emptyList()
+        return ExternalSystemApiUtil.findAll(projectStructure, ProjectKeys.MODULE)
+            .find { it.data.moduleName == moduleName }
+            ?.let { ExternalSystemApiUtil.findAll(it, ProjectKeys.LIBRARY_DEPENDENCY) }
+            ?.mapNotNull { it.data.target }
+            ?: emptyList()
     }
 }
