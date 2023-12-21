@@ -3,7 +3,6 @@ package ru.rzn.gmyasoedov.gmaven.server;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.process.ProcessEvent;
-import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.rmi.RemoteProcessSupport;
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
 import com.intellij.openapi.util.Key;
@@ -11,16 +10,12 @@ import com.intellij.openapi.util.registry.Registry;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.execution.ParametersListUtil;
 import org.jetbrains.annotations.NotNull;
-import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionWorkspace;
 import ru.rzn.gmyasoedov.serverapi.GMavenServer;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 import static ru.rzn.gmyasoedov.gmaven.project.wrapper.MvnDotProperties.getJvmConfig;
 
@@ -38,13 +33,11 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
         super(GMavenServer.class);
         this.isImport = isImport;
         this.request = request;
-        this.workingDirectory = request.getProjectPath().toFile().isDirectory()
-                ? request.getProjectPath() : request.getProjectPath().getParent();
+        this.workingDirectory = getWorkingDirectory(request);
         String jvmConfig = getJvmConfig(workingDirectory);
         this.jvmConfigOptions = StringUtil.isEmpty(jvmConfig)
                 ? Collections.emptyList() : ParametersListUtil.parse(jvmConfig, true, true);
     }
-
 
     @Override
     protected void fireModificationCountChanged() {
@@ -59,23 +52,6 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
         return request.getTaskId();
     }
 
-    @SuppressWarnings("IOResourceOpenedButNotSafelyClosed")
-    @Override
-    protected void sendDataAfterStart(ProcessHandler handler) {
-        if (handler.getProcessInput() == null) {
-            return;
-        }
-        OutputStreamWriter writer = new OutputStreamWriter(handler.getProcessInput(), StandardCharsets.UTF_8);
-        try {
-            writer.write("token=" + UUID.randomUUID());
-            writer.write(System.lineSeparator());
-            writer.flush();
-            MavenLog.LOG.info("Sent token to maven server");
-        } catch (IOException e) {
-            MavenLog.LOG.warn("Cannot send token to maven server", e);
-        }
-    }
-
     @Override
     protected void logText(@NotNull Object configuration,
                            @NotNull ProcessEvent event,
@@ -87,7 +63,6 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
         if (request.getListener() != null) {
             request.getListener().onTaskOutput(request.getTaskId(), text, true);
         }
-
     }
 
     @Override
@@ -95,5 +70,15 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
                                                  @NotNull Object configuration,
                                                  @NotNull Executor executor) {
         return new MavenServerCmdState(request, workingDirectory, jvmConfigOptions, isImport);
+    }
+
+    private static Path getWorkingDirectory(@NotNull GServerRequest request) {
+        MavenExecutionWorkspace workspace = request.getSettings().getExecutionWorkspace();
+        if (workspace.getMultiModuleProjectDirectory() != null) {
+            return Path.of(workspace.getMultiModuleProjectDirectory());
+        } else {
+            return request.getProjectPath().toFile().isDirectory()
+                    ? request.getProjectPath() : request.getProjectPath().getParent();
+        }
     }
 }

@@ -18,7 +18,7 @@ class ShowFullLogCallback(private val project: Project) : NotificationListener.A
         if (contents.isEmpty()) return
         val content = contents.find { it.tabName.equals("sync", true) } ?: return
         println(content)
-        //MultipleBuildsView
+        //MultipleBuildsView BuildTreeConsoleView.onEvent
     }
 
     companion object {
