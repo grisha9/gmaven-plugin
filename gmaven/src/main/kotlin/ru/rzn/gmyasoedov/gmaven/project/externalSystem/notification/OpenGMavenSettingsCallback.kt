@@ -1,4 +1,4 @@
-package ru.rzn.gmyasoedov.gmaven.project.externalSystem.service
+package ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification
 
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationListener
@@ -14,6 +14,6 @@ class OpenGMavenSettingsCallback(private val project: Project) : NotificationLis
     }
 
     companion object {
-        val ID = "#open_gmaven_settings"
+        const val ID = "#open_gmaven_settings"
     }
 }

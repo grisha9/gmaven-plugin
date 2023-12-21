@@ -18,7 +18,7 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPluginData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.service.OpenGMavenSettingsCallback
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification.OpenGMavenSettingsCallback
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil

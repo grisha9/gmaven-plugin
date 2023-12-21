@@ -127,6 +127,7 @@
                      description="Additional Maven args for sub-task(not root pom) execution(comma delimiter)"/>
         <registryKey key="gmaven.gutter.annotation" defaultValue="true"
                      description="Disable/Enable gutter icon for navigation"/>
+        <registryKey key="gmaven.show.full.log" defaultValue="false" description="Show full log"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
 

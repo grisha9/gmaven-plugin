@@ -11,6 +11,7 @@ import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.util.PathUtil
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification.ShowFullLogCallback
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotUpdateType
@@ -188,6 +189,12 @@ private fun runMavenTaskInner(
 private fun processExceptions(exceptions: MutableList<MavenException>) {
     if (exceptions.isEmpty()) return
     val errorString = exceptions.joinToString(System.lineSeparator()) { it.message }
+
+    if (Registry.`is`("gmaven.show.full.log")) {
+        val fixId = ShowFullLogCallback.ID
+        val message = GBundle.message("gmaven.notification.full.log", errorString, fixId)
+        throw ExternalSystemException(message, fixId)
+    }
     throw ExternalSystemException(errorString)
 }
 

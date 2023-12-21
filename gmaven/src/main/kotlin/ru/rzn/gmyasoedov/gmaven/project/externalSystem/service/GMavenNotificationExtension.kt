@@ -7,16 +7,22 @@ import com.intellij.openapi.externalSystem.service.notification.NotificationData
 import com.intellij.openapi.externalSystem.service.notification.callback.OpenExternalSystemSettingsCallback
 import com.intellij.openapi.project.Project
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification.OpenGMavenSettingsCallback
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification.ShowFullLogCallback
 
 class GMavenNotificationExtension : ExternalSystemNotificationExtension {
 
     override fun getTargetExternalSystemId() = GMavenConstants.SYSTEM_ID
 
-    override fun customize(notificationData: NotificationData, project: Project, error: Throwable?) {
+    override fun customize(
+        notificationData: NotificationData, project: Project, externalProjectPath: String, error: Throwable?
+    ) {
         val e = (if (error is ExternalSystemException) error else null) ?: return
         for (fix in e.quickFixes) {
             if (OpenGMavenSettingsCallback.ID == fix) {
                 notificationData.setListener(OpenGMavenSettingsCallback.ID, OpenGMavenSettingsCallback(project))
+            } else if (ShowFullLogCallback.ID == fix) {
+                notificationData.setListener(ShowFullLogCallback.ID, ShowFullLogCallback(project))
             } else if (OpenExternalSystemSettingsCallback.ID == fix) {
                 val linkedProjectPath =
                     if (e is LocationAwareExternalSystemException) e.filePath else null
