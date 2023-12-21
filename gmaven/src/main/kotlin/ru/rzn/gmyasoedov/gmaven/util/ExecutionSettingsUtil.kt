@@ -8,12 +8,15 @@ import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.registry.Registry
+import com.intellij.util.io.exists
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData
 import ru.rzn.gmyasoedov.gmaven.project.profile.ProjectProfilesStateService
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MvnDotProperties
 import ru.rzn.gmyasoedov.gmaven.settings.*
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
+import java.nio.file.Path
 
 fun getDistributionSettings(projectSettings : MavenProjectSettings, project: Project): DistributionSettings {
     val settings = projectSettings.distributionSettings
@@ -64,6 +67,7 @@ fun fillExecutionWorkSpace(
             workspace.addProfile(profileExecution)
         }
     }
+    setMultiModuleProjectDirectory(projectPath, projectSettings.externalProjectPath, workspace)
 }
 
 private fun fillProjectBuildFiles(
@@ -106,4 +110,33 @@ private fun addedIgnoredModule(
         .filter { it.isIgnored }
         .map { ProjectExecution(MavenUtils.toGAString(it.data), false) }
         .forEach { data: ProjectExecution? -> workspace.addProject(data) }
+}
+
+private fun setMultiModuleProjectDirectory(
+    projectPathString: String, externalProjectPath: String?, workspace: MavenExecutionWorkspace
+) {
+    if (externalProjectPath == null || !Registry.`is`("gmaven.multiModuleProjectDirectory")) return
+    val projectPath = Path.of(projectPathString)
+    val projectDirPath = if (projectPath.toFile().isDirectory()) projectPath else projectPath.parent
+    if (MavenUtils.equalsPaths(projectDirPath.toString(), externalProjectPath)) return
+    val mainProjectPath = Path.of(externalProjectPath)
+    workspace.multiModuleProjectDirectory = getMultiModuleProjectDirectory(projectDirPath, mainProjectPath).toString()
+}
+
+private fun getMultiModuleProjectDirectory(projectPath: Path, mainProjectPath: Path): Path {
+    val workingDirectory = if (projectPath.toFile().isDirectory()) projectPath else projectPath.parent
+    var projectPathTmp = workingDirectory
+    try {
+        while (projectPathTmp != mainProjectPath) {
+            if (projectPathTmp.resolve(".mvn").exists()) {
+                return projectPathTmp
+            }
+            projectPathTmp = projectPathTmp.parent
+        }
+        if (projectPathTmp.resolve(".mvn").exists()) {
+            return projectPathTmp
+        }
+    } catch (ignored: Exception) {
+    }
+    return workingDirectory
 }
