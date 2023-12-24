@@ -67,7 +67,7 @@ fun fillExecutionWorkSpace(
             workspace.addProfile(profileExecution)
         }
     }
-    setMultiModuleProjectDirectory(projectPath, projectSettings.externalProjectPath, workspace)
+    setMultiModuleProjectDirectory(projectSettings.externalProjectPath, workspace)
 }
 
 private fun fillProjectBuildFiles(
@@ -113,9 +113,10 @@ private fun addedIgnoredModule(
 }
 
 private fun setMultiModuleProjectDirectory(
-    projectPathString: String, externalProjectPath: String?, workspace: MavenExecutionWorkspace
+    externalProjectPath: String?, workspace: MavenExecutionWorkspace
 ) {
     if (externalProjectPath == null || !Registry.`is`("gmaven.multiModuleProjectDirectory")) return
+    val projectPathString = workspace.subProjectBuildFile ?: workspace.projectBuildFile ?: return
     val projectPath = Path.of(projectPathString)
     val projectDirPath = if (projectPath.toFile().isDirectory()) projectPath else projectPath.parent
     if (MavenUtils.equalsPaths(projectDirPath.toString(), externalProjectPath)) return
