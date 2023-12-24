@@ -60,18 +60,18 @@ fun fillExecutionWorkSpace(
     }
     addedIgnoredModule(workspace, allModules, targetModuleNode)
     addedProfiles(projectDataNode, ProjectProfilesStateService.getInstance(project), workspace)
-    setMultiModuleProjectDirectory(projectPath, projectSettings.externalProjectPath, workspace)
+    setMultiModuleProjectDirectory(projectSettings.externalProjectPath, workspace)
 }
 
 private fun getTargetModuleAndContextMap(
-    projectPath:String, allModules: Collection<DataNode<ModuleData>>
+    projectPath: String, allModules: Collection<DataNode<ModuleData>>
 ): Pair<DataNode<ModuleData>?, TreeMap<String, DataNode<ModuleData>>> {
     val moduleByInternalName = TreeMap<String, DataNode<ModuleData>>()
     var targetModuleNode: DataNode<ModuleData>? = null
     for (each in allModules) {
         moduleByInternalName[each.data.internalName] = each
         if (targetModuleNode == null && MavenUtils.equalsPaths(each.data.linkedExternalProjectPath, projectPath)) {
-            targetModuleNode = each;
+            targetModuleNode = each
         }
     }
     return targetModuleNode to moduleByInternalName
@@ -125,7 +125,7 @@ private fun addedIgnoredModule(
         val parentNode = allModules
             .find { it.data.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) == buildFile } ?: return
         parentNode.data.internalName
-    }  + "."
+    } + "."
     allModules.asSequence()
         .filter { it.isIgnored }
         .filter { it.data.internalName.startsWith(basePrefixInternalName) }
@@ -144,9 +144,10 @@ private fun addedProfiles(
 }
 
 private fun setMultiModuleProjectDirectory(
-    projectPathString: String, externalProjectPath: String?, workspace: MavenExecutionWorkspace
+    externalProjectPath: String?, workspace: MavenExecutionWorkspace
 ) {
     if (externalProjectPath == null || !Registry.`is`("gmaven.multiModuleProjectDirectory")) return
+    val projectPathString = workspace.subProjectBuildFile ?: workspace.projectBuildFile ?: return
     val projectPath = Path.of(projectPathString)
     val projectDirPath = if (projectPath.toFile().isDirectory()) projectPath else projectPath.parent
     if (MavenUtils.equalsPaths(projectDirPath.toString(), externalProjectPath)) return
