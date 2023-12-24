@@ -1,7 +1,9 @@
 # GMaven Changelog
 
+## [Unreleased]
+
 ## [233.20] - 2023-12-24
-### Fixed ([full changelog](https://github.com/grisha9/gmaven-plugin/blob/master/CHANGELOG.md))
+### Fixed
 - correct multiModuleProjectDirectory (checked .mvn folder)
 
 ## [233.19] - 2023-12-17
