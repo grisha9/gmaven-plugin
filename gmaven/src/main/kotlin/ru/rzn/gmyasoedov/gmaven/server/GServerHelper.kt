@@ -11,7 +11,6 @@ import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.util.PathUtil
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
-import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotUpdateType
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
@@ -24,9 +23,6 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest
 import java.nio.file.Files
-import java.nio.file.Path
-import kotlin.io.path.Path
-import kotlin.io.path.exists
 
 fun firstRun(gServerRequest: GServerRequest): MavenResult {
     val request = GServerRequest(
@@ -57,7 +53,7 @@ fun getProjectModel(
         processConsumer?.let { it(processSupport) }
         return runMavenTask(processSupport, modelRequest)
     }
-    return mavenResult;
+    return mavenResult
 }
 
 fun runTasks(
@@ -147,7 +143,7 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
         .map { it.toRawName() }
         .joinToString(separator = ",")
     setSubtaskArgs(modelRequest)
-    //setMultiModuleProjectDirectory(modelRequest, request.settings)
+    modelRequest.multiModuleProjectDirectory = request.settings.executionWorkspace.multiModuleProjectDirectory
     modelRequest.additionalArguments = request.settings.arguments
     modelRequest.importArguments = request.settings.argumentsImport
     return modelRequest
@@ -197,37 +193,10 @@ private fun setSubtaskArgs(modelRequest: GetModelRequest) {
     }
 }
 
-fun setMultiModuleProjectDirectory(modelRequest: GetModelRequest, settings: MavenExecutionSettings) {
-    if (modelRequest.projectList.isEmpty() && modelRequest.projectPath != null) {
-        modelRequest.multiModuleProjectDirectory =
-            getMultiModuleProjectDirectory(Path(modelRequest.projectPath), settings).toString()
-    }
-}
-
 fun getSubTaskArgs(): List<String> {
     return try {
         Registry.stringValue("gmaven.subtask.args").split(",").map { it.trim() }
     } catch (ignored: Exception) {
         emptyList()
     }
-}
-
-fun getMultiModuleProjectDirectory(projectPath: Path, settings: MavenExecutionSettings): Path {
-    val workingDirectory = if (projectPath.toFile().isDirectory()) projectPath else projectPath.getParent();
-    if (!Registry.`is`("gmaven.multiModuleProjectDirectory", true)) return workingDirectory
-    val mainProjectPath = settings.executionWorkspace.externalProjectPath?.let { Path(it) } ?: return workingDirectory
-    var projectPathTmp = workingDirectory
-    try {
-        while (projectPathTmp != mainProjectPath) {
-            if (projectPathTmp.resolve(".mvn").exists()) {
-                return projectPathTmp
-            }
-            projectPathTmp = projectPathTmp.parent
-        }
-        if (projectPathTmp.resolve(".mvn").exists()) {
-            return projectPathTmp
-        }
-    } catch (ignored: Exception) {
-    }
-    return workingDirectory;
 }
