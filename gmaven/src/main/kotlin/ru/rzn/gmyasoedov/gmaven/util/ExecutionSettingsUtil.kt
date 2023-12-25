@@ -9,13 +9,16 @@ import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.registry.Registry
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData
 import ru.rzn.gmyasoedov.gmaven.project.profile.ProjectProfilesStateService
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MvnDotProperties
 import ru.rzn.gmyasoedov.gmaven.settings.*
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
+import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.exists
 
 fun getDistributionSettings(projectSettings: MavenProjectSettings, project: Project): DistributionSettings {
     val settings = projectSettings.distributionSettings
@@ -57,17 +60,18 @@ fun fillExecutionWorkSpace(
     }
     addedIgnoredModule(workspace, allModules, targetModuleNode)
     addedProfiles(projectDataNode, ProjectProfilesStateService.getInstance(project), workspace)
+    setMultiModuleProjectDirectory(projectSettings.externalProjectPath, workspace)
 }
 
 private fun getTargetModuleAndContextMap(
-    projectPath:String, allModules: Collection<DataNode<ModuleData>>
+    projectPath: String, allModules: Collection<DataNode<ModuleData>>
 ): Pair<DataNode<ModuleData>?, TreeMap<String, DataNode<ModuleData>>> {
     val moduleByInternalName = TreeMap<String, DataNode<ModuleData>>()
     var targetModuleNode: DataNode<ModuleData>? = null
     for (each in allModules) {
         moduleByInternalName[each.data.internalName] = each
         if (targetModuleNode == null && MavenUtils.equalsPaths(each.data.linkedExternalProjectPath, projectPath)) {
-            targetModuleNode = each;
+            targetModuleNode = each
         }
     }
     return targetModuleNode to moduleByInternalName
@@ -121,7 +125,7 @@ private fun addedIgnoredModule(
         val parentNode = allModules
             .find { it.data.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) == buildFile } ?: return
         parentNode.data.internalName
-    }  + "."
+    } + "."
     allModules.asSequence()
         .filter { it.isIgnored }
         .filter { it.data.internalName.startsWith(basePrefixInternalName) }
@@ -137,4 +141,34 @@ private fun addedProfiles(
     for (profileDataNode in ExternalSystemApiUtil.findAll(projectDataNode, ProfileData.KEY)) {
         profilesStateService.getProfileExecution(profileDataNode.data)?.let { workspace.addProfile(it) }
     }
+}
+
+private fun setMultiModuleProjectDirectory(
+    externalProjectPath: String?, workspace: MavenExecutionWorkspace
+) {
+    if (externalProjectPath == null || !Registry.`is`("gmaven.multiModuleProjectDirectory")) return
+    val projectPathString = workspace.subProjectBuildFile ?: workspace.projectBuildFile ?: return
+    val projectPath = Path.of(projectPathString)
+    val projectDirPath = if (projectPath.toFile().isDirectory()) projectPath else projectPath.parent
+    if (MavenUtils.equalsPaths(projectDirPath.toString(), externalProjectPath)) return
+    val mainProjectPath = Path.of(externalProjectPath)
+    workspace.multiModuleProjectDirectory = getMultiModuleProjectDirectory(projectDirPath, mainProjectPath).toString()
+}
+
+private fun getMultiModuleProjectDirectory(projectPath: Path, mainProjectPath: Path): Path {
+    val workingDirectory = if (projectPath.toFile().isDirectory()) projectPath else projectPath.parent
+    var projectPathTmp = workingDirectory
+    try {
+        while (projectPathTmp != mainProjectPath) {
+            if (projectPathTmp.resolve(".mvn").exists()) {
+                return projectPathTmp
+            }
+            projectPathTmp = projectPathTmp.parent
+        }
+        if (projectPathTmp.resolve(".mvn").exists()) {
+            return projectPathTmp
+        }
+    } catch (ignored: Exception) {
+    }
+    return workingDirectory
 }

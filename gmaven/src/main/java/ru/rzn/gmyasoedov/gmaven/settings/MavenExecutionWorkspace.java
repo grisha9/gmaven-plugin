@@ -20,6 +20,8 @@ public class MavenExecutionWorkspace implements Serializable {
     private String subProjectBuildFile;
     @Nullable
     private String externalProjectPath;
+    @Nullable
+    private String multiModuleProjectDirectory;
 
     public void addProfile(@Nullable ProfileExecution data) {
         if (data != null) {
@@ -67,5 +69,14 @@ public class MavenExecutionWorkspace implements Serializable {
 
     public void setExternalProjectPath(String externalProjectPath) {
         this.externalProjectPath = externalProjectPath;
+    }
+
+    @Nullable
+    public String getMultiModuleProjectDirectory() {
+        return multiModuleProjectDirectory;
+    }
+
+    public void setMultiModuleProjectDirectory(@Nullable String multiModuleProjectDirectory) {
+        this.multiModuleProjectDirectory = multiModuleProjectDirectory;
     }
 }
