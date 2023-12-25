@@ -113,12 +113,15 @@ public class GMavenServerImpl implements GMavenServer {
         String extClasspath = System.getProperty(GMavenServer.MAVEN_EXT_CLASS_PATH_PROPERTY);
         if (mavenHome == null) throw new RuntimeException("no maven home path");
         if (extClasspath == null) throw new RuntimeException("no maven ext class path");
-        String projectPath = request.projectPath;
-
+        String projectPath = request.multiModuleProjectDirectory != null
+                ? request.multiModuleProjectDirectory : request.projectPath;
         System.setProperty("classworlds.conf", Paths.get(mavenHome, "bin", "m2.conf").toString());
         System.setProperty("maven.home", mavenHome);
         System.setProperty("library.jansi.path", Paths.get(mavenHome, "lib", "jansi-native").toString());
         System.setProperty("maven.multiModuleProjectDirectory", projectPath);
-        System.setProperty("user.dir", projectPath);
+        System.setProperty("user.dir", request.projectPath);
+        if (request.multiModuleProjectDirectory != null) {
+            System.out.printf("userDir: %s multiModuleProjectDir: %s%n", request.projectPath, projectPath);
+        }
     }
 }
