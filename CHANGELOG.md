@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [232.20] - 2023-12-24
+### Fixed
+- correct multiModuleProjectDirectory (checked .mvn folder)
+
 ## [232.19] - 2023-12-17
 ### Added
 - Navigation from dependency/artifactId tag to module or local repository pom file
