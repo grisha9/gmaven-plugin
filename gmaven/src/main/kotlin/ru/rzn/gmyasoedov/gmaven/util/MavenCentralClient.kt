@@ -12,6 +12,8 @@ object MavenCentralClient {
     private const val ROW_COUNT = 50
     private const val SEARCH_BY_GROUP_AND_ARTIFACT_URL =
         "https://search.maven.org/solrsearch/select?q=g:%s+AND+a:%s&core=gav&rows=${ROW_COUNT}&wt=json"
+    private const val SEARCH_GROUP_BY_ARTIFACT_URL =
+        "https://search.maven.org/solrsearch/select?q=%s+AND+a:%s&rows=${ROW_COUNT}&wt=json"
     private const val SEARCH_BY_ARTIFACT_URL =
         "https://search.maven.org/solrsearch/select?q=%s&rows=${ROW_COUNT}&wt=json"
 
@@ -25,6 +27,13 @@ object MavenCentralClient {
     fun find(group: String, artifact: String): List<MavenCentralArtifactInfo> {
         return if (group.length > 1 && artifact.length > 1)
             findByUrl(SEARCH_BY_GROUP_AND_ARTIFACT_URL.format(group, artifact))
+        else emptyList()
+    }
+
+    @JvmStatic
+    fun findGroupId(group: String, artifact: String): List<MavenCentralArtifactInfo> {
+        return if (group.length > 1 && artifact.length > 1)
+            findByUrl(SEARCH_GROUP_BY_ARTIFACT_URL.format(group, artifact))
         else emptyList()
     }
 

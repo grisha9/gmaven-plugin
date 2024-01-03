@@ -5,6 +5,7 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.xml.XmlFile
@@ -15,6 +16,7 @@ import org.jetbrains.concurrency.Promise
 import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
 import ru.rzn.gmyasoedov.gmaven.util.MavenCentralArtifactInfo
 import ru.rzn.gmyasoedov.gmaven.util.MavenCentralClient.find
+import ru.rzn.gmyasoedov.gmaven.util.MavenCentralClient.findGroupId
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil.*
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import java.util.concurrent.atomic.AtomicLong
@@ -23,6 +25,8 @@ import java.util.function.Consumer
 
 private const val TIMEOUT_PROMISE_MS = 10_000
 private const val TIMEOUT_REQUEST_MS = 1_000
+
+private const val MIN_ARTIFACT_LENGTH = 3
 
 class MavenCoordinateCompletionContributor : CompletionContributor() {
     private val supportTagNames = setOf(ARTIFACT_ID, GROUP_ID, VERSION)
@@ -46,12 +50,22 @@ class MavenCoordinateCompletionContributor : CompletionContributor() {
         if (!supportTagNames.contains(tagElement.name)) return null
         val parentXmlTag = tagElement.parent as? XmlTag ?: return null
 
-        if (tagElement.name == VERSION) {
-            val artifactId = parentXmlTag.getSubTagText(ARTIFACT_ID) ?: return null
-            val groupId = parentXmlTag.getSubTagText(GROUP_ID) ?: return null
-            return VersionContributor(artifactId, groupId)
-        } else {
-            return GAVContributor(tagElement)
+        return when (tagElement.name) {
+            VERSION -> {
+                val artifactId = parentXmlTag.getSubTagText(ARTIFACT_ID) ?: return null
+                val groupId = parentXmlTag.getSubTagText(GROUP_ID) ?: return null
+                VersionContributor(artifactId, groupId)
+            }
+
+            ARTIFACT_ID -> {
+                GAVContributor(tagElement)
+            }
+
+            else -> {
+                val artifactId = parentXmlTag.getSubTagText(ARTIFACT_ID)
+                if (artifactId == null || artifactId.length < MIN_ARTIFACT_LENGTH)
+                    GAVContributor(tagElement) else GroupContributor(tagElement, artifactId)
+            }
         }
     }
 
@@ -130,6 +144,44 @@ private class GAVContributor(val artifactOrGroupTag: XmlTag) : Consumer<Completi
     }
 }
 
+private class GroupContributor(val groupTag: XmlTag, val artifactId: String) : Consumer<CompletionResultSet> {
+    override fun accept(result: CompletionResultSet) {
+        val groupIdText = result.prefixMatcher.prefix
+        if (groupTag.name != GROUP_ID) return
+        val promise = AsyncPromise<List<MavenCentralArtifactInfo>>()
+        ApplicationManager.getApplication().executeOnPooledThread {
+            promise.setResult(findGroupId(groupIdText, artifactId))
+        }
+        val findInModules = findInModule(groupIdText, groupTag.project)
+        findInModules.forEach {
+            val lookupElement = LookupElementBuilder.create(it).withInsertHandler(GroupInsertHandler)
+            result.addElement(PrioritizedLookupElement.withPriority(lookupElement, 100.0))
+        }
+
+        val startMillis = System.currentTimeMillis()
+        while (promise.getState() == Promise.State.PENDING && System.currentTimeMillis() - startMillis < TIMEOUT_PROMISE_MS) {
+            ProgressManager.checkCanceled()
+            Thread.yield()
+        }
+        if (!promise.isDone()) return
+
+        val artifactInfoList = promise.get() ?: return
+        artifactInfoList.forEach {
+            result.addElement(LookupElementBuilder.create(it.g).withInsertHandler(GroupInsertHandler))
+        }
+    }
+
+    private fun findInModule(groupIdText: String, project: Project): List<String> {
+        if (groupIdText.length < 2) return emptyList()
+        return CachedModuleDataService
+            .getDataHolder(project).modules.asSequence()
+            .filter { it.groupId.contains(groupIdText) }
+            .map { it.groupId }
+            .distinct()
+            .toList()
+    }
+}
+
 private object GAVInsertHandler : InsertHandler<LookupElement> {
 
     override fun handleInsert(context: InsertionContext, item: LookupElement) {
@@ -146,6 +198,22 @@ private object GAVInsertHandler : InsertHandler<LookupElement> {
             versionTag?.value?.text = artifactInfo.v
         }
         targetTag?.value?.text = if (isArtifactTag) artifactInfo.g else artifactInfo.a
+
+        context.setLaterRunnable {
+            CodeCompletionHandlerBase(CompletionType.BASIC).invokeCompletion(context.project, context.editor)
+        }
+    }
+}
+
+private object GroupInsertHandler : InsertHandler<LookupElement> {
+
+    override fun handleInsert(context: InsertionContext, item: LookupElement) {
+        val groupId: String = item.`object` as? String ?: return
+        val contextFile = context.file as? XmlFile ?: return
+        val element = contextFile.findElementAt(context.startOffset)
+        val xmlTag = PsiTreeUtil.getParentOfType(element, XmlTag::class.java) ?: return
+        context.commitDocument()
+        xmlTag.value.text = groupId
 
         context.setLaterRunnable {
             CodeCompletionHandlerBase(CompletionType.BASIC).invokeCompletion(context.project, context.editor)
