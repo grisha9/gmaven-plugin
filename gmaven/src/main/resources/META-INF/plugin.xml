@@ -178,6 +178,14 @@
             <add-to-group group-id="ExternalSystemView.BaseProjectMenu" anchor="after" relative-to-action="ExternalSystem.RefreshProject"/>
             <add-to-group group-id="ExternalSystemView.ModuleMenu" anchor="after" relative-to-action="ExternalSystem.RefreshProject"/>
         </action>
+        <action id="GMaven.ExternalSystem.ResetProfileState" icon="AllIcons.General.Reset"
+                class="ru.rzn.gmyasoedov.gmaven.project.action.ResetProfileStateToDefaultAction">
+            <add-to-group group-id="ExternalSystemView.BaseProjectMenu" anchor="last"/>
+        </action>
+
+        <group id="ExternalSystemView.GMaven.ProfileMenu">
+            <reference id="GMaven.ExternalSystem.ResetProfileState"/>
+        </group>
 
         <group id="GMaven.View.ActionsToolbar.CenterPanel">
             <separator/>
