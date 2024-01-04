@@ -56,4 +56,8 @@ public class ProfileNode extends ExternalSystemNode<ProfileData> {
     public boolean isAlwaysLeaf() {
         return true;
     }
+
+    public ProfileData getProfileData() {
+        return profileData;
+    }
 }

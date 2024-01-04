@@ -2,11 +2,14 @@ package ru.rzn.gmyasoedov.gmaven.project.externalSystem.view;
 
 import com.intellij.ide.projectView.PresentationData;
 import com.intellij.openapi.externalSystem.model.DataNode;
+import com.intellij.openapi.externalSystem.model.project.AbstractExternalEntityData;
 import com.intellij.openapi.externalSystem.util.Order;
 import com.intellij.openapi.externalSystem.view.ExternalProjectsView;
 import com.intellij.openapi.externalSystem.view.ExternalSystemNode;
 import icons.GMavenIcons;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData;
 
 import java.util.ArrayList;
@@ -14,7 +17,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Order(ExternalSystemNode.BUILTIN_TASKS_DATA_NODE_ORDER - 2)
-public class ProfileNodes extends ExternalSystemNode<Object> {
+public class ProfileNodes extends ExternalSystemNode<AbstractExternalEntityData> {
 
     private final List<ProfileNode> profiles;
 
@@ -50,5 +53,19 @@ public class ProfileNodes extends ExternalSystemNode<Object> {
     @Override
     protected List<? extends ExternalSystemNode<?>> doBuildChildren() {
         return profiles;
+    }
+
+    public List<ProfileNode> getProfiles() {
+        return List.copyOf(profiles);
+    }
+
+    @Override
+    public @Nullable AbstractExternalEntityData getData() {
+        return profiles.isEmpty() ? null : profiles.get(0).getData();
+    }
+
+    @Override
+    protected @Nullable @NonNls String getMenuId() {
+        return "ExternalSystemView.GMaven.ProfileMenu";
     }
 }
