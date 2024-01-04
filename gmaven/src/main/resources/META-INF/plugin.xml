@@ -181,6 +181,11 @@
         <action id="GMaven.Toolbar.SkipTests" class="ru.rzn.gmyasoedov.gmaven.project.action.SkipTestsAction"/>
         <action id="GMaven.Toolbar.Offline" class="ru.rzn.gmyasoedov.gmaven.project.action.OfflineModeAction"/>
         <action id="GMaven.Toolbar.Snapshot" class="ru.rzn.gmyasoedov.gmaven.project.action.UpdateSnapshotAction"/>
+        <action id="GMaven.ExternalSystem.RefreshProjectWithPlugins" icon="AllIcons.Actions.Refresh"
+                class="ru.rzn.gmyasoedov.gmaven.project.action.RefreshProjectWithPluginsAction">
+            <add-to-group group-id="ExternalSystemView.BaseProjectMenu" anchor="after" relative-to-action="ExternalSystem.RefreshProject"/>
+            <add-to-group group-id="ExternalSystemView.ModuleMenu" anchor="after" relative-to-action="ExternalSystem.RefreshProject"/>
+        </action>
 
         <group id="GMaven.View.ActionsToolbar.CenterPanel">
             <separator/>
