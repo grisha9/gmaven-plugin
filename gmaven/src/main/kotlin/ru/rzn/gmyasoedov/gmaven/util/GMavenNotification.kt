@@ -5,6 +5,12 @@ import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.externalSystem.service.notification.ExternalSystemNotificationManager
+import com.intellij.openapi.externalSystem.service.notification.NotificationCategory.ERROR
+import com.intellij.openapi.externalSystem.service.notification.NotificationData
+import com.intellij.openapi.externalSystem.service.notification.NotificationSource
+import com.intellij.openapi.project.Project
+import org.jetbrains.annotations.Nls
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
 
@@ -32,5 +38,14 @@ object GMavenNotification {
             actions.forEach { notification.addAction(it) }
             notification.notify(null)
         }
+    }
+
+    fun errorExternalSystemNotification(
+        title: @Nls String, message: @Nls String, project: Project
+    ) {
+        val notification = NotificationData(title, message, ERROR, NotificationSource.TASK_EXECUTION)
+        notification.isBalloonNotification = true
+        ExternalSystemNotificationManager.getInstance(project)
+            .showNotification(GMavenConstants.SYSTEM_ID, notification)
     }
 }

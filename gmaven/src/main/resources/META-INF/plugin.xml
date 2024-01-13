@@ -217,5 +217,11 @@
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <add-to-group group-id="ProjectViewPopupMenu"/>
         </action>
+        <action id="Gmaven.EffectivePom"
+                class="ru.rzn.gmyasoedov.gmaven.project.action.EffectivePomAction"
+                icon="GMavenIcons.ExecuteMavenGoal">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ProjectViewPopupMenu"/>
+        </action>
     </actions>
 </idea-plugin>
