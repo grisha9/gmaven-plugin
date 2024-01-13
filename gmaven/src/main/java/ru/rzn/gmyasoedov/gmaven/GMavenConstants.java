@@ -41,6 +41,9 @@ public final class GMavenConstants {
     public static final List<String> BASIC_PHASES =
             Arrays.asList("clean", "validate", "compile", "test", "package", "verify", "install", "deploy", "site");
 
+    public static final String TASK_RESOLVE_PLUGINS = "dependency:resolve-plugins";
+    public static final String TASK_DOWNLOAD_SOURCE = "dependency:sources";
+    public static final String TASK_EFFECTIVE_POM = "help:effective-pom";
 
     @NotNull
     @NonNls

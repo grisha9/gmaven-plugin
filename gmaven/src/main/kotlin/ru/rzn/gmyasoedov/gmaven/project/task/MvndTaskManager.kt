@@ -51,7 +51,7 @@ object MvndTaskManager {
         projectPath: Path, settings: MavenExecutionSettings, tasks: List<String>
     ): ParametersList {
         val parametersList = ParametersList()
-        if (!projectPath.isDirectory()) {
+        if (!projectPath.toFile().isDirectory()) {
             parametersList.add("-f")
             parametersList.add(projectPath.toString())
         }
