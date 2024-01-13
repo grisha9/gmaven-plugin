@@ -38,6 +38,10 @@ public final class GMavenConstants {
     @NotNull @NonNls
     public static final String SOURCE_SET_MODULE_TYPE_KEY = "sourceSet";
 
+    public static final String TASK_RESOLVE_PLUGINS = "dependency:resolve-plugins";
+    public static final String TASK_DOWNLOAD_SOURCE = "dependency:sources";
+    public static final String TASK_EFFECTIVE_POM = "help:effective-pom";
+
     @NotNull
     @NonNls
     public static final ProjectSystemId SYSTEM_ID = new ProjectSystemId(GMAVEN.toUpperCase(), GMAVEN);

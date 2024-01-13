@@ -17,9 +17,10 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.util.containers.ContainerUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants.TASK_RESOLVE_PLUGINS
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 
-private const val RESOLVE_PLUGINS_TASK = "dependency:resolve-plugins"
+
 
 class RefreshProjectWithPluginsAction :
     ExternalSystemNodeAction<AbstractExternalEntityData>(AbstractExternalEntityData::class.java), DumbAware {
@@ -56,7 +57,7 @@ class RefreshProjectWithPluginsAction :
         val externalProjectPath = if (projectSettings == null)
             configPathAware.linkedExternalProjectPath else projectSettings.externalProjectPath
 
-        val importSpec = ImportSpecBuilder(project, projectSystemId).withArguments(RESOLVE_PLUGINS_TASK)
+        val importSpec = ImportSpecBuilder(project, projectSystemId).withArguments(TASK_RESOLVE_PLUGINS)
         if (ExternalSystemUtil.confirmLoadingUntrustedProject(project, projectSystemId)) {
             ExternalSystemUtil.refreshProject(externalProjectPath, importSpec)
         }
