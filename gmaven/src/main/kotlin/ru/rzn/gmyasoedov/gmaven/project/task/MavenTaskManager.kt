@@ -10,6 +10,7 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUt
 import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundException
 import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager
 import com.intellij.openapi.util.registry.Registry
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
 import ru.rzn.gmyasoedov.gmaven.project.getMavenHome
 import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
@@ -20,6 +21,8 @@ import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.io.path.Path
+import kotlin.io.path.notExists
 
 class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
     private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, GServerRemoteProcessSupport>()
@@ -33,11 +36,12 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         listener: ExternalSystemTaskNotificationListener
     ) {
         settings ?: throw ExternalSystemException("settings is empty")
+
+        val tasks = getTasks(taskNames, settings)
         val workspace = settings.executionWorkspace
         val projectBuildFile = workspace.projectBuildFile
             ?: throw ExternalSystemException("project build file is empty")
         val buildPath = Path.of(workspace.subProjectBuildFile ?: projectBuildFile)
-        val tasks = getTasks(taskNames)
 
         if (settings.isUseMvndForTasks) {
             try {
@@ -58,12 +62,13 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         }
     }
 
-    private fun getTasks(taskNames: MutableList<String>): List<String> {
-        return if (Registry.stringValue("gmaven.lifecycles").contains(" ")) {
+    private fun getTasks(taskNames: List<String>, settings: MavenExecutionSettings): List<String> {
+        val tasks = if (Registry.stringValue("gmaven.lifecycles").contains(" ")) {
             taskNames.flatMap { it.split(" ") }
         } else {
             taskNames
         }
+        return preprocessSettings(tasks, settings)
     }
 
     override fun cancelTask(id: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
@@ -79,5 +84,16 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
             WARNING,
             listOf(ActionManager.getInstance().getAction("OpenLog"), ShowLogAction.notificationAction())
         )
+    }
+
+    private fun preprocessSettings(taskNames: List<String>, settings: MavenExecutionSettings): List<String> {
+        if (taskNames.size == 3 && taskNames[0] == GMavenConstants.TASK_EFFECTIVE_POM) {
+            if (taskNames[taskNames.size - 2] != "-f") return taskNames
+            val buildFile = taskNames[taskNames.size - 1]
+            if (Path(buildFile).notExists()) return taskNames
+            settings.executionWorkspace.subProjectBuildFile = buildFile
+            return listOf(taskNames[0])
+        }
+        return taskNames
     }
 }
