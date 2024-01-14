@@ -27,7 +27,8 @@ class PomXmlCompletionTagListenerContributor : CompletionContributor() {
             return // Don't brake the template.
         }
         val psiFile = parameters.originalFile as? XmlFile ?: return
-        if (!CachedModuleDataService.getDataHolder(psiFile.project).isConfigPath(psiFile.virtualFile.path)) return
+        val filePath = MavenUtils.toNioPathOrNull(psiFile.virtualFile)?.toString()  ?: return
+        if (!CachedModuleDataService.getDataHolder(psiFile.project).isConfigPath(filePath)) return
 
         result.runRemainingContributors(parameters) { r ->
             val lookupElement = r.lookupElement
