@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [233.21] - 2024-01-14
+### Added
+- action: reload GMaven project with plugins [wiki](https://github.com/grisha9/gmaven-plugin/wiki/Actions#reload-gmaven-project-with-plugins)
+- action: reset profile state to default [wiki](https://github.com/grisha9/gmaven-plugin/wiki/Actions#reset-profile-state-to-default)
+- action: show effective pom  [wiki](https://github.com/grisha9/gmaven-plugin/wiki/Actions#show-effective-pom)
+
 ## [233.20] - 2023-12-24
 ### Fixed
 - correct multiModuleProjectDirectory (checked .mvn folder)
