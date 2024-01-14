@@ -39,7 +39,8 @@ class EffectivePomAction : ExternalSystemAction() {
     override fun isVisible(e: AnActionEvent): Boolean {
         val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return false
         val project = e.getData(CommonDataKeys.PROJECT) ?: return false
-        return CachedModuleDataService.getDataHolder(project).isConfigPath(virtualFile.path)
+        val filePath = virtualFile.toNioPathOrNull()?.toString()  ?: return false
+        return CachedModuleDataService.getDataHolder(project).isConfigPath(filePath)
     }
 
     override fun actionPerformed(e: AnActionEvent) {
