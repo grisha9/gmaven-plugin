@@ -9,6 +9,7 @@ import com.intellij.codeInsight.completion.CompletionType.BASIC
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementDecorator
 import com.intellij.codeInsight.template.TemplateManager
+import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.xml.XmlFile
 import com.intellij.psi.xml.XmlTag
@@ -27,7 +28,8 @@ class PomXmlCompletionTagListenerContributor : CompletionContributor() {
             return // Don't brake the template.
         }
         val psiFile = parameters.originalFile as? XmlFile ?: return
-        if (!CachedModuleDataService.getDataHolder(psiFile.project).isConfigPath(psiFile.virtualFile.path)) return
+        val filePath = psiFile.virtualFile.toNioPathOrNull()?.toString()  ?: return
+        if (!CachedModuleDataService.getDataHolder(psiFile.project).isConfigPath(filePath)) return
 
         result.runRemainingContributors(parameters) { r ->
             val lookupElement = r.lookupElement
