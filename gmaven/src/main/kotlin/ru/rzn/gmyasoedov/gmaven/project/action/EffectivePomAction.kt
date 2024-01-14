@@ -11,7 +11,6 @@ import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExe
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.task.TaskCallback
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
-import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.PsiFileFactory
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.TASK_EFFECTIVE_POM
@@ -44,7 +43,7 @@ class EffectivePomAction : ExternalSystemAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return
-        val configNioPath = virtualFile.toNioPathOrNull() ?: return
+        val configNioPath = virtualFile.toNioPath()
         val project = e.getData(CommonDataKeys.PROJECT) ?: return
         val projectSettings = MavenSettings.getInstance(project)
             .getLinkedProjectSettings(configNioPath.parent.toString()) ?: return
