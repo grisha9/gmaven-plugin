@@ -4,16 +4,18 @@ import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
 import com.intellij.icons.AllIcons
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
+import com.intellij.lang.xml.XMLLanguage
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.readText
 import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiManager
 import com.intellij.psi.xml.XmlFile
 import com.intellij.psi.xml.XmlTag
-import com.intellij.util.io.isDirectory
 import icons.GMavenIcons
 import kotlinx.collections.immutable.toImmutableSet
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
@@ -107,19 +109,26 @@ class PomXmlDomGutterAnnotator : Annotator {
     }
 
     private fun getXmlFile(path: Path, project: Project): XmlFile? {
-        val filePath = if (path.isDirectory()) path.resolve(GMavenConstants.POM_XML) else path
+        val filePath = if (path.toFile().isDirectory()) path.resolve(GMavenConstants.POM_XML) else path
         if (!filePath.exists()) return null
 
-        val psiFile = LocalFileSystem.getInstance().findFileByNioFile(filePath)
-            ?.let { PsiManager.getInstance(project).findFile(it) }
-        return if (psiFile is XmlFile) psiFile else null
+        val virtualFile = LocalFileSystem.getInstance().findFileByNioFile(filePath) ?: return null
+        val psiFile = virtualFile.let { PsiManager.getInstance(project).findFile(it) } ?: return null
+        return if (psiFile is XmlFile) psiFile else {
+            try {
+                PsiFileFactory.getInstance(project)
+                    .createFileFromText(XMLLanguage.INSTANCE, virtualFile.readText()) as? XmlFile
+            } catch (e: Exception) {
+                null
+            }
+        }
     }
 
     private fun getParentPath(xmlParentTag: XmlTag, projectSettings: ProjectSettings): Path? {
         try {
             val relativePath = xmlParentTag.getSubTagText(RELATIVE_PATH)
             return if (relativePath == null) {
-                val parentPath = xmlParentTag.containingFile.virtualFile?.parent?.parent?.toNioPath() ?: return null
+                val parentPath = xmlParentTag.containingFile.virtualFile?.parent?.parent?.toNioPathOrNull()
                 val isProjectModule = projectSettings.modules.contains(parentPath.toString())
                 if (isProjectModule) parentPath else getParentInLocalRepo(xmlParentTag, projectSettings)
             } else if (relativePath.isEmpty() && projectSettings.localRepos.isNotEmpty()) {

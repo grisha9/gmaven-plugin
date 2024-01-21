@@ -4,7 +4,6 @@ import com.intellij.openapi.externalSystem.model.Key
 import com.intellij.openapi.externalSystem.model.project.AbstractExternalEntityData
 import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
 import com.intellij.serialization.PropertyMapping
-import com.intellij.util.containers.ContainerUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 
 class CompilerPluginData @PropertyMapping("path", "arguments", "buildDirectory", "baseDirectory") private constructor(
@@ -42,8 +41,8 @@ class CompilerPluginData @PropertyMapping("path", "arguments", "buildDirectory",
     val baseDirectory: String
 
     init {
-        this.path = ContainerUtil.immutableList(ArrayList(path))
-        this.arguments = ContainerUtil.immutableList(ArrayList(arguments))
+        this.path = path.toList()
+        this.arguments = arguments.toList()
         this.buildDirectory = buildDirectory
         this.baseDirectory = baseDirectory
     }
