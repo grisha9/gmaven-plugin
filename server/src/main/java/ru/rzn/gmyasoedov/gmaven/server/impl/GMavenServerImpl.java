@@ -89,6 +89,8 @@ public class GMavenServerImpl implements GMavenServer {
             mvnArgs.add("-Dpackaging=jar");
         } else if (request.tasks != null && !request.tasks.isEmpty()) {
             mvnArgs.addAll(request.tasks);
+        } else if (request.readOnly) {
+            mvnArgs.add(READ_TASK);
         } else {
             mvnArgs.add(RESOLVE_TASK);
         }
