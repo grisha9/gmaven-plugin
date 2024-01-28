@@ -25,6 +25,7 @@ public class MavenArtifactConverter {
                 null,
                 null,
                 false,
-                project.getFile(),true);
+                project.getFile(),
+                true);
     }
 }

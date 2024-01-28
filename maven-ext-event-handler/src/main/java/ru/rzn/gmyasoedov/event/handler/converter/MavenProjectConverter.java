@@ -12,7 +12,8 @@ import java.util.*;
 public class MavenProjectConverter {
 
     public static MavenProject convert(org.apache.maven.project.MavenProject mavenProject,
-                                       Map<String, List<DependencyNode>> dependencyResultMap) {
+                                       Map<String, List<DependencyNode>> dependencyResultMap,
+                                       boolean readOnly) {
         if (dependencyResultMap == null) {
             dependencyResultMap = Collections.emptyMap();
         }
@@ -28,6 +29,15 @@ public class MavenProjectConverter {
             MavenArtifact mavenArtifact = MavenArtifactConverter.convert(artifact);
             artifacts.add(mavenArtifact);
             convertedArtifactMap.put(artifact, mavenArtifact);
+        }
+        if (readOnly) {
+            Map<String, org.apache.maven.project.MavenProject> references = mavenProject.getProjectReferences();
+            if (references != null) {
+                for (org.apache.maven.project.MavenProject each : references.values()) {
+                    MavenArtifact mavenArtifact = MavenArtifactConverter.convert(each);
+                    artifacts.add(mavenArtifact);
+                }
+            }
         }
         List<DependencyTreeNode> dependencyTreeNodes = DependencyTreeNodeConverter
                 .convert(dependencyResultMap.get(mavenProject.getArtifactId()), convertedArtifactMap);

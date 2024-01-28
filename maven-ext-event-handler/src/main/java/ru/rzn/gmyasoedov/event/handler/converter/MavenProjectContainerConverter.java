@@ -5,15 +5,12 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.Os;
 import org.codehaus.plexus.util.StringUtils;
 import ru.rzn.gmyasoedov.event.handler.EventSpyResultHolder;
+import ru.rzn.gmyasoedov.serverapi.GMavenServer;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class MavenProjectContainerConverter {
 
@@ -29,9 +26,10 @@ public class MavenProjectContainerConverter {
         if (topLevelProject == null) {
             return null;
         }
+        boolean readOnly = source.session.getRequest().getGoals().contains(GMavenServer.READ_TASK);
         MavenProjectContainer container = new MavenProjectContainer(MavenProjectConverter
-                .convert(topLevelProject, source.dependencyResult));
-        fillContainer(container, projectByDirectoryMap, source);
+                .convert(topLevelProject, source.dependencyResult, readOnly));
+        fillContainer(container, projectByDirectoryMap, source, readOnly);
 
         return container;
     }
@@ -52,7 +50,8 @@ public class MavenProjectContainerConverter {
 
     private static void fillContainer(MavenProjectContainer rootContainer,
                                       Map<File, MavenProject> projectByDirectoryMap,
-                                      EventSpyResultHolder resultHolder) {
+                                      EventSpyResultHolder resultHolder,
+                                      boolean readOnly) {
         ru.rzn.gmyasoedov.serverapi.model.MavenProject project = rootContainer.getProject();
         for (String module : project.getModulesDir()) {
             if (StringUtils.isEmpty(module)) continue;
@@ -62,10 +61,10 @@ public class MavenProjectContainerConverter {
             if (mavenProjectByModuleFile == null) continue;
 
             MavenProjectContainer projectContainer = new MavenProjectContainer(
-                    MavenProjectConverter.convert(mavenProjectByModuleFile, resultHolder.dependencyResult)
+                    MavenProjectConverter.convert(mavenProjectByModuleFile, resultHolder.dependencyResult, readOnly)
             );
             rootContainer.getModules().add(projectContainer);
-            fillContainer(projectContainer, projectByDirectoryMap, resultHolder);
+            fillContainer(projectContainer, projectByDirectoryMap, resultHolder, readOnly);
         }
     }
 

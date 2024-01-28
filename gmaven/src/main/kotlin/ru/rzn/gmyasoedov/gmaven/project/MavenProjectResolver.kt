@@ -14,6 +14,7 @@ import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotifica
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
+import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.util.io.isDirectory
@@ -21,6 +22,7 @@ import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
+import ru.rzn.gmyasoedov.gmaven.project.policy.ReadProjectResolverPolicy
 import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
@@ -58,13 +60,30 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         sdk ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
         val mavenHome = getMavenHome(settings.distributionSettings)
         val buildPath = Path.of(settings.executionWorkspace.projectBuildFile ?: projectPath)
-        val request = GServerRequest(id, buildPath, mavenHome, sdk, listener = listener, settings = settings)
+        val request = getServerRequest(id, buildPath, mavenHome, sdk, listener, settings, resolverPolicy)
         try {
             val projectModel = getProjectModel(request) { cancellationMap[id] = it }
             return getProjectDataNode(projectPath, projectModel, settings)
         } finally {
             cancellationMap.remove(id)
         }
+    }
+
+    private fun getServerRequest(
+        id: ExternalSystemTaskId,
+        buildPath: Path,
+        mavenHome: Path,
+        sdk: Sdk,
+        listener: ExternalSystemTaskNotificationListener,
+        settings: MavenExecutionSettings,
+        resolverPolicy: ProjectResolverPolicy?
+    ): GServerRequest {
+        return GServerRequest(
+            id, buildPath, mavenHome, sdk,
+            listener = listener,
+            settings = settings,
+            readOnly = resolverPolicy is ReadProjectResolverPolicy
+        )
     }
 
     private fun getPreviewProjectDataNode(
