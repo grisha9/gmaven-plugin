@@ -15,12 +15,16 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.vfs.VirtualFile
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
+import ru.rzn.gmyasoedov.gmaven.project.policy.ReadProjectResolverPolicy
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.util.updateMavenJdk
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 
+const val MODULES_COUNT_FOR_PARALLEL = 5
+
 class GOpenProjectProvider : AbstractOpenProjectProvider() {
+
     override val systemId: ProjectSystemId = SYSTEM_ID
 
     override fun isProjectFile(file: VirtualFile) = MavenUtils.isPomFile(null, file)
@@ -45,11 +49,21 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         )
 
         ExternalProjectsManagerImpl.getInstance(project).runWhenInitialized {
-            ExternalSystemUtil.refreshProject(
-                externalProjectPath,
-                ImportSpecBuilder(project, SYSTEM_ID)
-                    .callback(createFinalImportCallback(project, externalProjectPath))
-            )
+            val importSpecBuilder = getImportSpecBuilder(project, externalProjectPath)
+            ExternalSystemUtil.refreshProject(externalProjectPath, importSpecBuilder)
+        }
+    }
+
+    private fun getImportSpecBuilder(
+        project: Project,
+        externalProjectPath: String
+    ): ImportSpecBuilder {
+        return if (Registry.`is`("gmaven.fast.open.project")) {
+            ImportSpecBuilder(project, SYSTEM_ID)
+                .projectResolverPolicy(ReadProjectResolverPolicy())
+                .callback(createFinalImportCallbackWithResolve(project, externalProjectPath))
+        } else {
+            ImportSpecBuilder(project, SYSTEM_ID).callback(createFinalImportCallback(project, externalProjectPath))
         }
     }
 
@@ -62,6 +76,27 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
                 if (externalProject == null) return
                 ProjectDataManager.getInstance().importData(externalProject, project)
                 updateMavenJdk(project, externalProjectPath)
+            }
+        }
+    }
+
+    private fun createFinalImportCallbackWithResolve(
+        project: Project,
+        externalProjectPath: String
+    ): ExternalProjectRefreshCallback {
+        return object : ExternalProjectRefreshCallback {
+            override fun onSuccess(externalProject: DataNode<ProjectData>?) {
+                if (externalProject == null) return
+                ProjectDataManager.getInstance().importData(externalProject, project)
+                updateMavenJdk(project, externalProjectPath)
+
+                val modulesCount = MavenSettings.getInstance(project)
+                    .getLinkedProjectSettings(externalProjectPath)?.modules?.size ?: 0
+                var importSpecBuilder = ImportSpecBuilder(project, SYSTEM_ID)
+                if (modulesCount > MODULES_COUNT_FOR_PARALLEL) {
+                    importSpecBuilder = importSpecBuilder.withArguments("-T 1C")
+                }
+                ExternalSystemUtil.refreshProject(externalProjectPath, importSpecBuilder)
             }
         }
     }

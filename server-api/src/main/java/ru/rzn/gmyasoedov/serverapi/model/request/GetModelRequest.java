@@ -22,4 +22,5 @@ public class GetModelRequest implements Serializable {
     public boolean notUpdateSnapshots;
     public boolean quiteLogs;
     public boolean debugLog;
+    public boolean readOnly;
 }
