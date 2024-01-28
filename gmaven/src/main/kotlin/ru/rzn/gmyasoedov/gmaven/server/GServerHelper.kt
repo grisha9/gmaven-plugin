@@ -146,6 +146,7 @@ private fun getModelRequest(request: GServerRequest): GetModelRequest {
     modelRequest.multiModuleProjectDirectory = request.settings.executionWorkspace.multiModuleProjectDirectory
     modelRequest.additionalArguments = request.settings.arguments
     modelRequest.importArguments = request.settings.argumentsImport
+    modelRequest.readOnly = request.readOnly
     return modelRequest
 }
 

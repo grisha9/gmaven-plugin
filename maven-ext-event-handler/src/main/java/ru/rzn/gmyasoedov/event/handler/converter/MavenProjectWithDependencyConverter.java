@@ -3,6 +3,7 @@ package ru.rzn.gmyasoedov.event.handler.converter;
 import org.apache.maven.execution.MavenExecutionResult;
 import org.apache.maven.project.MavenProject;
 import ru.rzn.gmyasoedov.event.handler.EventSpyResultHolder;
+import ru.rzn.gmyasoedov.serverapi.GMavenServer;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer;
 
 import java.util.ArrayList;
@@ -19,9 +20,10 @@ public class MavenProjectWithDependencyConverter {
         List<MavenProject> allProjects = executionResult.getTopologicallySortedProjects();
         if (allProjects == null) return null;
         List<MavenProjectContainer> result = new ArrayList<>(allProjects.size());
+        boolean readOnly = source.session.getRequest().getGoals().contains(GMavenServer.READ_TASK);
         for (MavenProject project : allProjects) {
             result.add(new MavenProjectContainer(
-                    MavenProjectConverter.convert(project, source.dependencyResult))
+                    MavenProjectConverter.convert(project, source.dependencyResult, readOnly))
             );
         }
         if (result.isEmpty()) return null;
