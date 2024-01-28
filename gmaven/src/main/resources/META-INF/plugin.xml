@@ -140,6 +140,8 @@
                      description="Disable/Enable gutter icon for navigation"/>
         <registryKey key="gmaven.multiModuleProjectDirectory" defaultValue="true"
                      description="Calc maven multi.module directory"/>
+        <registryKey key="gmaven.fast.open.project" defaultValue="true"
+                     description="Fast open project"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
 

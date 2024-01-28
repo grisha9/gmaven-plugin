@@ -14,5 +14,6 @@ data class GServerRequest(
     val settings: MavenExecutionSettings,
     val installGMavenPlugin: Boolean = false,
     val listener: ExternalSystemTaskNotificationListener? = null,
+    val readOnly: Boolean = false
 )
 
