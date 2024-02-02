@@ -15,9 +15,8 @@
         <![CDATA[
         <h3>Added</h3>
         <ul>
-            <li>action: reload GMaven project with plugins (<a href="https://github.com/grisha9/gmaven-plugin/wiki/Actions#reload-gmaven-project-with-plugins" target="_blank" rel="nofollow">Wiki</a>)</li></li></li>
-            <li>action: reset profile state to default (<a href="https://github.com/grisha9/gmaven-plugin/wiki/Actions#reset-profile-state-to-default" target="_blank" rel="nofollow">Wiki</a>)</li></li></li>
-            <li>action: show effective pom (<a href="https://github.com/grisha9/gmaven-plugin/wiki/Actions#show-effective-pom" target="_blank" rel="nofollow">Wiki</a>)</li></li></li>
+            <li>Fast open for existing project</li>
+            <li>Update bundled maven wrapper to 3.9.6</li>
         </ul>
     ]]>
     </change-notes>

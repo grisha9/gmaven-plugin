@@ -87,7 +87,7 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         return object : ExternalProjectRefreshCallback {
             override fun onSuccess(externalProject: DataNode<ProjectData>?) {
                 if (externalProject == null) return
-                ProjectDataManager.getInstance().importData(externalProject, project)
+                ProjectDataManager.getInstance().importData(externalProject, project, false)
                 updateMavenJdk(project, externalProjectPath)
 
                 val modulesCount = MavenSettings.getInstance(project)
