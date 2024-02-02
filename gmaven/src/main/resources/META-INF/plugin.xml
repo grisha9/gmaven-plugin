@@ -122,7 +122,7 @@
                      description="Maven boot file prefix"/>
         <registryKey key="gmaven.support.extensions" defaultValue="pom,xml,scala,groovy,atom,rb,yml,yaml,clj"
                      description="Maven support extensions"/>
-        <registryKey key="gmaven.bundled.wrapper.version" defaultValue="3.9.1"
+        <registryKey key="gmaven.bundled.wrapper.version" defaultValue="3.9.6"
                      description="Maven bundled wrapper version"/>
         <registryKey key="gmaven.vm.remove.javaagent" defaultValue="true"
                      description="Remove java vm parameter -javaagent for maven import process"/>
