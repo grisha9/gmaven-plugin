@@ -9,6 +9,7 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.openapi.util.registry.Registry
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.util.PathUtil
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification.ShowFullLogCallback
@@ -197,13 +198,18 @@ private fun processExceptions(exceptions: MutableList<MavenException>) {
 
 private fun setSubtaskArgs(modelRequest: GetModelRequest) {
     if (modelRequest.projectList.isNotEmpty()) {
-        modelRequest.subTaskArguments = getSubTaskArgs()
+        val subTaskArgs = getSubTaskArgs()
+        if (subTaskArgs.isNotEmpty()) {
+            modelRequest.subTaskArguments = subTaskArgs
+        }
     }
 }
 
 fun getSubTaskArgs(): List<String> {
     return try {
-        Registry.stringValue("gmaven.subtask.args").split(",").map { it.trim() }
+        val stringValue = Registry.stringValue("gmaven.subtask.args")
+        if (StringUtil.isEmptyOrSpaces(stringValue)) return emptyList()
+        stringValue.split(",").map { it.trim() }
     } catch (ignored: Exception) {
         emptyList()
     }
