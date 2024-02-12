@@ -23,7 +23,6 @@ import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.util.updateMavenJdk
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 
-const val MODULES_COUNT_FOR_PARALLEL = 5
 
 class GOpenProjectProvider : AbstractOpenProjectProvider() {
 
@@ -42,13 +41,13 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         val externalProjectPath = settings.externalProjectPath
 
         ExternalSystemApiUtil.getSettings(project, SYSTEM_ID).linkProject(settings)
-        if (Registry.`is`("external.system.auto.import.disabled")) return
         ExternalSystemUtil.refreshProject(
             externalProjectPath,
             ImportSpecBuilder(project, SYSTEM_ID)
                 .usePreviewMode()
                 .use(ProgressExecutionMode.MODAL_SYNC)
         )
+        if (Registry.`is`("external.system.auto.import.disabled")) return
 
         ExternalProjectsManagerImpl.getInstance(project).runWhenInitialized {
             val importSpecBuilder = getImportSpecBuilder(project, externalProjectPath)
