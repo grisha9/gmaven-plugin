@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [233.22] - 2024-02-02
+### Added
+- Fast open for existing project [wiki](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-registry-keys#gmavenfastopenproject)
+- Update bundled maven wrapper to 3.9.6
+
 ## [233.21] - 2024-01-14
 ### Added
 - action: reload GMaven project with plugins [wiki](https://github.com/grisha9/gmaven-plugin/wiki/Actions#reload-gmaven-project-with-plugins)
