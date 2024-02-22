@@ -9,6 +9,7 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin.par
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenContentRoot
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginContentRoots
+import ru.rzn.gmyasoedov.gmaven.util.toFeatureString
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
@@ -52,7 +53,7 @@ class KotlinMavenPlugin : MavenFullImportPlugin {
         val configurationElement = parseConfiguration(plugin.body.configuration, context)
         val jvmTarget = configurationElement.getChild("jvmTarget")?.textTrim
             ?: project.properties["kotlin.compiler.jvmTarget"] as? String
-            ?: LanguageLevel.JDK_1_8.toJavaVersion().toFeatureString()
+            ?: LanguageLevel.JDK_1_8.toFeatureString()
         val languageVersion = configurationElement.getChild("languageVersion")?.textTrim
             ?: project.properties["kotlin.compiler.languageVersion"] as? String
         val apiVersion = configurationElement.getChild("apiVersion")?.textTrim

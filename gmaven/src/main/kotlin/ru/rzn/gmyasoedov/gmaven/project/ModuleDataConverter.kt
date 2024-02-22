@@ -13,6 +13,7 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPluginData
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver.ModuleContextHolder
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
+import ru.rzn.gmyasoedov.gmaven.util.toFeatureString
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
@@ -69,7 +70,7 @@ fun createModuleData(
     val targetBytecodeLevel: LanguageLevel = compilerData.targetLevel
     moduleDataNode.createChild(ModuleSdkData.KEY, ModuleSdkData(null))
 
-    val targetBytecodeVersion = targetBytecodeLevel.toJavaVersion().toFeatureString()
+    val targetBytecodeVersion = targetBytecodeLevel.toFeatureString()
     moduleDataNode.createChild(
         JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, sourceLanguageLevel, targetBytecodeVersion)
     )
@@ -181,8 +182,7 @@ private fun createSourceSetModule(
 
     val sourceLevel = if (isTest) compilerData.testSourceLevel else compilerData.sourceLevel
     val targetLevel = (if (isTest) compilerData.testTargetLevel else compilerData.targetLevel)
-        .toJavaVersion().toFeatureString()
-    moduleNode.createChild(JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, sourceLevel, targetLevel))
+    moduleNode.createChild(JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, sourceLevel, targetLevel.toFeatureString()))
     moduleNode.createChild(ModuleSdkData.KEY, ModuleSdkData(null))
     return moduleNode
 }

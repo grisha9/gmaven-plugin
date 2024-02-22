@@ -27,6 +27,7 @@ import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
+import ru.rzn.gmyasoedov.gmaven.util.toFeatureString
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import java.io.File
 import java.nio.file.Path
@@ -126,7 +127,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val languageLevel = LanguageLevel.parse(sdkName)
         val javaProjectData = JavaProjectData(
             GMavenConstants.SYSTEM_ID, project.outputDirectory, languageLevel,
-            languageLevel!!.toJavaVersion().toFeatureString()
+            languageLevel!!.toFeatureString()
         )
         projectDataNode.createChild(JavaProjectData.KEY, javaProjectData)
 
