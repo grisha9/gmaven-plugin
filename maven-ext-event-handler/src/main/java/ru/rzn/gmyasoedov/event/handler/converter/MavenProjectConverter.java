@@ -57,13 +57,13 @@ public class MavenProjectConverter {
                 .dependencyTree(dependencyTreeNodes)
                 .sourceRoots(mavenProject.getCompileSourceRoots())
                 .testSourceRoots(mavenProject.getTestCompileSourceRoots())
-                .resourceRoots(convertResorce(mavenProject.getResources()))
-                .testResourceRoots(convertResorce(mavenProject.getTestResources()))
+                .resourceRoots(convertResource(mavenProject.getResources()))
+                .testResourceRoots(convertResource(mavenProject.getTestResources()))
                 .buildDirectory(mavenProject.getBuild().getDirectory())
                 .outputDirectory(mavenProject.getBuild().getOutputDirectory())
                 .testOutputDirectory(mavenProject.getBuild().getTestOutputDirectory())
                 .resolvedArtifacts(artifacts)
-                .dependencyArtifacts(convertMavenArtifact(mavenProject.getDependencyArtifacts()))
+               // .dependencyArtifacts(convertMavenArtifact(mavenProject.getDependencyArtifacts()))
                 .parentArtifact(mavenProject.getParent() != null
                         ? MavenArtifactConverter.convert(mavenProject.getParent()) : null)
                 .properties(getProperties(mavenProject))
@@ -92,7 +92,7 @@ public class MavenProjectConverter {
         return result;
     }
 
-    private static List<String> convertResorce(List<Resource> resources) {
+    private static List<String> convertResource(List<Resource> resources) {
         if (resources == null || resources.isEmpty()) return Collections.emptyList();
         ArrayList<String> result = new ArrayList<>(resources.size());
         for (Resource item : resources) {

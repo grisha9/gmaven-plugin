@@ -213,7 +213,7 @@ public class MavenServerCmdState extends CommandLineState {
             }
             return bootJarPath.orElseThrow();
         } catch (IOException e) {
-            throw new RuntimeException("maven boot jar not found", e);
+            throw new RuntimeException("maven boot jar not found in: " + mavenPath, e);
         }
     }
 

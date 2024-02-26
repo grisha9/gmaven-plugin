@@ -26,6 +26,7 @@ import java.nio.file.Path
 import java.util.*
 import javax.swing.Icon
 import kotlin.io.path.exists
+import kotlin.io.path.name
 
 class PomXmlDomGutterAnnotator : Annotator {
 
@@ -117,7 +118,7 @@ class PomXmlDomGutterAnnotator : Annotator {
         return if (psiFile is XmlFile) psiFile else {
             try {
                 PsiFileFactory.getInstance(project)
-                    .createFileFromText(XMLLanguage.INSTANCE, virtualFile.readText()) as? XmlFile
+                    .createFileFromText(filePath.name, XMLLanguage.INSTANCE, virtualFile.readText()) as? XmlFile
             } catch (e: Exception) {
                 null
             }
