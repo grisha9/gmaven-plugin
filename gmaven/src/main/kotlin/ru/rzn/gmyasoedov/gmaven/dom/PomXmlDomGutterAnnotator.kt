@@ -28,6 +28,7 @@ import java.util.*
 import javax.swing.Icon
 import kotlin.io.path.exists
 import kotlin.io.path.name
+import kotlin.io.path.notExists
 
 class PomXmlDomGutterAnnotator : Annotator {
 
@@ -115,7 +116,7 @@ class PomXmlDomGutterAnnotator : Annotator {
         if (!filePath.exists()) return null
 
         val virtualFile = LocalFileSystem.getInstance().findFileByNioFile(filePath) ?: return null
-        val psiFile = virtualFile.let { PsiManager.getInstance(project).findFile(it) } ?: return null
+        val psiFile = PsiManager.getInstance(project).findFile(virtualFile) ?: return null
         return if (psiFile is XmlFile) psiFile else {
             try {
                 PsiFileFactory.getInstance(project)
@@ -136,7 +137,11 @@ class PomXmlDomGutterAnnotator : Annotator {
             } else if (relativePath.isEmpty() && projectSettings.localRepos.isNotEmpty()) {
                 getParentInLocalRepo(xmlParentTag, projectSettings)
             } else {
-                xmlParentTag.containingFile.virtualFile.parent?.toNioPath()?.resolve(relativePath)
+                val parentPath = xmlParentTag.containingFile.virtualFile.parent?.toNioPath()?.resolve(relativePath)
+                if (parentPath == null || parentPath.notExists()) {
+                    return getParentInLocalRepo(xmlParentTag, projectSettings)
+                }
+                return parentPath
             }
         } catch (e: Exception) {
             return null

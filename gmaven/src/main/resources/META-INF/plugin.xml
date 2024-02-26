@@ -136,8 +136,8 @@
 
         <notificationGroup id="GMaven" displayType="BALLOON"/>
 
-        <fileType name="XML" extensions="pom"/>
-        <completion.contributor language="XML"
+        <fileTypeOverrider implementation="ru.rzn.gmyasoedov.gmaven.dom.PomFileTypeOverrider" order="first"/>
+        <completion.contributor language="XML" order="first"
                                 implementationClass="ru.rzn.gmyasoedov.gmaven.dom.completion.MavenCoordinateCompletionContributor"/>
         <completion.contributor language="XML"
                                 implementationClass="ru.rzn.gmyasoedov.gmaven.dom.completion.PomXmlCompletionTagListenerContributor"
