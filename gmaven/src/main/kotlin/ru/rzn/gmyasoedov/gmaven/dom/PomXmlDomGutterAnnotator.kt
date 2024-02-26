@@ -24,6 +24,7 @@ import java.nio.file.Path
 import java.util.*
 import javax.swing.Icon
 import kotlin.io.path.exists
+import kotlin.io.path.name
 
 class PomXmlDomGutterAnnotator : Annotator {
 
@@ -110,9 +111,16 @@ class PomXmlDomGutterAnnotator : Annotator {
         val filePath = if (path.isDirectory()) path.resolve(GMavenConstants.POM_XML) else path
         if (!filePath.exists()) return null
 
-        val psiFile = LocalFileSystem.getInstance().findFileByNioFile(filePath)
-            ?.let { PsiManager.getInstance(project).findFile(it) }
-        return if (psiFile is XmlFile) psiFile else null
+        val virtualFile = LocalFileSystem.getInstance().findFileByNioFile(filePath) ?: return null
+        val psiFile = virtualFile.let { PsiManager.getInstance(project).findFile(it) } ?: return null
+        return if (psiFile is XmlFile) psiFile else {
+            try {
+                PsiFileFactory.getInstance(project)
+                    .createFileFromText(filePath.name, XMLLanguage.INSTANCE, virtualFile.readText()) as? XmlFile
+            } catch (e: Exception) {
+                null
+            }
+        }
     }
 
     private fun getParentPath(xmlParentTag: XmlTag, projectSettings: ProjectSettings): Path? {
