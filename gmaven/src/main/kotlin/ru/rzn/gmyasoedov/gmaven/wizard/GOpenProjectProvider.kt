@@ -1,5 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven.wizard
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.externalSystem.importing.AbstractOpenProjectProvider
 import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder
 import com.intellij.openapi.externalSystem.model.DataNode
@@ -11,6 +12,7 @@ import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManagerImpl
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.vfs.VirtualFile
@@ -20,8 +22,6 @@ import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.util.updateMavenJdk
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
-
-const val MODULES_COUNT_FOR_PARALLEL = 5
 
 class GOpenProjectProvider : AbstractOpenProjectProvider() {
 
@@ -40,13 +40,13 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         val externalProjectPath = settings.externalProjectPath
 
         ExternalSystemApiUtil.getSettings(project, SYSTEM_ID).linkProject(settings)
-        if (Registry.`is`("external.system.auto.import.disabled")) return
         ExternalSystemUtil.refreshProject(
             externalProjectPath,
             ImportSpecBuilder(project, SYSTEM_ID)
                 .usePreviewMode()
                 .use(ProgressExecutionMode.MODAL_SYNC)
         )
+        if (Registry.`is`("external.system.auto.import.disabled")) return
 
         ExternalProjectsManagerImpl.getInstance(project).runWhenInitialized {
             val importSpecBuilder = getImportSpecBuilder(project, externalProjectPath)
@@ -58,12 +58,14 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         project: Project,
         externalProjectPath: String
     ): ImportSpecBuilder {
-        return if (Registry.`is`("gmaven.fast.open.project")) {
+        return if (!Registry.`is`("gmaven.fast.open.project")
+            || ApplicationManager.getApplication().isHeadlessEnvironment
+            || ApplicationManager.getApplication().isUnitTestMode) {
+            ImportSpecBuilder(project, SYSTEM_ID).callback(createFinalImportCallback(project, externalProjectPath))
+        } else {
             ImportSpecBuilder(project, SYSTEM_ID)
                 .projectResolverPolicy(ReadProjectResolverPolicy())
                 .callback(createFinalImportCallbackWithResolve(project, externalProjectPath))
-        } else {
-            ImportSpecBuilder(project, SYSTEM_ID).callback(createFinalImportCallback(project, externalProjectPath))
         }
     }
 
@@ -90,13 +92,9 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
                 ProjectDataManager.getInstance().importData(externalProject, project)
                 updateMavenJdk(project, externalProjectPath)
 
-                val modulesCount = MavenSettings.getInstance(project)
-                    .getLinkedProjectSettings(externalProjectPath)?.modules?.size ?: 0
-                var importSpecBuilder = ImportSpecBuilder(project, SYSTEM_ID)
-                if (modulesCount > MODULES_COUNT_FOR_PARALLEL) {
-                    importSpecBuilder = importSpecBuilder.withArguments("-T 1C")
+                DumbService.getInstance(project).runWhenSmart {
+                    ExternalSystemUtil.refreshProject(externalProjectPath, ImportSpecBuilder(project, SYSTEM_ID))
                 }
-                ExternalSystemUtil.refreshProject(externalProjectPath, importSpecBuilder)
             }
         }
     }
