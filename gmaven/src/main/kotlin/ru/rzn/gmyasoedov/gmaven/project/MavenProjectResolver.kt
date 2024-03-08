@@ -17,7 +17,6 @@ import com.intellij.openapi.externalSystem.service.project.ExternalSystemProject
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.pom.java.LanguageLevel
-import com.intellij.util.io.isDirectory
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
@@ -33,6 +32,7 @@ import java.io.File
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 
 class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSettings> {
@@ -143,8 +143,8 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     }
 
     private fun getProjectDirectory(projectPath: String): Path {
-        val projectNioPath = Path.of(projectPath)
-        return if (projectNioPath.isDirectory()) projectNioPath else projectNioPath.parent
+        val projectNioPath = Path(projectPath)
+        return if (projectNioPath.toFile().isDirectory) projectNioPath else projectNioPath.parent
     }
 
     class ProjectResolverContext(
