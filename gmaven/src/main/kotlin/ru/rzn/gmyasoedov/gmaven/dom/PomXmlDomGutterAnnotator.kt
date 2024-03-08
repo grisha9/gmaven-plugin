@@ -1,18 +1,27 @@
 package ru.rzn.gmyasoedov.gmaven.dom
 
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
+import com.intellij.find.FindBundle
+import com.intellij.find.FindModel
+import com.intellij.find.findInProject.FindInProjectManager
 import com.intellij.icons.AllIcons
+import com.intellij.ide.DataManager
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
+import com.intellij.lang.annotation.HighlightSeverity
+import com.intellij.lang.xml.XMLLanguage
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.readText
 import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiManager
 import com.intellij.psi.xml.XmlFile
 import com.intellij.psi.xml.XmlTag
+import com.intellij.util.containers.ContainerUtil
 import com.intellij.util.io.isDirectory
 import icons.GMavenIcons
 import kotlinx.collections.immutable.toImmutableSet
@@ -20,6 +29,7 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil.*
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
+import java.awt.event.MouseEvent
 import java.nio.file.Path
 import java.util.*
 import javax.swing.Icon
@@ -55,6 +65,10 @@ class PomXmlDomGutterAnnotator : Annotator {
         } else if (tagName == PLUGIN && xmlTag.parentTag?.parentTag?.name != PLUGIN_MANAGEMENT) {
             val management = getDependencyManagement(xmlFile, settingsHolder)
             addGutterIcon(xmlTag, management, holder, true)
+        } else if (tagName == DEPENDENCY && xmlTag.parentTag?.parentTag?.name == DEPENDENCY_MANAGEMENT) {
+            addSearchArtifactGutterIcon(xmlTag, holder)
+        } else if (tagName == PLUGIN && xmlTag.parentTag?.parentTag?.name == PLUGIN_MANAGEMENT) {
+            addSearchArtifactGutterIcon(xmlTag, holder)
         }
     }
 
@@ -80,6 +94,42 @@ class PomXmlDomGutterAnnotator : Annotator {
                     .setTooltipText(generateTooltip(it, isPlugin, management))
                     .createGutterIcon(holder, xmlTag)
             }
+    }
+
+    private fun addSearchArtifactGutterIcon(xmlTag: XmlTag, holder: AnnotationHolder) {
+        val artifactIdTag = xmlTag.findFirstSubTag(ARTIFACT_ID) ?: return
+        val artifactId = artifactIdTag.value.text
+        if (artifactId.isEmpty()) return
+
+        val myBuilder = MyNavigationGutterIconBuilder(AllIcons.Actions.Search,
+            { element: PsiElement? ->
+                ContainerUtil.createMaybeSingletonList(
+                    element
+                )
+            })
+
+        val builder = myBuilder
+            .setTarget(artifactIdTag)
+            .setTooltipText(FindBundle.message("find.what.group") + " $artifactId")
+        if (builder is MyNavigationGutterIconBuilder) {
+            val renderer = builder.createGutterIconRenderer(xmlTag.project) { event, element ->
+                performSearch(event, element, artifactId)
+            }
+
+            holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
+                .range(artifactIdTag)
+                .gutterIconRenderer(renderer)
+                .needsUpdateOnTyping(false)
+                .create()
+        }
+    }
+
+    private fun performSearch(event: MouseEvent, element: PsiElement, artifactId: String) {
+        val findModel = FindModel()
+        findModel.stringToFind = "<artifactId>$artifactId</artifactId>"
+        findModel.isProjectScope = true
+        val dataContext = DataManager.getInstance().getDataContext(event.component)
+        FindInProjectManager.getInstance(element.project).findInProject(dataContext, findModel)
     }
 
     private fun getParentInLocalRepo(
@@ -164,7 +214,7 @@ class PomXmlDomGutterAnnotator : Annotator {
             fillDependencyManagement(xmlFile, management, projectSettings)
             dependencyManagement = management
         }
-        return dependencyManagement!!;
+        return dependencyManagement!!
     }
 
     private fun fillDependencyManagement(
