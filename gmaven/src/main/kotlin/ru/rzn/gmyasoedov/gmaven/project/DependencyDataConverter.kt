@@ -6,9 +6,11 @@ import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.project.*
 import com.intellij.openapi.externalSystem.model.project.dependencies.ProjectDependenciesImpl
+import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.util.registry.Registry
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver.ProjectResolverContext
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
 import ru.rzn.gmyasoedov.serverapi.model.MavenArtifact
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
@@ -16,10 +18,9 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
 import java.nio.file.Path
 import kotlin.io.path.exists
 
+
 fun addDependencies(
-    container: MavenProjectContainer,
-    projectNode: DataNode<ProjectData>,
-    context: MavenProjectResolver.ProjectResolverContext
+    container: MavenProjectContainer, projectNode: DataNode<ProjectData>, context: ProjectResolverContext
 ) {
     addDependencies(container.project, context)
     for (childContainer in container.modules) {
@@ -27,9 +28,7 @@ fun addDependencies(
     }
 }
 
-private fun addDependencies(
-    project: MavenProject, context: MavenProjectResolver.ProjectResolverContext
-) {
+private fun addDependencies(project: MavenProject, context: ProjectResolverContext) {
     val moduleContextHolder = context.moduleDataByArtifactId[project.id]!!
     val sourceSetModules = moduleContextHolder.perSourceSetModules
     if (sourceSetModules == null) {
@@ -40,9 +39,7 @@ private fun addDependencies(
 }
 
 private fun addDependencies(
-    project: MavenProject,
-    moduleByMavenProject: DataNode<ModuleData>,
-    context: MavenProjectResolver.ProjectResolverContext
+    project: MavenProject, moduleByMavenProject: DataNode<ModuleData>, context: ProjectResolverContext
 ) {
     var hasLibrary = false
     for (artifact in project.resolvedArtifacts) {
@@ -66,7 +63,7 @@ private fun addDependencies(
     project: MavenProject,
     mainModule: DataNode<SourceSetData>,
     testModule: DataNode<SourceSetData>,
-    context: MavenProjectResolver.ProjectResolverContext
+    context: ProjectResolverContext
 ) {
     var hasLibrary = false
     for (artifact in project.resolvedArtifacts) {
@@ -90,45 +87,73 @@ private fun addDependencies(
     }
 }
 
-private fun addLibrary(parentNode: DataNode<ModuleData>,
-                       artifact: MavenArtifact,
-                       context: MavenProjectResolver.ProjectResolverContext) {
-    val createLibrary = createLibrary(artifact, context.mavenResult.settings.modulesCount)
-    val libraryDependencyData = LibraryDependencyData(parentNode.data, createLibrary, LibraryLevel.PROJECT)
+private fun addLibrary(parentNode: DataNode<ModuleData>, artifact: MavenArtifact, context: ProjectResolverContext) {
+    val createdLibrary = createLibrary(artifact, context.mavenResult.settings.modulesCount)
+
+    var level = LibraryLevel.PROJECT
+    if (!linkProjectLibrary(context, context.projectNode, createdLibrary)) {
+        level = LibraryLevel.MODULE
+    }
+
+    val libraryDependencyData = LibraryDependencyData(parentNode.data, createdLibrary, level)
     libraryDependencyData.scope = getScope(artifact)
     libraryDependencyData.order = 20 + getScopeOrder(libraryDependencyData.scope)
     parentNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData)
     if (libraryDependencyData.scope == DependencyScope.RUNTIME) {
-        val libraryDependencyDataTest = LibraryDependencyData(parentNode.data, createLibrary, LibraryLevel.PROJECT)
+        val libraryDependencyDataTest = LibraryDependencyData(parentNode.data, createdLibrary, level)
         libraryDependencyDataTest.scope = DependencyScope.TEST
         libraryDependencyDataTest.order = 20 + getScopeOrder(libraryDependencyDataTest.scope)
         parentNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyDataTest)
     }
-    //projectNode.createChild(ProjectKeys.LIBRARY, createLibrary) - todo #c.i.o.e.s.p.m.LibraryDataService - Multiple project level libraries found with the same name 'GMaven: org.junit.platform:junit-platform-engine:1.7.1'
 }
 
 private fun addLibrary(
-    mainNode: DataNode<SourceSetData>, testNode: DataNode<SourceSetData>, artifact: MavenArtifact,
-    context: MavenProjectResolver.ProjectResolverContext
+    mainNode: DataNode<SourceSetData>,
+    testNode: DataNode<SourceSetData>,
+    artifact: MavenArtifact,
+    context: ProjectResolverContext
 ) {
     val scope = getScope(artifact)
-    val createLibrary = createLibrary(artifact, context.mavenResult.settings.modulesCount)
+    val createdLibrary = createLibrary(artifact, context.mavenResult.settings.modulesCount)
+    var level = LibraryLevel.PROJECT
+    if (!linkProjectLibrary(context, context.projectNode, createdLibrary)) {
+        level = LibraryLevel.MODULE
+    }
     if (scope != DependencyScope.TEST) {
-        val libraryDependencyData = LibraryDependencyData(mainNode.data, createLibrary, LibraryLevel.PROJECT)
+        val libraryDependencyData = LibraryDependencyData(mainNode.data, createdLibrary, level)
         libraryDependencyData.scope = scope
         libraryDependencyData.order = 20 + getScopeOrder(libraryDependencyData.scope)
         mainNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData)
 
-        val libraryDependencyDataTest = LibraryDependencyData(testNode.data, createLibrary, LibraryLevel.PROJECT)
+        val libraryDependencyDataTest = LibraryDependencyData(testNode.data, createdLibrary, level)
         libraryDependencyDataTest.scope = scope
         libraryDependencyDataTest.order = libraryDependencyData.order
         testNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyDataTest)
     } else {
-        val libraryDependencyData = LibraryDependencyData(mainNode.data, createLibrary, LibraryLevel.PROJECT)
+        val libraryDependencyData = LibraryDependencyData(mainNode.data, createdLibrary, level)
         libraryDependencyData.scope = scope
         libraryDependencyData.order = 20 + getScopeOrder(libraryDependencyData.scope)
         mainNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData)
     }
+}
+
+private fun linkProjectLibrary(
+    context: ProjectResolverContext, ideProject: DataNode<ProjectData>, library: LibraryData
+): Boolean {
+    if (!Registry.`is`("gmaven.library.map.for.performance")) return true
+
+    val cache = context.libraryDataMap
+    val libraryName = library.externalName
+
+    val libraryData = cache.computeIfAbsent(libraryName) {
+        var newValueToCache = ExternalSystemApiUtil
+            .findChild(ideProject, ProjectKeys.LIBRARY) { it.data.externalName == libraryName }
+        if (newValueToCache == null) {
+            newValueToCache = ideProject.createChild(ProjectKeys.LIBRARY, library)
+        }
+        newValueToCache
+    }
+    return libraryData.data == library
 }
 
 private fun addModuleDependency(parentNode: DataNode<out ModuleData>, targetModule: ModuleData) {
@@ -146,7 +171,7 @@ private fun createLibrary(artifact: MavenArtifact, modulesCount: Int): LibraryDa
     if (artifact.file == null) return library
     val artifactAbsolutePath = artifact.file.absolutePath
     library.addPath(getLibraryPathType(artifact), artifactAbsolutePath)
-    if (modulesCount <= 10 || Registry.`is`("gmaven.import.library.sync.sources")) {
+    if (modulesCount <= 10 || Registry.`is`("gmaven.import.library.sync.sources")) { //todo registry to settings
         val sourceAbsolutePath = artifactAbsolutePath.replace(".jar", "-sources.jar")
         if (sourceAbsolutePath != artifactAbsolutePath && Path.of(sourceAbsolutePath).exists()) {
             library.addPath(LibraryPathType.SOURCE, sourceAbsolutePath)

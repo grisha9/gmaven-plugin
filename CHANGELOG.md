@@ -2,10 +2,11 @@
 
 ## [Unreleased]
 
-## [233.24] - 2024-02-08
+## [233.23] - 2024-02-08
 ### Added
 - Search artifact from management sections [wiki](https://github.com/grisha9/gmaven-plugin/wiki/Actions#search-by-artifactid-from-dependencymanagement-and-pluginmanagement-sections)
 ### Fixed
+- Increased speed of projects reimport (Redundant dependency indexing)
 - Dom gutter navigation for pom.xml
 
 ## [233.22] - 2024-02-02

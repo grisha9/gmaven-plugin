@@ -5,10 +5,7 @@ import com.intellij.openapi.externalSystem.importing.ProjectResolverPolicy
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.externalSystem.model.ProjectKeys
-import com.intellij.openapi.externalSystem.model.project.ContentRootData
-import com.intellij.openapi.externalSystem.model.project.ModuleData
-import com.intellij.openapi.externalSystem.model.project.ProjectData
-import com.intellij.openapi.externalSystem.model.project.ProjectSdkData
+import com.intellij.openapi.externalSystem.model.project.*
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
@@ -133,7 +130,9 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
 
         var ideProjectPath = settings.ideProjectPath
         ideProjectPath = ideProjectPath ?: projectPath
-        val context = ProjectResolverContext(settings, absolutePath, ideProjectPath, mavenResult, languageLevel)
+        val context = ProjectResolverContext(
+            projectDataNode, settings, absolutePath, ideProjectPath, mavenResult, languageLevel
+        )
 
         val moduleNode = createModuleData(container, projectDataNode, context)
         addDependencies(container, projectDataNode, context)
@@ -148,6 +147,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     }
 
     class ProjectResolverContext(
+        val projectNode: DataNode<ProjectData>,
         val settings: MavenExecutionSettings,
         val rootProjectPath: String,
         val ideaProjectPath: String,
@@ -155,6 +155,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val projectLanguageLevel: LanguageLevel,
         val contextElementMap: MutableMap<String, Element> = HashMap(),
         val moduleDataByArtifactId: MutableMap<String, ModuleContextHolder> = TreeMap(),
+        val libraryDataMap: MutableMap<String, DataNode<LibraryData>> = TreeMap(),
         val pluginExtensionMap: Map<String, MavenFullImportPlugin> = MavenFullImportPlugin.EP_NAME.extensions
             .associateBy { it.key }
     ) {
