@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [233.24] - 2024-02-08
+### Added
+- Search artifact from management sections [wiki](https://github.com/grisha9/gmaven-plugin/wiki/Actions#search-by-artifactid-from-dependencymanagement-and-pluginmanagement-sections)
+### Fixed
+- Dom gutter navigation for pom.xml
+
 ## [233.22] - 2024-02-02
 ### Added
 - Fast open for existing project [wiki](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-registry-keys#gmavenfastopenproject)
