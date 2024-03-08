@@ -10,10 +10,12 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.patterns.XmlPatterns
 import com.intellij.psi.*
 import com.intellij.psi.PsiReferenceBase.Immediate
+import com.intellij.psi.PsiReferenceRegistrar.LOWER_PRIORITY
 import com.intellij.psi.xml.XmlFile
 import com.intellij.psi.xml.XmlTag
 import com.intellij.util.ProcessingContext
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.util.CachedModuleData
 import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
@@ -29,12 +31,16 @@ class MavenArtifactIdXmlPsiReferenceContributor : PsiReferenceContributor() {
     override fun registerReferenceProviders(registrar: PsiReferenceRegistrar) {
         if (MavenUtils.pluginEnabled(MavenUtils.INTELLIJ_MAVEN_PLUGIN_ID)) return
 
-        val pattern = XmlPatterns.xmlTag()
+        val patternDependency = XmlPatterns.xmlTag()
             .withName(MavenArtifactUtil.ARTIFACT_ID)
             .withParent(XmlPatterns.xmlTag().withName(MavenArtifactUtil.DEPENDENCY))
-        registrar.registerReferenceProvider(
-            pattern, MavenArtifactIdXmlPsiReferenceProvider(), PsiReferenceRegistrar.LOWER_PRIORITY
-        )
+        val patternParent = XmlPatterns.xmlTag()
+            .withName(MavenArtifactUtil.ARTIFACT_ID)
+            .withParent(XmlPatterns.xmlTag().withName(MavenArtifactUtil.PARENT))
+
+        val psiReferenceProvider = MavenArtifactIdXmlPsiReferenceProvider()
+        registrar.registerReferenceProvider(patternDependency, psiReferenceProvider, LOWER_PRIORITY)
+        registrar.registerReferenceProvider(patternParent, psiReferenceProvider, LOWER_PRIORITY)
     }
 }
 
@@ -72,8 +78,17 @@ private class MavenArtifactIdXmlPsiReferenceProvider : PsiReferenceProvider() {
     private fun getLocalRepositoryPsiReferences(
         xmlTag: XmlTag, moduleName: String, artifactId: String, range: TextRange
     ): Array<PsiReference> {
-        val path = xmlTag.containingFile.parent?.virtualFile?.canonicalPath ?: return emptyArray()
-        val settings = MavenSettings.getInstance(xmlTag.project).getLinkedProjectSettings(path) ?: return emptyArray()
+        val settings = MavenSettings.getInstance(xmlTag.project).linkedProjectsSettings
+        for (each in settings) {
+            val references = getLocalRepositoryPsiReferences(xmlTag, moduleName, artifactId, range, each)
+            if (references.isNotEmpty()) return references
+        }
+        return emptyArray()
+    }
+
+    private fun getLocalRepositoryPsiReferences(
+        xmlTag: XmlTag, moduleName: String, artifactId: String, range: TextRange, settings: MavenProjectSettings
+    ): Array<PsiReference> {
         val localRepositoryPath = settings.localRepositoryPath ?: return emptyArray()
         val parentXml = xmlTag.parentTag ?: return emptyArray()
         val groupId = parentXml.getSubTagText(MavenArtifactUtil.GROUP_ID) ?: return emptyArray()
