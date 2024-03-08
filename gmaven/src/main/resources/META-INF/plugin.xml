@@ -15,8 +15,11 @@
         <![CDATA[
         <h3>Added</h3>
         <ul>
-            <li>Fast open for existing project</li>
-            <li>Update bundled maven wrapper to 3.9.6</li>
+            <li>Search artifact from management sections (<a href="https://github.com/grisha9/gmaven-plugin/wiki/Actions#search-by-artifactid-from-dependencymanagement-and-pluginmanagement-sections" target="_blank" rel="nofollow">Wiki</a>)</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+            <li>Dom gutter navigation for pom.xml</li>
         </ul>
     ]]>
     </change-notes>
