@@ -17,8 +17,7 @@ class GMavenProjectImportProvider : AbstractExternalProjectImportProvider(
 
     override fun canImport(fileOrDirectory: VirtualFile, project: Project?): Boolean {
         if (super.canImport(fileOrDirectory, project)) return true
-        return if (!fileOrDirectory.isDirectory) MavenUtils.isPomFileIgnoringName(project, fileOrDirectory)
-        else false
+        return if (!fileOrDirectory.isDirectory) canImportFromFile(fileOrDirectory) else false
     }
 
     override fun canImportFromFile(file: VirtualFile): Boolean {

@@ -12,7 +12,6 @@ import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.extensions.PluginDescriptor;
 import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.externalSystem.model.project.ModuleData;
@@ -29,33 +28,27 @@ import com.intellij.openapi.projectRoots.ex.JavaSdkUtil;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.util.NlsSafe;
-import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.SystemInfo;
-import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.registry.Registry;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
 import com.intellij.psi.xml.XmlFile;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.SystemProperties;
-import com.intellij.util.xml.NanoXmlBuilder;
-import com.intellij.util.xml.NanoXmlUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData;
-import ru.rzn.gmyasoedov.gmaven.project.MavenProjectsManager;
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
 import ru.rzn.gmyasoedov.serverapi.model.MavenId;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
@@ -67,7 +60,6 @@ import java.util.regex.Pattern;
 import static com.intellij.openapi.util.io.JarUtil.getJarAttribute;
 import static com.intellij.openapi.util.io.JarUtil.loadProperties;
 import static com.intellij.openapi.util.text.StringUtil.*;
-import static com.intellij.util.xml.NanoXmlBuilder.stop;
 import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.M2;
 
 public class MavenUtils {
@@ -143,9 +135,7 @@ public class MavenUtils {
 
         String name = file.getName();
         if (isPomFileName(name)) return true;
-        if (!isPotentialPomFile(name)) return false;
-
-        return isPomFileIgnoringName(project, file);
+        return isPotentialPomFile(name);
     }
 
     public static boolean isSimplePomFile(@Nullable VirtualFile file) {
@@ -155,40 +145,6 @@ public class MavenUtils {
         if (isPomFileName(name)) return true;
         if (!isPotentialPomFile(name)) return false;
         return false;
-    }
-
-    public static boolean isPomFileIgnoringName(@Nullable Project project, @NotNull VirtualFile file) {
-        if (project == null || !project.isInitialized()) {
-            if (!FileUtil.extensionEquals(file.getName(), "xml")) return false;
-            try {
-                try (InputStream in = file.getInputStream()) {
-                    Ref<Boolean> isPomFile = Ref.create(false);
-                    Reader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
-                    NanoXmlUtil.parse(reader, new NanoXmlBuilder() {
-                        @Override
-                        public void startElement(String name, String nsPrefix, String nsURI, String systemID, int lineNr) throws Exception {
-                            if ("project".equals(name)) {
-                                isPomFile.set(nsURI.startsWith("http://maven.apache.org/POM/"));
-                            }
-                            stop();
-                        }
-                    });
-                    return isPomFile.get();
-                }
-            } catch (IOException ignore) {
-                return false;
-            }
-        }
-
-        MavenProjectsManager mavenProjectsManager = MavenProjectsManager.getInstance(project);
-        if (mavenProjectsManager.findProject(file) != null) return true;
-
-        return ReadAction.compute(() -> {
-            if (project.isDisposed()) return false;
-            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-            if (psiFile == null) return false;
-            return isProjectFile(psiFile);
-        });
     }
 
     public static void showError(Project project, @NlsContexts.NotificationTitle String title, Throwable e) {
