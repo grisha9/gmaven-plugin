@@ -18,6 +18,7 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
 import java.nio.file.Path
 import kotlin.io.path.exists
 
+private const val MIN_MODULES_COUNT_TO_CHECK_SOURCES = 10
 
 fun addDependencies(
     container: MavenProjectContainer,
@@ -89,13 +90,8 @@ private fun addDependencies(
     }
 }
 
-private fun addLibrary(
-    parentNode: DataNode<ModuleData>,
-    artifact: MavenArtifact,
-    context: ProjectResolverContext
-) {
-    val createdLibrary = createLibrary(artifact, context.mavenResult.settings.modulesCount)
-
+private fun addLibrary(parentNode: DataNode<ModuleData>, artifact: MavenArtifact, context: ProjectResolverContext) {
+    val createdLibrary = createLibrary(artifact, context)
     var level = LibraryLevel.PROJECT
     if (!linkProjectLibrary(context, context.projectNode, createdLibrary)) {
         level = LibraryLevel.MODULE
@@ -118,7 +114,7 @@ private fun addLibrary(
     context: ProjectResolverContext
 ) {
     val scope = getScope(artifact)
-    val createdLibrary = createLibrary(artifact, context.mavenResult.settings.modulesCount)
+    val createdLibrary = createLibrary(artifact, context)
     var level = LibraryLevel.PROJECT
     if (!linkProjectLibrary(context, context.projectNode, createdLibrary)) {
         level = LibraryLevel.MODULE
@@ -167,7 +163,7 @@ private fun addModuleDependency(parentNode: DataNode<out ModuleData>, targetModu
     parentNode.createChild(ProjectKeys.MODULE_DEPENDENCY, data)
 }
 
-private fun createLibrary(artifact: MavenArtifact, modulesCount: Int): LibraryData {
+private fun createLibrary(artifact: MavenArtifact, context: ProjectResolverContext): LibraryData {
     val library = LibraryData(GMavenConstants.SYSTEM_ID, artifact.id, !artifact.isResolved)
     library.artifactId = artifact.artifactId
     library.setGroup(artifact.groupId)
@@ -175,7 +171,7 @@ private fun createLibrary(artifact: MavenArtifact, modulesCount: Int): LibraryDa
     if (artifact.file == null) return library
     val artifactAbsolutePath = artifact.file.absolutePath
     library.addPath(getLibraryPathType(artifact), artifactAbsolutePath)
-    if (modulesCount <= 10 || Registry.`is`("gmaven.import.library.sync.sources")) { //todo registry to settings
+    if (context.moduleDataByArtifactId.size < MIN_MODULES_COUNT_TO_CHECK_SOURCES || context.settings.isCheckSources) {
         val sourceAbsolutePath = artifactAbsolutePath.replace(".jar", "-sources.jar")
         if (sourceAbsolutePath != artifactAbsolutePath && Path.of(sourceAbsolutePath).exists()) {
             library.addPath(LibraryPathType.SOURCE, sourceAbsolutePath)

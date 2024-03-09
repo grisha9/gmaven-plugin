@@ -22,6 +22,7 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
 
     private boolean offlineMode = false;
     private boolean skipTests = false;
+    private boolean checkSourcesInLocalRepo = false;
 
     public MavenSettings(@NotNull Project project) {
         super(MavenSettingsListener.TOPIC, project);
@@ -51,6 +52,7 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
 
         state.setOfflineMode(isOfflineMode());
         state.setSkipTests(isSkipTests());
+        state.setCheckSourcesInLocalRepo(isCheckSourcesInLocalRepo());
         return state;
     }
 
@@ -59,6 +61,7 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
         super.loadState(state);
         setOfflineMode(state.isOfflineMode());
         setSkipTests(state.skipTests);
+        setCheckSourcesInLocalRepo(state.checkSourcesInLocalRepo);
     }
 
     public boolean isOfflineMode() {
@@ -77,6 +80,14 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
         this.skipTests = skipTests;
     }
 
+    public boolean isCheckSourcesInLocalRepo() {
+        return checkSourcesInLocalRepo;
+    }
+
+    public void setCheckSourcesInLocalRepo(boolean checkSourcesInLocalRepo) {
+        this.checkSourcesInLocalRepo = checkSourcesInLocalRepo;
+    }
+
     public boolean getStoreProjectFilesExternally() {
         return ExternalStorageConfigurationManager.getInstance(getProject()).isEnabled();
     }
@@ -93,7 +104,7 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
         private final Set<MavenProjectSettings> myProjectSettings = new TreeSet<>();
         private boolean isOfflineMode = false;
         private boolean skipTests = false;
-
+        private boolean checkSourcesInLocalRepo = false;
 
         @Override
         @XCollection(elementTypes = MavenProjectSettings.class)
@@ -122,6 +133,14 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
 
         public void setSkipTests(boolean skipTests) {
             this.skipTests = skipTests;
+        }
+
+        public boolean isCheckSourcesInLocalRepo() {
+            return checkSourcesInLocalRepo;
+        }
+
+        public void setCheckSourcesInLocalRepo(boolean checkSourcesInLocalRepo) {
+            this.checkSourcesInLocalRepo = checkSourcesInLocalRepo;
         }
     }
 }
