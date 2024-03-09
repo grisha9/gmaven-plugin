@@ -1,0 +1,68 @@
+package ru.rzn.gmyasoedov.gmaven.project.action
+
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.externalSystem.action.ExternalSystemNodeAction
+import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder
+import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys
+import com.intellij.openapi.externalSystem.model.ProjectSystemId
+import com.intellij.openapi.externalSystem.model.project.AbstractExternalEntityData
+import com.intellij.openapi.externalSystem.model.project.ExternalConfigPathAware
+import com.intellij.openapi.externalSystem.model.project.ProjectData
+import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
+import com.intellij.openapi.externalSystem.util.ExternalSystemBundle
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.project.DumbAware
+import com.intellij.openapi.project.Project
+import com.intellij.util.containers.ContainerUtil
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants.TASK_DOWNLOAD_SOURCE
+import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
+import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
+
+
+class ReloadProjectWithSourcesAction :
+    ExternalSystemNodeAction<AbstractExternalEntityData>(AbstractExternalEntityData::class.java), DumbAware {
+
+    init {
+        getTemplatePresentation().text = GBundle.message("gmaven.action.reload.with.sources.text")
+        getTemplatePresentation().setDescription(
+            ExternalSystemBundle.messagePointer("action.refresh.project.description", "External")
+        )
+    }
+
+    override fun isEnabled(e: AnActionEvent): Boolean {
+        if (!super.isEnabled(e)) return false
+        val systemId = getSystemId(e)
+        if (systemId != GMavenConstants.SYSTEM_ID) return false
+        val selectedNodes = e.getData(ExternalSystemDataKeys.SELECTED_NODES)
+        if (selectedNodes == null || selectedNodes.size != 1) return false
+        val externalData = selectedNodes[0].data
+        return externalData is ProjectData
+    }
+
+    override fun perform(
+        project: Project,
+        projectSystemId: ProjectSystemId,
+        externalData: AbstractExternalEntityData,
+        e: AnActionEvent
+    ) {
+        val selectedNodes = e.getData(ExternalSystemDataKeys.SELECTED_NODES)
+        val configPathAware = ContainerUtil.getFirstItem(selectedNodes)?.data as? ExternalConfigPathAware ?: return
+        FileDocumentManager.getInstance().saveAllDocuments()
+
+        val mavenSettings = MavenSettings.getInstance(project)
+        mavenSettings.isCheckSourcesInLocalRepo = true
+
+        val projectSettings = ExternalSystemApiUtil.getSettings(project, projectSystemId)
+            .getLinkedProjectSettings(configPathAware.linkedExternalProjectPath)
+        val externalProjectPath = if (projectSettings == null)
+            configPathAware.linkedExternalProjectPath else projectSettings.externalProjectPath
+
+        val importSpec = ImportSpecBuilder(project, projectSystemId)
+            .withArguments("compile -DskipTests $TASK_DOWNLOAD_SOURCE")
+        if (ExternalSystemUtil.confirmLoadingUntrustedProject(project, projectSystemId)) {
+            ExternalSystemUtil.refreshProject(externalProjectPath, importSpec)
+        }
+    }
+}

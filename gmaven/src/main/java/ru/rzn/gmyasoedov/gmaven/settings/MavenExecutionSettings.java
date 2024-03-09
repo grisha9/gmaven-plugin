@@ -29,6 +29,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     @Nullable
     private String threadCount;
     private final boolean offlineWork;
+    private boolean checkSources = false;
     private boolean resolveModulePerSourceSet = false;
     private boolean useQualifiedModuleNames = false;
     private boolean nonRecursive = false;
@@ -164,6 +165,14 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     public void setUseMvndForTasks(boolean useMvndForTasks) {
         this.useMvndForTasks = useMvndForTasks;
+    }
+
+    public boolean isCheckSources() {
+        return checkSources;
+    }
+
+    public void setCheckSources(boolean checkSources) {
+        this.checkSources = checkSources;
     }
 
     @Override
