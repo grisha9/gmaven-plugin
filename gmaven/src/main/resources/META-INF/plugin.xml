@@ -19,6 +19,7 @@
         </ul>
         <h3>Fixed</h3>
         <ul>
+            <li>Increased speed of projects reimport (Redundant dependency indexing)</li>
             <li>Dom gutter navigation for pom.xml</li>
         </ul>
     ]]>
@@ -31,6 +32,7 @@
         <![CDATA[
         The lightweight Maven plugin that gets the project model through maven task execution.
         This provides greater simplicity and original build tool behavior in obtaining project data.
+        Article about GMaven on <a href="https://dev.to/grisha9/my-intellij-idea-plugin-for-maven-support-gmaven-cn9">dev.to</a>.
         Adds support for the Maven for Java language projects:
         <br>
         <ul>
@@ -144,6 +146,8 @@
                      description="Calc maven multi.module directory"/>
         <registryKey key="gmaven.fast.open.project" defaultValue="true"
                      description="Fast open project"/>
+        <registryKey key="gmaven.library.map.for.performance" defaultValue="true"
+                     description="New import logic for library"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
 
