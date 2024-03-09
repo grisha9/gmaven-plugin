@@ -215,6 +215,7 @@ public final class MavenManager
             result.setOutputLevel(projectSettings.getOutputLevel());
             result.setShowPluginNodes(projectSettings.getShowPluginNodes());
             result.setUseMvndForTasks(projectSettings.getUseMvndForTasks());
+            result.setCheckSources(settings.isCheckSourcesInLocalRepo());
             fillExecutionWorkSpace(project, projectSettings, projectPath, result.getExecutionWorkspace());
             if (projectSettings.getArguments() != null) {
                 result.withArguments(ParametersListUtil.parse(projectSettings.getArguments(), true, true));
