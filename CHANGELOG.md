@@ -5,6 +5,7 @@
 ## [233.23] - 2024-02-08
 ### Added
 - Search artifact from management sections [wiki](https://github.com/grisha9/gmaven-plugin/wiki/Actions#search-by-artifactid-from-dependencymanagement-and-pluginmanagement-sections)
+- Support IDEA 241+ version
 ### Fixed
 - Increased speed of projects reimport (Redundant dependency indexing)
 - Dom gutter navigation for pom.xml
