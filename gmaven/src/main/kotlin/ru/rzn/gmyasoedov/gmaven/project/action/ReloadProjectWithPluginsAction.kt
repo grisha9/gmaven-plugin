@@ -21,8 +21,7 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants.TASK_RESOLVE_PLUGINS
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 
 
-
-class RefreshProjectWithPluginsAction :
+class ReloadProjectWithPluginsAction :
     ExternalSystemNodeAction<AbstractExternalEntityData>(AbstractExternalEntityData::class.java), DumbAware {
 
     init {
