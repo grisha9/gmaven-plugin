@@ -38,6 +38,7 @@ public final class GMavenConstants {
     public static final String MODULE_PROP_HAS_DEPENDENCIES = "hasDependencies";
     @NotNull @NonNls
     public static final String SOURCE_SET_MODULE_TYPE_KEY = "sourceSet";
+    public static final String IDEA_PSI_EDIT_TOKEN = "IntellijIdeaRulezzz";
     public static final List<String> BASIC_PHASES =
             Arrays.asList("clean", "validate", "compile", "test", "package", "verify", "install", "deploy", "site");
 
