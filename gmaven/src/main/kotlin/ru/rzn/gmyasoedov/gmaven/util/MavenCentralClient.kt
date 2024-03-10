@@ -12,8 +12,12 @@ object MavenCentralClient {
     private const val ROW_COUNT = 50
     private const val SEARCH_BY_GROUP_AND_ARTIFACT_URL =
         "https://search.maven.org/solrsearch/select?q=g:%s+AND+a:%s&core=gav&rows=${ROW_COUNT}&wt=json"
+    private const val SEARCH_GROUP_BY_ARTIFACT_URL =
+        "https://search.maven.org/solrsearch/select?q=%s+AND+a:%s&rows=${ROW_COUNT}&wt=json"
     private const val SEARCH_BY_ARTIFACT_URL =
         "https://search.maven.org/solrsearch/select?q=%s&rows=${ROW_COUNT}&wt=json"
+    private const val SEARCH_ARTIFACT_BY_ARTIFACT_AND_GROUP_URL =
+        "https://search.maven.org/solrsearch/select?q=%s+AND+g:%s&rows=${ROW_COUNT}&wt=json"
 
     private val errorCount = AtomicLong()
     private val gson = Gson()
@@ -29,8 +33,12 @@ object MavenCentralClient {
     }
 
     @JvmStatic
-    fun find(query: String): List<MavenCentralArtifactInfo> {
-        return if (query.length > 2) findByUrl(SEARCH_BY_ARTIFACT_URL.format(query)) else emptyList()
+    fun findArtifact(query: String, groupId: String?): List<MavenCentralArtifactInfo> {
+        if (query.length < 3) return emptyList()
+        if (groupId != null && groupId.length > 4) {
+            return findByUrl(SEARCH_ARTIFACT_BY_ARTIFACT_AND_GROUP_URL.format(query, groupId))
+        }
+        return findByUrl(SEARCH_BY_ARTIFACT_URL.format(query))
     }
 
     private fun findByUrl(url: String): List<MavenCentralArtifactInfo> {
