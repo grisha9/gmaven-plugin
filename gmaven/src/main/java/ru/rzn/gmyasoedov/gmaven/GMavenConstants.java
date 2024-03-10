@@ -37,6 +37,7 @@ public final class GMavenConstants {
 
     @NotNull @NonNls
     public static final String SOURCE_SET_MODULE_TYPE_KEY = "sourceSet";
+    public static final String IDEA_PSI_EDIT_TOKEN = "IntellijIdeaRulezzz";
 
     public static final String TASK_RESOLVE_PLUGINS = "dependency:resolve-plugins";
     public static final String TASK_DOWNLOAD_SOURCE = "dependency:sources";
