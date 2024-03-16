@@ -2,7 +2,14 @@
 
 ## [Unreleased]
 
-## [232.23] - 2024-02-08
+## [232.24] - 2024-03-17
+### Fixed
+- Kotlin content roots
+### Added
+- Action: download all sources [wiki](https://github.com/grisha9/gmaven-plugin/wiki/Actions#download-all-sources)
+- Support Maven property in build files(navigation/completion/rename)
+
+## [232.23] - 2024-03-08
 ### Added
 - Search artifact from management sections [wiki](https://github.com/grisha9/gmaven-plugin/wiki/Actions#search-by-artifactid-from-dependencymanagement-and-pluginmanagement-sections)
 ### Fixed
