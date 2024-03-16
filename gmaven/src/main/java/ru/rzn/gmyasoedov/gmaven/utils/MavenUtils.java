@@ -464,8 +464,13 @@ public class MavenUtils {
     }
 
     @NotNull
+    public static String toGAString(@NotNull String groupId, @NotNull String artifactId) {
+        return groupId + ":" + artifactId;
+    }
+
+    @NotNull
     public static String toGAString(@NotNull ModuleData moduleData) {
-        return moduleData.getGroup() + ":" + moduleData.getModuleName();
+        return toGAString(moduleData.getGroup(), moduleData.getModuleName());
     }
 
     @NotNull
