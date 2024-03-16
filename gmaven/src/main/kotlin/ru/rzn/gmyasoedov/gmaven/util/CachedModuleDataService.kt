@@ -27,7 +27,8 @@ object CachedModuleDataService {
         try {
             val cachedValue = CachedValuesManager.getManager(project).getCachedValue(project) {
                 CachedValueProvider.Result
-                    .create(getCacheDataHolder(project),
+                    .create(
+                        getCacheDataHolder(project),
                         ExternalProjectsDataStorage.getInstance(project), modificationTracker
                     )
             }
@@ -76,6 +77,9 @@ data class CachedDataHolder(
     val ignoredConfigPaths: Set<String> = emptySet()
 ) {
     fun isConfigPath(path: String) = activeConfigPaths.contains(path) || ignoredConfigPaths.contains(path)
+
+    fun findModuleData(groupId: String, artifactId: String) =
+        modules.find { it.groupId == groupId && it.artifactId == artifactId }
 }
 
 data class CachedModuleData(
