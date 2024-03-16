@@ -31,8 +31,6 @@ import kotlin.io.path.listDirectoryEntries
 private const val TIMEOUT_PROMISE_MS = 10_000
 private const val TIMEOUT_REQUEST_MS = 1_000
 
-private const val MIN_ARTIFACT_LENGTH = 3
-
 class MavenCoordinateCompletionContributor : CompletionContributor() {
     private val supportTagNames = setOf(ARTIFACT_ID, GROUP_ID, VERSION)
 

@@ -9,21 +9,15 @@ import com.intellij.ide.DataManager
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
-import com.intellij.lang.xml.XMLLanguage
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.util.text.StringUtil
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.readText
 import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFileFactory
-import com.intellij.psi.PsiManager
 import com.intellij.psi.xml.XmlFile
 import com.intellij.psi.xml.XmlTag
 import icons.GMavenIcons
 import kotlinx.collections.immutable.toImmutableSet
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil.*
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
@@ -32,8 +26,6 @@ import java.nio.file.Path
 import java.util.*
 import javax.swing.Icon
 import kotlin.io.path.exists
-import kotlin.io.path.name
-import kotlin.io.path.notExists
 
 class PomXmlDomGutterAnnotator : Annotator {
 
@@ -51,7 +43,7 @@ class PomXmlDomGutterAnnotator : Annotator {
         val settingsHolder = getProjectSettings(project)
 
         if (tagName == PARENT) {
-            val parentPath = getParentPath(xmlTag, settingsHolder) ?: return
+            val parentPath = XmlPsiUtil.getParentPath(xmlTag, settingsHolder.localRepos) ?: return
             addGutterIcon(parentPath, xmlTag, holder, GMavenIcons.ParentProject, "GMaven:parent")
         } else if (tagName == MODULE) {
             val moduleName = xmlTag.value.text
@@ -137,50 +129,13 @@ class PomXmlDomGutterAnnotator : Annotator {
     private fun addGutterIcon(
         path: Path, xmlTag: XmlTag, holder: AnnotationHolder, icon: Icon, text: String
     ): Boolean {
-        val xmlFile = getXmlFile(path, xmlTag.project) ?: return false
+        val xmlFile = XmlPsiUtil.getXmlFile(path, xmlTag.project) ?: return false
         NavigationGutterIconBuilder
             .create(icon)
             .setTargets(xmlFile)
             .setTooltipText(text)
             .createGutterIcon(holder, xmlTag)
         return true
-    }
-
-    private fun getXmlFile(path: Path, project: Project): XmlFile? {
-        val filePath = if (path.toFile().isDirectory()) path.resolve(GMavenConstants.POM_XML) else path
-        if (!filePath.exists()) return null
-
-        val virtualFile = LocalFileSystem.getInstance().findFileByNioFile(filePath) ?: return null
-        val psiFile = PsiManager.getInstance(project).findFile(virtualFile) ?: return null
-        return if (psiFile is XmlFile) psiFile else {
-            try {
-                PsiFileFactory.getInstance(project)
-                    .createFileFromText(filePath.name, XMLLanguage.INSTANCE, virtualFile.readText()) as? XmlFile
-            } catch (e: Exception) {
-                null
-            }
-        }
-    }
-
-    private fun getParentPath(xmlParentTag: XmlTag, projectSettings: ProjectSettings): Path? {
-        try {
-            val relativePath = xmlParentTag.getSubTagText(RELATIVE_PATH)
-            return if (relativePath == null) {
-                val parentPath = xmlParentTag.containingFile.virtualFile?.parent?.parent?.toNioPathOrNull()
-                val isProjectModule = projectSettings.modules.contains(parentPath.toString())
-                if (isProjectModule) parentPath else getParentInLocalRepo(xmlParentTag, projectSettings)
-            } else if (relativePath.isEmpty() && projectSettings.localRepos.isNotEmpty()) {
-                getParentInLocalRepo(xmlParentTag, projectSettings)
-            } else {
-                val parentPath = xmlParentTag.containingFile.virtualFile.parent?.toNioPath()?.resolve(relativePath)
-                if (parentPath == null || parentPath.notExists()) {
-                    return getParentInLocalRepo(xmlParentTag, projectSettings)
-                }
-                return parentPath
-            }
-        } catch (e: Exception) {
-            return null
-        }
     }
 
     private fun collectSettings(project: Project): ProjectSettings {
@@ -225,8 +180,8 @@ class PomXmlDomGutterAnnotator : Annotator {
             dependencyManagement.properties.putIfAbsent(property.name, property.value.text)
         }
         val parentTag = xmlFile.rootTag?.findFirstSubTag(PARENT) ?: return
-        val parentPath = getParentPath(parentTag, projectSettings) ?: return
-        val parentXmlFile = getXmlFile(parentPath, xmlFile.project) ?: return
+        val parentPath = XmlPsiUtil.getParentPath(parentTag, projectSettings.localRepos) ?: return
+        val parentXmlFile = XmlPsiUtil.getXmlFile(parentPath, xmlFile.project) ?: return
         if (xmlFile.virtualFile == parentXmlFile.virtualFile) return
         fillDependencyManagement(parentXmlFile, dependencyManagement, projectSettings, deepCount + 1)
     }
