@@ -50,13 +50,17 @@ public interface MavenFullImportPlugin {
         return element;
     }
 
-    @NotNull
+    @Nullable
     static String getAbsoluteContentPath(@NotNull String sourcePath, @NotNull MavenProject mavenProject) {
-        var path = Paths.get(sourcePath);
-        if (path.isAbsolute()) {
-            return sourcePath;
-        } else {
-            return Path.of(mavenProject.getBasedir(), sourcePath).toAbsolutePath().toString();
+        try {
+            var path = Paths.get(sourcePath);
+            if (path.isAbsolute()) {
+                return sourcePath;
+            } else {
+                return Path.of(mavenProject.getBasedir(), sourcePath).toAbsolutePath().toString();
+            }
+        } catch (Exception e) {
+            return null;
         }
     }
 }
