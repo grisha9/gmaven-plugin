@@ -51,8 +51,8 @@ class BuildHelperMavenPlugin : MavenFullImportPlugin {
         val paths = ArrayList<String>()
         for (sourceElement in element.getChild(paramName)?.children ?: emptyList()) {
             val sourcePath = sourceElement.textTrim
-            if (sourcePath != null && sourcePath.isNotEmpty()) {
-                paths.add(MavenFullImportPlugin.getAbsoluteContentPath(sourcePath, mavenProject))
+            if (!sourcePath.isNullOrEmpty()) {
+                MavenFullImportPlugin.getAbsoluteContentPath(sourcePath, mavenProject)?.let { paths.add(it) }
             }
         }
         return paths

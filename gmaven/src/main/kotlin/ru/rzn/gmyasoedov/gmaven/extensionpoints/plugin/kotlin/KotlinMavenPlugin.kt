@@ -75,10 +75,9 @@ class KotlinMavenPlugin : MavenFullImportPlugin {
         val element = parseConfiguration(execution.configuration, context)
         val paths = ArrayList<String>()
         for (sourceDirElement in element.getChild("sourceDirs")?.children ?: emptyList()) {
-            if ("sourceDir" != sourceDirElement.name) continue
             val sourcePath = sourceDirElement.textTrim
-            if (sourcePath != null && sourcePath.isNotEmpty()) {
-                paths.add(getAbsoluteContentPath(sourcePath, mavenProject))
+            if (!sourcePath.isNullOrEmpty()) {
+                getAbsoluteContentPath(sourcePath, mavenProject)?.let { paths.add(it) }
             }
         }
         return paths
