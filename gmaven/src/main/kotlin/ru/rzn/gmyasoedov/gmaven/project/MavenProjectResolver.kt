@@ -1,6 +1,7 @@
 package ru.rzn.gmyasoedov.gmaven.project
 
 import com.intellij.externalSystem.JavaProjectData
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.externalSystem.importing.ProjectResolverPolicy
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
@@ -9,6 +10,7 @@ import com.intellij.openapi.externalSystem.model.project.*
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
+import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_INTERNAL_JAVA
 import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
 import com.intellij.openapi.projectRoots.Sdk
@@ -50,7 +52,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         listener: ExternalSystemTaskNotificationListener
     ): DataNode<ProjectData> {
         settings ?: throw ExternalSystemException("settings is empty")
-        val sdk = settings.jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) }
+        val sdk = settings.jdkName?.let { getSdk(it) }
         if (isPreviewMode) {
             return getPreviewProjectDataNode(projectPath, settings)
         }
@@ -145,6 +147,9 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val projectNioPath = Path(projectPath)
         return if (projectNioPath.toFile().isDirectory) projectNioPath else projectNioPath.parent
     }
+
+    private fun getSdk(it: String) = if (ApplicationManager.getApplication().isUnitTestMode)
+        ExternalSystemJdkUtil.getJdk(null, USE_INTERNAL_JAVA) else ExternalSystemJdkUtil.getJdk(null, it)
 
     class ProjectResolverContext(
         val projectNode: DataNode<ProjectData>,
