@@ -25,7 +25,6 @@ import java.awt.event.MouseEvent
 import java.nio.file.Path
 import java.util.*
 import javax.swing.Icon
-import kotlin.io.path.exists
 
 class PomXmlDomGutterAnnotator : Annotator {
 
@@ -110,20 +109,6 @@ class PomXmlDomGutterAnnotator : Annotator {
         findModel.isProjectScope = true
         val dataContext = DataManager.getInstance().getDataContext(event.component)
         FindInProjectManager.getInstance(element.project).findInProject(dataContext, findModel)
-    }
-
-    private fun getParentInLocalRepo(
-        parentXmlTag: XmlTag,
-        projectSettings: ProjectSettings
-    ): Path? {
-        val groupId = parentXmlTag.getSubTagText(GROUP_ID) ?: return null
-        val artifactId = parentXmlTag.getSubTagText(ARTIFACT_ID) ?: return null
-        val version = parentXmlTag.getSubTagText(VERSION) ?: return null
-        for (localRepoPath in projectSettings.localRepos) {
-            val artifactPath = getArtifactNioPath(Path.of(localRepoPath), groupId, artifactId, version, "pom")
-            if (artifactPath.exists()) return artifactPath
-        }
-        return null
     }
 
     private fun addGutterIcon(
