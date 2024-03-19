@@ -111,7 +111,7 @@ class MavenPropertyPsiReference(
 */
 
         val propertiesMap = TreeMap<String, XmlTag>()
-        fillProperties(xmlFile, propertiesMap, repos)
+        XmlPsiUtil.fillProperties(xmlFile, propertiesMap, repos)
 
         val propertyXmlTag = propertiesMap.get(propertyName)
         if (propertyXmlTag != null) return propertyXmlTag
@@ -128,7 +128,7 @@ class MavenPropertyPsiReference(
         val projectSettings = MavenSettings.getInstance(xmlTag.project).linkedProjectsSettings
         val repos = projectSettings.mapNotNull { it.localRepositoryPath }
         val propertiesMap = TreeMap<String, XmlTag>()
-        fillProperties(xmlFile, propertiesMap, repos)
+        XmlPsiUtil.fillProperties(xmlFile, propertiesMap, repos)
         return propertiesMap.keys.map { LookupElementBuilder.create(it) }.toTypedArray()
     }
 
@@ -136,21 +136,5 @@ class MavenPropertyPsiReference(
         return if (parentPathPom != null) {
             XmlPsiUtil.getXmlFile(parentPathPom, element.project)?.containingDirectory
         } else parentPathDirectory
-    }
-
-    private fun fillProperties(
-        xmlFile: XmlFile, propertiesMap: MutableMap<String, XmlTag> = TreeMap(), localRepos: List<String>,
-        deepCount: Int = 0
-    ) {
-        if (deepCount > 100) return
-        val properties = xmlFile.rootTag?.findFirstSubTag(MavenArtifactUtil.PROPERTIES)?.subTags ?: emptyArray()
-        for (property in properties) {
-            propertiesMap.putIfAbsent(property.name, property)
-        }
-        val parentTag = xmlFile.rootTag?.findFirstSubTag(MavenArtifactUtil.PARENT) ?: return
-        val parentPath = XmlPsiUtil.getParentPath(parentTag, localRepos) ?: return
-        val parentXmlFile = XmlPsiUtil.getXmlFile(parentPath, xmlFile.project) ?: return
-        if (xmlFile.virtualFile == parentXmlFile.virtualFile) return
-        fillProperties(parentXmlFile, propertiesMap, localRepos, deepCount + 1)
     }
 }
