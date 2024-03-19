@@ -18,6 +18,7 @@ import com.intellij.psi.xml.XmlFile
 import com.intellij.psi.xml.XmlTag
 import icons.GMavenIcons
 import kotlinx.collections.immutable.toImmutableSet
+import ru.rzn.gmyasoedov.gmaven.dom.XmlPsiUtil.getPlaceHolderValue
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil.*
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
@@ -42,7 +43,9 @@ class PomXmlDomGutterAnnotator : Annotator {
         val settingsHolder = getProjectSettings(project)
 
         if (tagName == PARENT) {
-            val parentPath = XmlPsiUtil.getParentPath(xmlTag, settingsHolder.localRepos) ?: return
+            val management = getDependencyManagement(xmlFile, settingsHolder)
+            val parentPath = XmlPsiUtil
+                .getParentPath(xmlTag, settingsHolder.localRepos, management.properties) ?: return
             addGutterIcon(parentPath, xmlTag, holder, GMavenIcons.ParentProject, "GMaven:parent")
         } else if (tagName == MODULE) {
             val moduleName = xmlTag.value.text
@@ -149,23 +152,39 @@ class PomXmlDomGutterAnnotator : Annotator {
         xmlFile: XmlFile, dependencyManagement: DependencyManagement, projectSettings: ProjectSettings,
         deepCount: Int = 0
     ) {
-        if (deepCount > 100) return
+        if (deepCount > 500) return
         val dependencies = xmlFile.rootTag?.findFirstSubTag(DEPENDENCY_MANAGEMENT)
             ?.findFirstSubTag(DEPENDENCIES)?.findSubTags(DEPENDENCY) ?: emptyArray()
         val plugins = xmlFile.rootTag?.findFirstSubTag(BUILD)?.findFirstSubTag(PLUGIN_MANAGEMENT)
             ?.findFirstSubTag(PLUGINS)?.findSubTags(PLUGIN) ?: emptyArray()
         val properties = xmlFile.rootTag?.findFirstSubTag(PROPERTIES)?.subTags ?: emptyArray()
-        for (each in dependencies) {
-            dependencyToString(each)?.let { dependencyManagement.dependencies.putIfAbsent(it, each) }
-        }
-        for (each in plugins) {
-            dependencyToString(each)?.let { dependencyManagement.plugins.putIfAbsent(it, each) }
-        }
         for (property in properties) {
             dependencyManagement.properties.putIfAbsent(property.name, property.value.text)
         }
+        for (each in dependencies) {
+            dependencyToString(each)?.let { dependencyManagement.dependencies.putIfAbsent(it, each) }
+            if (each.getSubTagText(TYPE) == "pom" && each.getSubTagText(SCOPE) == "import") {
+                val parentPath = XmlPsiUtil
+                    .getParentPath(each, projectSettings.localRepos, dependencyManagement.properties) ?: continue
+                val parentXmlFile = XmlPsiUtil.getXmlFile(parentPath, xmlFile.project) ?: continue
+                fillDependencyManagement(parentXmlFile, dependencyManagement, projectSettings, deepCount)
+            }
+        }
+        for (each in plugins) {
+            dependencyToString(each)?.let { dependencyManagement.plugins.putIfAbsent(it, each) }
+            if (each.getSubTagText(TYPE) == "pom" && each.getSubTagText(SCOPE) == "import") {
+                val parentPath = XmlPsiUtil
+                    .getParentPath(each, projectSettings.localRepos, dependencyManagement.properties) ?: continue
+                val parentXmlFile = XmlPsiUtil.getXmlFile(parentPath, xmlFile.project) ?: continue
+                fillDependencyManagement(parentXmlFile, dependencyManagement, projectSettings, deepCount)
+            }
+        }
         val parentTag = xmlFile.rootTag?.findFirstSubTag(PARENT) ?: return
-        val parentPath = XmlPsiUtil.getParentPath(parentTag, projectSettings.localRepos) ?: return
+        val parentPath = XmlPsiUtil.getParentPath(
+            parentTag,
+            projectSettings.localRepos,
+            dependencyManagement.properties
+        ) ?: return
         val parentXmlFile = XmlPsiUtil.getXmlFile(parentPath, xmlFile.project) ?: return
         if (xmlFile.virtualFile == parentXmlFile.virtualFile) return
         fillDependencyManagement(parentXmlFile, dependencyManagement, projectSettings, deepCount + 1)
@@ -178,8 +197,8 @@ class PomXmlDomGutterAnnotator : Annotator {
     }
 
     private fun generateTooltip(xmlTag: XmlTag, isPlugin: Boolean, dependencyManagement: DependencyManagement): String {
-        val groupId = getValue(xmlTag.getSubTagText(GROUP_ID), dependencyManagement)
-        val version = getValue(xmlTag.getSubTagText(VERSION), dependencyManagement)
+        val groupId = getPlaceHolderValue(xmlTag.getSubTagText(GROUP_ID), dependencyManagement.properties)
+        val version = getPlaceHolderValue(xmlTag.getSubTagText(VERSION), dependencyManagement.properties)
         val res = StringBuilder()
         res.append(if (isPlugin) "<plugin>\n" else "<dependency>\n")
         res.append("    <groupId>").append(groupId).append("</groupId>\n")
@@ -189,17 +208,6 @@ class PomXmlDomGutterAnnotator : Annotator {
         }
         res.append(if (isPlugin) "</plugin>\n" else "</dependency>\n")
         return StringUtil.escapeXmlEntities(res.toString()).replace(" ", "&nbsp;") //NON-NLS
-    }
-
-    private fun getValue(
-        subTagText: String?,
-        dependencyManagement: DependencyManagement
-    ): String? {
-        if (subTagText != null && subTagText.startsWith("\${") && subTagText.endsWith("}")) {
-            val propertyName = subTagText.subSequence(2, subTagText.length - 1)
-            return dependencyManagement.properties[propertyName]
-        }
-        return subTagText
     }
 
     private data class ProjectSettings(val localRepos: List<String>, val modules: Set<String>)
