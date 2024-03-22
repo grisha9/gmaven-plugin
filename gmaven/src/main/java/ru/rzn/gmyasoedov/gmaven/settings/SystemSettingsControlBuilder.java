@@ -1,6 +1,7 @@
 
 package ru.rzn.gmyasoedov.gmaven.settings;
 
+import com.intellij.openapi.externalSystem.util.ExternalSystemSettingsControl;
 import com.intellij.openapi.externalSystem.util.ExternalSystemUiUtil;
 import com.intellij.openapi.externalSystem.util.PaintAwarePanel;
 import com.intellij.ui.components.JBCheckBox;
@@ -10,7 +11,7 @@ import ru.rzn.gmyasoedov.gmaven.bundle.GBundle;
 
 import static ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message;
 
-public class SystemSettingsControlBuilder implements GMavenSystemSettingsControlBuilder {
+public class SystemSettingsControlBuilder implements ExternalSystemSettingsControl<MavenSettings> {
 
     @NotNull
     private final MavenSettings myInitialSettings;
@@ -92,11 +93,5 @@ public class SystemSettingsControlBuilder implements GMavenSystemSettingsControl
     @Override
     public void disposeUIResources() {
         ExternalSystemUiUtil.disposeUi(this);
-    }
-
-    @NotNull
-    @Override
-    public MavenSettings getInitialSettings() {
-        return myInitialSettings;
     }
 }

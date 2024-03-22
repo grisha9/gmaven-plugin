@@ -2,9 +2,9 @@ package ru.rzn.gmyasoedov.gmaven.settings;
 
 import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil;
+import com.intellij.openapi.externalSystem.service.settings.AbstractExternalProjectSettingsControl;
 import com.intellij.openapi.externalSystem.util.ExternalSystemUiUtil;
 import com.intellij.openapi.externalSystem.util.PaintAwarePanel;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
@@ -50,7 +50,7 @@ import static java.util.Objects.requireNonNullElse;
 import static ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message;
 import static ru.rzn.gmyasoedov.gmaven.settings.DistributionType.CUSTOM;
 
-public class ProjectSettingsControlBuilder implements GMavenProjectSettingsControlBuilder {
+public class ProjectSettingsControlBuilder extends AbstractExternalProjectSettingsControl<MavenProjectSettings> {
     @NotNull
     private final MavenProjectSettings projectSettings;
 
@@ -86,27 +86,17 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     private JPanel jdkComboBoxWrapper;
 
     public ProjectSettingsControlBuilder(@NotNull MavenProjectSettings initialSettings) {
+        super(initialSettings);
         projectSettings = initialSettings;
     }
 
     @Override
-    public void showUi(boolean show) {
-        ExternalSystemUiUtil.showUi(this, show);
-    }
-
-    @Override
-    @NotNull
-    public MavenProjectSettings getInitialSettings() {
-        return projectSettings;
-    }
-
-    @Override
-    public boolean validate(MavenProjectSettings settings) throws ConfigurationException {
+    public boolean validate(MavenProjectSettings settings) {
         return false;
     }
 
     @Override
-    public void apply(MavenProjectSettings settings) {
+    public void applyExtraSettings(MavenProjectSettings settings) {
         if (nonRecursiveCheckBox != null) {
             settings.setNonRecursive(nonRecursiveCheckBox.isSelected());
         }
@@ -153,7 +143,7 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     }
 
     @Override
-    public boolean isModified() {
+    public boolean isExtraSettingModified() {
         if (nonRecursiveCheckBox != null
                 && nonRecursiveCheckBox.isSelected() != projectSettings.getNonRecursive()) {
             return true;
@@ -220,10 +210,16 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     }
 
     @Override
-    public void reset(@Nullable Project project,
-                      MavenProjectSettings settings,
-                      boolean isDefaultModuleCreation,
-                      @Nullable WizardContext wizardContext) {
+    public @Nullable String getHelpId() {
+        return "GMaven_Project_Settings";
+    }
+
+    @Override
+    protected void resetExtraSettings(boolean isDefaultModuleCreation) {
+    }
+
+    @Override
+    public void resetExtraSettings(boolean isDefaultModuleCreation, @Nullable WizardContext wizardContext) {
         if (nonRecursiveCheckBox != null) {
             nonRecursiveCheckBox.setSelected(projectSettings.getNonRecursive());
         }
@@ -258,6 +254,7 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
             outPutLevelCombobox.setItem(new OutputLevelComboBoxItem(projectSettings.getOutputLevel()));
         }
 
+        Project project = getProject();
         if (project == null) return;
         if (mavenCustomPathField != null) {
             mavenCustomPathField.addBrowseFolderListener(
@@ -270,7 +267,8 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
             mavenHomeCombobox.addItem(
                     new DistributionSettingsComboBoxItem(DistributionSettings.getBundled())
             );
-            var distributionUrl = MvnDotProperties.getDistributionUrl(project, settings.getExternalProjectPath());
+            String externalProjectPath = projectSettings.getExternalProjectPath();
+            var distributionUrl = MvnDotProperties.getDistributionUrl(project, externalProjectPath);
             if (!distributionUrl.isEmpty()) {
                 mavenHomeCombobox.addItem(
                         new DistributionSettingsComboBoxItem(DistributionSettings.getWrapper(distributionUrl))
@@ -318,7 +316,7 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
     }
 
     @Override
-    public void createAndFillControls(PaintAwarePanel content, int indentLevel) {
+    public void fillExtraControls(PaintAwarePanel content, int indentLevel) {
         nonRecursiveCheckBox = new JBCheckBox(message("gmaven.settings.project.recursive"));
         content.add(nonRecursiveCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
 
@@ -500,16 +498,6 @@ public class ProjectSettingsControlBuilder implements GMavenProjectSettingsContr
                 wrapperHintLabel.setText(value.getUrl());
             }
         }
-    }
-
-    @Override
-    public void update(String linkedProjectPath, MavenProjectSettings settings, boolean isDefaultModuleCreation) {
-
-    }
-
-    @Override
-    public void disposeUIResources() {
-
     }
 
     private static void setupProjectSdksModel(@NotNull ProjectSdksModel sdksModel, @NotNull Project project, @Nullable Sdk projectSdk) {
