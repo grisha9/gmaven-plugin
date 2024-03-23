@@ -33,13 +33,6 @@ object MavenCentralClient {
     }
 
     @JvmStatic
-    fun findGroupId(group: String, artifact: String): List<MavenCentralArtifactInfo> {
-        return if (group.length > 1 && artifact.length > 1)
-            findByUrl(SEARCH_GROUP_BY_ARTIFACT_URL.format(group, artifact))
-        else emptyList()
-    }
-
-    @JvmStatic
     fun findArtifact(query: String, groupId: String?): List<MavenCentralArtifactInfo> {
         if (query.length < 3) return emptyList()
         if (groupId != null && groupId.length > 4) {

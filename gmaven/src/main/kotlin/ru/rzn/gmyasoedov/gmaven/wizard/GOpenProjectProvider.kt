@@ -16,6 +16,7 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.vfs.VirtualFile
+import org.jetbrains.annotations.VisibleForTesting
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.project.policy.ReadProjectResolverPolicy
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
@@ -37,7 +38,8 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         attachProjectAndRefresh(mavenProjectSettings, project)
     }
 
-    private fun attachProjectAndRefresh(settings: MavenProjectSettings, project: Project) {
+    @VisibleForTesting
+    fun attachProjectAndRefresh(settings: MavenProjectSettings, project: Project) {
         val externalProjectPath = settings.externalProjectPath
 
         ExternalSystemApiUtil.getSettings(project, SYSTEM_ID).linkProject(settings)
@@ -49,7 +51,7 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         )
         if (Registry.`is`("external.system.auto.import.disabled")) return
 
-        ExternalProjectsManagerImpl.getInstance(project).runWhenInitialized {
+        runWhenInitialized(project) {
             val importSpecBuilder = getImportSpecBuilder(project, externalProjectPath)
             ExternalSystemUtil.refreshProject(externalProjectPath, importSpecBuilder)
         }
@@ -61,7 +63,8 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
     ): ImportSpecBuilder {
         return if (!Registry.`is`("gmaven.fast.open.project")
             || ApplicationManager.getApplication().isHeadlessEnvironment
-            || ApplicationManager.getApplication().isUnitTestMode) {
+            || ApplicationManager.getApplication().isUnitTestMode
+        ) {
             ImportSpecBuilder(project, SYSTEM_ID).callback(createFinalImportCallback(project, externalProjectPath))
         } else {
             ImportSpecBuilder(project, SYSTEM_ID)
@@ -96,6 +99,16 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
                 DumbService.getInstance(project).runWhenSmart {
                     ExternalSystemUtil.refreshProject(externalProjectPath, ImportSpecBuilder(project, SYSTEM_ID))
                 }
+            }
+        }
+    }
+
+    private fun runWhenInitialized(project: Project, runnable: Runnable) {
+        if (ApplicationManager.getApplication().isUnitTestMode) {
+            runnable.run()
+        } else {
+            ExternalProjectsManagerImpl.getInstance(project).runWhenInitialized {
+                runnable.run()
             }
         }
     }

@@ -1,18 +1,12 @@
 package ru.rzn.gmyasoedov.gmaven.project
 
-import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder
-import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
-import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import org.jetbrains.jps.model.java.JavaResourceRootType
 import org.jetbrains.jps.model.java.JavaSourceRootType
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.MavenImportingTestCase
-import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
-import ru.rzn.gmyasoedov.gmaven.wizard.createMavenProjectSettings
 
-class MavenProjectImportTest : MavenImportingTestCase() {
+class KotlinMavenPluginImportTest : MavenImportingTestCase() {
 
-    fun testKotlinMavenPluginOnlyKotlinSources() {
+    fun testOnlyKotlinSources() {
         val projectFile = createProjectPom(
             """
             <groupId>org.example</groupId>
@@ -61,14 +55,9 @@ class MavenProjectImportTest : MavenImportingTestCase() {
             "src/main/kotlin",
             "src/test/kotlin",
         )
-        val mavenSettings = MavenSettings.getInstance(project)
-        mavenSettings.storeProjectFilesExternally = true
-        val mavenProjectSettings = createMavenProjectSettings(projectFile, project)
 
-        ExternalSystemUtil.refreshProject(
-            mavenProjectSettings.externalProjectPath,
-            ImportSpecBuilder(project, GMavenConstants.SYSTEM_ID).use(ProgressExecutionMode.MODAL_SYNC)
-        )
+        import(projectFile)
+
         assertModules("project")
         assertContentRootsSources(
             "project", JavaSourceRootType.SOURCE,
@@ -81,7 +70,7 @@ class MavenProjectImportTest : MavenImportingTestCase() {
         )
     }
 
-    fun testKotlinMavenPluginJavaAndKotlinSources() {
+    fun testJavaAndKotlinSources() {
         val projectFile = createProjectPom(
             """
             <groupId>org.example</groupId>
@@ -178,14 +167,9 @@ class MavenProjectImportTest : MavenImportingTestCase() {
             "src/test/java",
             "src/test/resources",
         )
-        val mavenSettings = MavenSettings.getInstance(project)
-        mavenSettings.storeProjectFilesExternally = true
-        val mavenProjectSettings = createMavenProjectSettings(projectFile, project)
 
-        ExternalSystemUtil.refreshProject(
-            mavenProjectSettings.externalProjectPath,
-            ImportSpecBuilder(project, GMavenConstants.SYSTEM_ID).use(ProgressExecutionMode.MODAL_SYNC)
-        )
+        import(projectFile)
+
         assertModules("project")
         assertContentRootsSources(
             "project", JavaSourceRootType.SOURCE,

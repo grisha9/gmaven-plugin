@@ -8,11 +8,23 @@ import com.intellij.openapi.roots.ContentFolder
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.VfsUtilCore
+import com.intellij.openapi.vfs.VirtualFile
 import org.jetbrains.jps.model.java.JavaResourceRootType
 import org.jetbrains.jps.model.java.JavaSourceRootType
+import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
+import ru.rzn.gmyasoedov.gmaven.wizard.GOpenProjectProvider
+import ru.rzn.gmyasoedov.gmaven.wizard.createMavenProjectSettings
 import java.util.*
 
 abstract class MavenImportingTestCase : MavenTestCase() {
+
+    protected fun import(projectFile: VirtualFile) {
+        val mavenSettings = MavenSettings.getInstance(project)
+        mavenSettings.storeProjectFilesExternally = true
+        val mavenProjectSettings = createMavenProjectSettings(projectFile, project)
+
+        GOpenProjectProvider().attachProjectAndRefresh(mavenProjectSettings, project)
+    }
 
     protected fun assertModules(vararg expectedNames: String) {
         val actualNames = ModuleManager.getInstance(project).modules.mapTo(mutableSetOf()) { it.name }
