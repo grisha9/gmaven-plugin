@@ -148,6 +148,8 @@
                      description="Fast open project"/>
         <registryKey key="gmaven.library.map.for.performance" defaultValue="true"
                      description="New import logic for library"/>
+        <registryKey key="gmaven.search.artifact.maven.central" defaultValue="true"
+                     description="Search artifacts in maven central"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
 

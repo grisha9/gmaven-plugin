@@ -2,6 +2,7 @@ package ru.rzn.gmyasoedov.gmaven.util
 
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ProjectKeys
+import com.intellij.openapi.externalSystem.model.project.LibraryData
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsDataStorage
@@ -39,6 +40,16 @@ object CachedModuleDataService {
         }
     }
 
+    fun getLibrary(project: Project): List<MavenCentralArtifactInfo> {
+        return CachedValuesManager.getManager(project).getCachedValue(project) {
+            CachedValueProvider.Result
+                .create(
+                    getCachedLibrary(project),
+                    ExternalProjectsDataStorage.getInstance(project), modificationTracker
+                )
+        }
+    }
+
     fun invalidate() {
         modificationTracker.incModificationCount()
     }
@@ -68,6 +79,24 @@ object CachedModuleDataService {
         val groupId = data.group ?: return null
         val version = data.version ?: return null
         return CachedModuleData(data.moduleName, groupId, version, moduleNode.isIgnored, configPath)
+    }
+
+    private fun getCachedLibrary(project: Project): List<MavenCentralArtifactInfo> {
+        return ProjectDataManager.getInstance().getExternalProjectsData(project, SYSTEM_ID)
+            .asSequence()
+            .mapNotNull { it.externalProjectStructure }
+            .flatMap { ExternalSystemApiUtil.findAll(it, ProjectKeys.LIBRARY) }
+            .mapNotNull { mapToLibraryData(it) }
+            .toList()
+    }
+
+    private fun mapToLibraryData(moduleNode: DataNode<LibraryData>): MavenCentralArtifactInfo? {
+        val data = moduleNode.data
+        val groupId = data.groupId ?: return null
+        val artifactId = data.artifactId ?: return null
+        val version = data.version ?: return null
+        val id = "$groupId:$artifactId:$version"
+        return MavenCentralArtifactInfo(id, groupId, artifactId, version)
     }
 }
 
