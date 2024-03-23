@@ -60,8 +60,7 @@ class MavenPropertyPsiReference(
             hasPrefix = true
         }
 
-        val projectSettings = MavenSettings.getInstance(xmlTag.project).linkedProjectsSettings
-        val repos = projectSettings.mapNotNull { it.localRepositoryPath }
+        val repos = XmlPsiUtil.getLocalRepos(xmlTag)
 
         val parentPathDirectory = xmlFile.parent
         var parentPathPom: Path? = null
@@ -125,8 +124,7 @@ class MavenPropertyPsiReference(
 
     override fun getVariants(): Array<Any> {
         val xmlFile = xmlTag.containingFile as? XmlFile ?: return emptyArray()
-        val projectSettings = MavenSettings.getInstance(xmlTag.project).linkedProjectsSettings
-        val repos = projectSettings.mapNotNull { it.localRepositoryPath }
+        val repos = XmlPsiUtil.getLocalRepos(xmlTag)
         val propertiesMap = TreeMap<String, XmlTag>()
         XmlPsiUtil.fillProperties(xmlFile, propertiesMap, repos)
         return propertiesMap.keys.map { LookupElementBuilder.create(it) }.toTypedArray()
