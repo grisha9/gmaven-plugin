@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [232.25] - 2024-03-23
+### Fixed
+- Project settings UI
+- Action: download all sources(Not worked) [wiki](https://github.com/grisha9/gmaven-plugin/wiki/Actions#download-all-sources)
+### Added
+- Improvement artifacts completion and navigation
+
 ## [232.24] - 2024-03-17
 ### Fixed
 - Kotlin content roots
