@@ -1,15 +1,22 @@
 package ru.rzn.gmyasoedov.gmaven.dom
 
 import com.intellij.lang.xml.XMLLanguage
+import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsDataStorage
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.readText
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiManager
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.xml.XmlFile
 import com.intellij.psi.xml.XmlTag
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
+import ru.rzn.gmyasoedov.gmaven.util.MavenCentralArtifactInfo
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import java.nio.file.Path
 import java.util.*
@@ -81,9 +88,76 @@ object XmlPsiUtil {
             propertiesMap.putIfAbsent(property.name, property)
         }
         val parentTag = xmlFile.rootTag?.findFirstSubTag(MavenArtifactUtil.PARENT) ?: return
-        val parentPath = XmlPsiUtil.getParentPath(parentTag, localRepos) ?: return
-        val parentXmlFile = XmlPsiUtil.getXmlFile(parentPath, xmlFile.project) ?: return
+        val parentPath = getParentPath(parentTag, localRepos) ?: return
+        val parentXmlFile = getXmlFile(parentPath, xmlFile.project) ?: return
         if (xmlFile.virtualFile == parentXmlFile.virtualFile) return
         fillProperties(parentXmlFile, propertiesMap, localRepos, deepCount + 1)
+    }
+
+    fun getDependencyManagementLibraryCache(xmlFile: PsiFile): Set<MavenCentralArtifactInfo> {
+        return CachedValuesManager.getManager(xmlFile.project).getCachedValue(xmlFile) {
+            CachedValueProvider.Result
+                .create(
+                    getDependencyManagementLibrary(xmlFile),
+                    ExternalProjectsDataStorage.getInstance(xmlFile.project)
+                )
+        }
+    }
+
+    private fun getDependencyManagementLibrary(xmlFile: PsiFile): Set<MavenCentralArtifactInfo> {
+        if (xmlFile !is XmlFile) return emptySet()
+        val repos = getLocalRepos(xmlFile)
+        val librarySet = mutableSetOf<MavenCentralArtifactInfo>()
+        fillDependencyManagement(xmlFile, librarySet, mutableMapOf(), repos, 0)
+        return librarySet
+    }
+
+    fun getLocalRepos(element: PsiElement): List<String> {
+        return MavenSettings.getInstance(element.project).linkedProjectsSettings.mapNotNull { it.localRepositoryPath }
+    }
+
+    private fun fillDependencyManagement(
+        xmlFile: XmlFile, librarySet: MutableSet<MavenCentralArtifactInfo>,
+        propertiesMap: MutableMap<String, String>, localRepos: List<String>, deepCount: Int = 0
+    ) {
+        if (deepCount > 500) return
+        val dependencies = xmlFile.rootTag?.findFirstSubTag(MavenArtifactUtil.DEPENDENCY_MANAGEMENT)
+            ?.findFirstSubTag(MavenArtifactUtil.DEPENDENCIES)?.findSubTags(MavenArtifactUtil.DEPENDENCY) ?: emptyArray()
+        val plugins = xmlFile.rootTag?.findFirstSubTag(MavenArtifactUtil.BUILD)
+            ?.findFirstSubTag(MavenArtifactUtil.PLUGIN_MANAGEMENT)
+            ?.findFirstSubTag(MavenArtifactUtil.PLUGINS)?.findSubTags(MavenArtifactUtil.PLUGIN) ?: emptyArray()
+        val properties = xmlFile.rootTag?.findFirstSubTag(MavenArtifactUtil.PROPERTIES)?.subTags ?: emptyArray()
+        for (property in properties) {
+            propertiesMap.putIfAbsent(property.name, property.value.text)
+        }
+        for (each in dependencies) {
+            dependencyToLibrary(each)?.let { librarySet.add(it) }
+            if (each.getSubTagText(MavenArtifactUtil.TYPE) == "pom" && each.getSubTagText(MavenArtifactUtil.SCOPE) == "import") {
+                val parentPath = getParentPath(each, localRepos, propertiesMap) ?: continue
+                val parentXmlFile = getXmlFile(parentPath, xmlFile.project) ?: continue
+                fillDependencyManagement(parentXmlFile, librarySet, propertiesMap, localRepos, deepCount + 1)
+            }
+        }
+        for (each in plugins) {
+            dependencyToLibrary(each)?.let { librarySet.add(it) }
+            if (each.getSubTagText(MavenArtifactUtil.TYPE) == "pom" && each.getSubTagText(MavenArtifactUtil.SCOPE) == "import") {
+                val parentPath = getParentPath(each, localRepos, propertiesMap) ?: continue
+                val parentXmlFile = getXmlFile(parentPath, xmlFile.project) ?: continue
+                fillDependencyManagement(parentXmlFile, librarySet, propertiesMap, localRepos, deepCount + 1)
+            }
+        }
+        val parentTag = xmlFile.rootTag?.findFirstSubTag(MavenArtifactUtil.PARENT) ?: return
+        val parentPath = getParentPath(parentTag, localRepos, propertiesMap) ?: return
+        val parentXmlFile = getXmlFile(parentPath, xmlFile.project) ?: return
+        if (xmlFile.virtualFile == parentXmlFile.virtualFile) return
+        fillDependencyManagement(parentXmlFile, librarySet, propertiesMap, localRepos, deepCount + 1)
+    }
+
+    private fun dependencyToLibrary(xmlTag: XmlTag): MavenCentralArtifactInfo? {
+        val groupId = xmlTag.getSubTagText(MavenArtifactUtil.GROUP_ID) ?: return null
+        val artifactId = xmlTag.getSubTagText(MavenArtifactUtil.ARTIFACT_ID) ?: return null
+        val version = xmlTag.getSubTagText(MavenArtifactUtil.VERSION) ?: return null
+        val id = "$groupId:$artifactId:$version"
+        return MavenCentralArtifactInfo(id, groupId, artifactId, version)
     }
 }

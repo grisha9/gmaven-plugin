@@ -167,7 +167,7 @@ class PomXmlDomGutterAnnotator : Annotator {
                 val parentPath = XmlPsiUtil
                     .getParentPath(each, projectSettings.localRepos, dependencyManagement.properties) ?: continue
                 val parentXmlFile = XmlPsiUtil.getXmlFile(parentPath, xmlFile.project) ?: continue
-                fillDependencyManagement(parentXmlFile, dependencyManagement, projectSettings, deepCount)
+                fillDependencyManagement(parentXmlFile, dependencyManagement, projectSettings, deepCount + 1)
             }
         }
         for (each in plugins) {
@@ -176,7 +176,7 @@ class PomXmlDomGutterAnnotator : Annotator {
                 val parentPath = XmlPsiUtil
                     .getParentPath(each, projectSettings.localRepos, dependencyManagement.properties) ?: continue
                 val parentXmlFile = XmlPsiUtil.getXmlFile(parentPath, xmlFile.project) ?: continue
-                fillDependencyManagement(parentXmlFile, dependencyManagement, projectSettings, deepCount)
+                fillDependencyManagement(parentXmlFile, dependencyManagement, projectSettings, deepCount + 1)
             }
         }
         val parentTag = xmlFile.rootTag?.findFirstSubTag(PARENT) ?: return
@@ -211,10 +211,10 @@ class PomXmlDomGutterAnnotator : Annotator {
     }
 
     private data class ProjectSettings(val localRepos: List<String>, val modules: Set<String>)
-
-    private data class DependencyManagement(
-        val dependencies: MutableMap<String, XmlTag> = TreeMap(),
-        val plugins: MutableMap<String, XmlTag> = TreeMap(),
-        val properties: MutableMap<String, String> = TreeMap()
-    )
 }
+
+data class DependencyManagement(
+    val dependencies: MutableMap<String, XmlTag> = TreeMap(),
+    val plugins: MutableMap<String, XmlTag> = TreeMap(),
+    val properties: MutableMap<String, String> = TreeMap()
+)

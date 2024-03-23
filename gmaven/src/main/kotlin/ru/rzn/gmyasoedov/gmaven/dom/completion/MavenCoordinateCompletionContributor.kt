@@ -5,6 +5,7 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.util.registry.Registry
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.xml.XmlFile
@@ -13,7 +14,7 @@ import com.intellij.psi.xml.XmlText
 import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.IDEA_PSI_EDIT_TOKEN
-import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
+import ru.rzn.gmyasoedov.gmaven.dom.XmlPsiUtil
 import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
 import ru.rzn.gmyasoedov.gmaven.util.MavenCentralArtifactInfo
 import ru.rzn.gmyasoedov.gmaven.util.MavenCentralClient.find
@@ -39,7 +40,7 @@ class MavenCoordinateCompletionContributor : CompletionContributor() {
         if (parameters.completionType != CompletionType.BASIC) return
         val currentTimeMillis = System.currentTimeMillis()
         val get = Util.timeStamp.get()
-        if (currentTimeMillis - get < TIMEOUT_REQUEST_MS) return
+        if (currentTimeMillis - get < getTimeout()) return
         Util.timeStamp.set(currentTimeMillis)
 
         result.restartCompletionWhenNothingMatches()
@@ -72,14 +73,14 @@ class MavenCoordinateCompletionContributor : CompletionContributor() {
         parameters: CompletionParameters, tagElement: XmlTag, resultSet: CompletionResultSet
     ): Nothing? {
         val groupId = getTextUnderCursor(parameters)
-        
-        popularGroupIds.filter { it.contains(groupId) }
+
+        val allGroupIds = CachedModuleDataService.getLibrary(tagElement.project).map { it.g } + popularGroupIds
+        allGroupIds.filter { it.contains(groupId) }
             .forEach { resultSet.addElement(LookupElementBuilder.create(it).withInsertHandler(GroupInsertHandler)) }
 
         val folders = getSplitGroupIdOnFolders(groupId)
         val parentFolder = folders.joinToString(".")
-        val repositoriesPath = MavenSettings.getInstance(tagElement.project).linkedProjectsSettings
-            .mapNotNullTo(mutableSetOf()) { it.localRepositoryPath }
+        val repositoriesPath = XmlPsiUtil.getLocalRepos(tagElement)
         val result = repositoriesPath.flatMapTo(mutableSetOf()) { getListFiles(it, folders, parentFolder) }
         for (each in result) {
             resultSet.addElement(LookupElementBuilder.create(each).withInsertHandler(GroupInsertHandler))
@@ -114,6 +115,9 @@ class MavenCoordinateCompletionContributor : CompletionContributor() {
         val timeStamp = AtomicLong(0)
     }
 
+    private fun getTimeout(): Int {
+        return if (Registry.`is`("gmaven.search.artifact.maven.central")) TIMEOUT_REQUEST_MS else 300
+    }
 }
 
 private class VersionContributor(val artifactId: String, val groupId: String) :
@@ -138,51 +142,74 @@ private class VersionContributor(val artifactId: String, val groupId: String) :
     }
 }
 
-private class GAVContributor(val artifactOrGroupTag: XmlTag, val parentXmlTag: XmlTag) : Consumer<CompletionResultSet> {
+private class GAVContributor(val artifactIdTag: XmlTag, val parentXmlTag: XmlTag) : Consumer<CompletionResultSet> {
     override fun accept(result: CompletionResultSet) {
         val queryText = result.prefixMatcher.prefix
-        val isArtifact = artifactOrGroupTag.name == ARTIFACT_ID
-        val promise = AsyncPromise<List<MavenCentralArtifactInfo>>()
         val groupId = parentXmlTag.getSubTagText(GROUP_ID)
-        ApplicationManager.getApplication().executeOnPooledThread {
-            promise.setResult(findArtifact(queryText, groupId))
-        }
-        val findInModules = findInModule(artifactOrGroupTag, isArtifact, queryText)
-        setLookupResult(findInModules, isArtifact, result)
 
+        val promise = asyncPromise(queryText, groupId)
+
+        val findInModules = findInModule(artifactIdTag, queryText)
+        setLookupResult(findInModules, result)
+
+        val artifactFromManagementData = XmlPsiUtil.getDependencyManagementLibraryCache(artifactIdTag.containingFile)
+            .filter { filterArtifact(groupId, queryText, it) }
+        val artifactFromProjectStructure = CachedModuleDataService.getLibrary(artifactIdTag.project)
+            .filter { filterArtifact(groupId, queryText, it) }
+
+        setLookupResult(artifactFromManagementData, result)
+        setLookupResult(artifactFromProjectStructure, result)
+
+        if (promise == null) return
         val startMillis = System.currentTimeMillis()
-        while (promise.getState() == Promise.State.PENDING && System.currentTimeMillis() - startMillis < TIMEOUT_PROMISE_MS) {
+        while (promise.getState() == Promise.State.PENDING
+            && System.currentTimeMillis() - startMillis < TIMEOUT_PROMISE_MS
+        ) {
             ProgressManager.checkCanceled()
             Thread.yield()
         }
         if (!promise.isDone()) return
 
         val artifactInfoList = promise.get() ?: return
-        setLookupResult(artifactInfoList, isArtifact, result)
+        setLookupResult(artifactInfoList, result)
+    }
+
+    private fun asyncPromise(queryText: String, groupId: String?): AsyncPromise<List<MavenCentralArtifactInfo>>? {
+        if (!Registry.`is`("gmaven.search.artifact.maven.central")) return null
+        val promise = AsyncPromise<List<MavenCentralArtifactInfo>>()
+        ApplicationManager.getApplication()
+            .executeOnPooledThread { promise.setResult(findArtifact(queryText, groupId)) }
+        return promise
     }
 
     private fun setLookupResult(
-        artifactInfoList: List<MavenCentralArtifactInfo>, isArtifact: Boolean, result: CompletionResultSet
+        artifactInfoList: Collection<MavenCentralArtifactInfo>, result: CompletionResultSet
     ) {
         artifactInfoList.forEach {
-            val lookupString = if (isArtifact) it.a else it.g
             result.addElement(
-                LookupElementBuilder.create(it, lookupString)
+                LookupElementBuilder.create(it, it.a)
                     .withPresentableText(it.id)
                     .withInsertHandler(GAVInsertHandler)
             )
         }
     }
 
-    private fun findInModule(
-        artifactOrGroupTag: XmlTag, isArtifact: Boolean, query: String
-    ): List<MavenCentralArtifactInfo> {
-        if (!isArtifact || query.length < 2) return emptyList()
+    private fun findInModule(artifactIdTag: XmlTag, query: String): List<MavenCentralArtifactInfo> {
+        if (query.length < 2) return emptyList()
         return CachedModuleDataService
-            .getDataHolder(artifactOrGroupTag.project).modules.asSequence()
+            .getDataHolder(artifactIdTag.project).modules.asSequence()
             .filter { it.artifactId.contains(query, true) }
             .map { MavenCentralArtifactInfo(it.groupId + ":" + it.artifactId, it.groupId, it.artifactId, it.version) }
             .toList()
+    }
+
+    private fun filterArtifact(groupId: String?, artifactId: String, data: MavenCentralArtifactInfo): Boolean {
+        if (artifactId.length < 2) return false
+        return if (groupId == null || groupId.length < 3) {
+            data.a.contains(artifactId)
+        } else {
+            data.a.contains(artifactId) && data.g.contains(groupId)
+        }
     }
 }
 
