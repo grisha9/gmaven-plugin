@@ -1,6 +1,5 @@
 package ru.rzn.gmyasoedov.gmaven.settings;
 
-import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil;
 import com.intellij.openapi.externalSystem.service.settings.AbstractExternalProjectSettingsControl;
 import com.intellij.openapi.externalSystem.util.ExternalSystemUiUtil;
@@ -24,8 +23,6 @@ import com.intellij.ui.JBColor;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
-import com.intellij.util.ui.GridBag;
-import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
@@ -80,10 +77,28 @@ public class ProjectSettingsControlBuilder extends AbstractExternalProjectSettin
     private ComboBox<DistributionSettingsComboBoxItem> mavenHomeCombobox;
     @Nullable
     private TextFieldWithBrowseButton mavenCustomPathField;
-    @Nullable
-    private JBLabel wrapperHintLabel;
     private SdkComboBox jdkComboBox;
     private JPanel jdkComboBoxWrapper;
+    @Nullable
+    private JBLabel snapshotUpdateLabel;
+    @Nullable
+    private JBLabel outputLevelLabel;
+    @Nullable
+    private JBLabel threadCountLabel;
+    @Nullable
+    private JBLabel vmOptionsLabel;
+    @Nullable
+    private JBLabel argumentsLabel;
+    @Nullable
+    private JBLabel argumentsImportLabel;
+    @Nullable
+    private JBLabel jdkLabel;
+    @Nullable
+    private JBLabel mavenHomeLabel;
+    @Nullable
+    private JBLabel mavenCustomPathLabel;
+    @Nullable
+    private JPanel mainPanel;
 
     public ProjectSettingsControlBuilder(@NotNull MavenProjectSettings initialSettings) {
         super(initialSettings);
@@ -215,11 +230,7 @@ public class ProjectSettingsControlBuilder extends AbstractExternalProjectSettin
     }
 
     @Override
-    protected void resetExtraSettings(boolean isDefaultModuleCreation) {
-    }
-
-    @Override
-    public void resetExtraSettings(boolean isDefaultModuleCreation, @Nullable WizardContext wizardContext) {
+    public void resetExtraSettings(boolean isDefaultModuleCreation) {
         if (nonRecursiveCheckBox != null) {
             nonRecursiveCheckBox.setSelected(projectSettings.getNonRecursive());
         }
@@ -290,12 +301,10 @@ public class ProjectSettingsControlBuilder extends AbstractExternalProjectSettin
             setupMavenHomeHintAndCustom(current);
         }
         if (jdkComboBoxWrapper != null) {
-            Sdk projectSdk = wizardContext != null ? wizardContext.getProjectJdk() : null;
-
             ProjectStructureConfigurable structureConfigurable = ProjectStructureConfigurable.getInstance(project);
             ProjectSdksModel sdksModel = structureConfigurable.getProjectJdksModel();
 
-            setupProjectSdksModel(sdksModel, project, projectSdk);
+            setupProjectSdksModel(sdksModel, project);
             recreateJdkComboBox(project, sdksModel);
             setSelectedJdk(jdkComboBox, projectSettings.getJdkName());
         }
@@ -317,104 +326,95 @@ public class ProjectSettingsControlBuilder extends AbstractExternalProjectSettin
 
     @Override
     public void fillExtraControls(PaintAwarePanel content, int indentLevel) {
+        mainPanel = new JPanel(new GridBagLayout());
+        content.add(mainPanel, ExternalSystemUiUtil.getFillLineConstraints(0).insets(0, 0, 0, 0));
+
         nonRecursiveCheckBox = new JBCheckBox(message("gmaven.settings.project.recursive"));
-        content.add(nonRecursiveCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        mainPanel.add(nonRecursiveCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
 
         useWholeProjectContextCheckBox = new JBCheckBox(message("gmaven.settings.project.task.context"));
         useWholeProjectContextCheckBox.setToolTipText(message("gmaven.settings.project.task.context.tooltip"));
-        content.add(useWholeProjectContextCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        mainPanel.add(useWholeProjectContextCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
 
         resolveModulePerSourceSetCheckBox = new JBCheckBox(message("gmaven.settings.project.module.per.source.set"));
-        content.add(resolveModulePerSourceSetCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        mainPanel.add(resolveModulePerSourceSetCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
 
         useMvndForTasksCheckBox = new JBCheckBox(message("gmaven.settings.project.mvnd"));
         useMvndForTasksCheckBox.setToolTipText(message("gmaven.settings.project.mvnd.tooltip"));
-        content.add(useMvndForTasksCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        mainPanel.add(useMvndForTasksCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
 
         showPluginNodesCheckBox = new JBCheckBox(message("gmaven.settings.project.plugins"));
         showPluginNodesCheckBox.setToolTipText(message("gmaven.settings.project.plugins.tooltip"));
-        content.add(showPluginNodesCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        mainPanel.add(showPluginNodesCheckBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
 
         snapshotUpdateComboBox = setupSnapshotUpdateComboBox();
-        JBLabel snapshotUpdateLabel = new JBLabel(message("gmaven.settings.project.snapshot.update"));
-        content.add(snapshotUpdateLabel, getLabelConstraints(indentLevel));
-        content.add(snapshotUpdateComboBox, getLabelConstraints(0));
-        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        snapshotUpdateLabel = new JBLabel(message("gmaven.settings.project.snapshot.update"));
+        mainPanel.add(snapshotUpdateLabel, getLabelConstraints(indentLevel));
+        mainPanel.add(snapshotUpdateComboBox, getLabelConstraints(0));
+        mainPanel.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
         snapshotUpdateLabel.setLabelFor(snapshotUpdateComboBox);
 
         outPutLevelCombobox = setupOutputLevelComboBox();
-        JBLabel outputLevelLabel = new JBLabel(message("gmaven.settings.project.output.level"));
-        content.add(outputLevelLabel, getLabelConstraints(indentLevel));
-        content.add(outPutLevelCombobox, getLabelConstraints(0));
-        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        outputLevelLabel = new JBLabel(message("gmaven.settings.project.output.level"));
+        mainPanel.add(outputLevelLabel, getLabelConstraints(indentLevel));
+        mainPanel.add(outPutLevelCombobox, getLabelConstraints(0));
+        mainPanel.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
         outputLevelLabel.setLabelFor(outPutLevelCombobox);
 
 
-        JBLabel threadCountLabel = new JBLabel(message("gmaven.settings.project.thread.count"));
+        threadCountLabel = new JBLabel(message("gmaven.settings.project.thread.count"));
         threadCountField = new JTextField();
-        content.add(threadCountLabel, getLabelConstraints(indentLevel));
-        content.add(threadCountField, getLabelConstraints(0));
-        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        mainPanel.add(threadCountLabel, getLabelConstraints(indentLevel));
+        mainPanel.add(threadCountField, getLabelConstraints(0));
+        mainPanel.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
         threadCountLabel.setLabelFor(threadCountField);
 
 
-        JBLabel vmOptionsLabel = new JBLabel(message("gmaven.settings.project.vm.options"));
+        vmOptionsLabel = new JBLabel(message("gmaven.settings.project.vm.options"));
         vmOptionsField = new JTextField();
-        content.add(vmOptionsLabel, getLabelConstraints(indentLevel));
-        content.add(vmOptionsField, getLabelConstraints(0));
-        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        mainPanel.add(vmOptionsLabel, getLabelConstraints(indentLevel));
+        mainPanel.add(vmOptionsField, getLabelConstraints(0));
+        mainPanel.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
         vmOptionsLabel.setLabelFor(vmOptionsField);
 
-        JBLabel argumentsLabel = new JBLabel(message("gmaven.settings.project.arguments"));
+        argumentsLabel = new JBLabel(message("gmaven.settings.project.arguments"));
         argumentsLabel.setToolTipText(message("gmaven.settings.project.arguments.tooltip"));
         argumentsField = new JTextField();
         argumentsField.setToolTipText(message("gmaven.settings.project.arguments.tooltip"));
-        content.add(argumentsLabel, getLabelConstraints(indentLevel));
-        content.add(argumentsField, getLabelConstraints(0));
-        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        mainPanel.add(argumentsLabel, getLabelConstraints(indentLevel));
+        mainPanel.add(argumentsField, getLabelConstraints(0));
+        mainPanel.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
         argumentsLabel.setLabelFor(argumentsField);
 
-        JBLabel argumentsImportLabel = new JBLabel(message("gmaven.settings.project.arguments.import"));
+        argumentsImportLabel = new JBLabel(message("gmaven.settings.project.arguments.import"));
         argumentsImportLabel.setToolTipText(message("gmaven.settings.project.arguments.import.tooltip"));
         argumentsImportField = new JTextField();
         argumentsImportField.setToolTipText(message("gmaven.settings.project.arguments.import.tooltip"));
-        content.add(argumentsImportLabel, getLabelConstraints(indentLevel));
-        content.add(argumentsImportField, getLabelConstraints(0));
-        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        mainPanel.add(argumentsImportLabel, getLabelConstraints(indentLevel));
+        mainPanel.add(argumentsImportField, getLabelConstraints(0));
+        mainPanel.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
         argumentsImportLabel.setLabelFor(argumentsImportField);
 
 
-        JBLabel jdkLabel = new JBLabel(message("gmaven.settings.project.jvm"));
+        jdkLabel = new JBLabel(message("gmaven.settings.project.jvm"));
         jdkComboBoxWrapper = new JPanel(new BorderLayout());
         jdkLabel.setLabelFor(jdkComboBoxWrapper);
-        content.add(jdkLabel, getLabelConstraints(indentLevel));
-        content.add(jdkComboBoxWrapper, getLabelConstraints(0));
-        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        mainPanel.add(jdkLabel, getLabelConstraints(indentLevel));
+        mainPanel.add(jdkComboBoxWrapper, getLabelConstraints(0));
+        mainPanel.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
 
-
-        JBLabel mavenHomeLabel = new JBLabel(message("gmaven.settings.project.maven.home"));
+        mavenHomeLabel = new JBLabel(message("gmaven.settings.project.maven.home"));
         mavenHomeCombobox = setupMavenHomeComboBox();
-        content.add(mavenHomeLabel, getLabelConstraints(indentLevel));
-        content.add(mavenHomeCombobox, getLabelConstraints(0));
-        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        mainPanel.add(mavenHomeLabel, getLabelConstraints(indentLevel));
+        mainPanel.add(mavenHomeCombobox, getLabelConstraints(0));
+        mainPanel.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
         mavenHomeLabel.setLabelFor(mavenHomeCombobox);
 
-        JBLabel hintLabel = new JBLabel("", UIUtil.ComponentStyle.MINI);
-        wrapperHintLabel = new JBLabel("", UIUtil.ComponentStyle.MINI);
-        GridBag constraints = getLabelConstraints(indentLevel);
-        constraints.insets.top = 0;
-        content.add(hintLabel, constraints);
-        constraints = getLabelConstraints(0);
-        constraints.insets.top = 0;
-        content.add(wrapperHintLabel, constraints);
-        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
-        hintLabel.setLabelFor(wrapperHintLabel);
-
-        JBLabel mavenCustomPathLabel = new JBLabel();
+        mavenCustomPathLabel = new JBLabel();
         mavenCustomPathField = new TextFieldWithBrowseButton();
-        content.add(mavenCustomPathLabel, getLabelConstraints(indentLevel));
-        content.add(mavenCustomPathField, getLabelConstraints(0));
-        content.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
+        mainPanel.add(mavenCustomPathLabel, getLabelConstraints(indentLevel));
+        mainPanel.add(mavenCustomPathField, getLabelConstraints(0));
+        mainPanel.add(Box.createGlue(), ExternalSystemUiUtil.getFillLineConstraints(indentLevel));
         mavenCustomPathLabel.setLabelFor(mavenCustomPathField);
     }
 
@@ -473,9 +473,10 @@ public class ProjectSettingsControlBuilder extends AbstractExternalProjectSettin
         var combobox = new ComboBox<>(items);
         combobox.setRenderer(new MyItemCellRenderer<>());
         combobox.addItemListener(e -> {
-            DistributionSettingsComboBoxItem item = (DistributionSettingsComboBoxItem) e.getItem();
-            DistributionSettings value = item.value;
-            setupMavenHomeHintAndCustom(value);
+            if (e.getItem() instanceof DistributionSettingsComboBoxItem item) {
+                DistributionSettings value = item.value;
+                setupMavenHomeHintAndCustom(value);
+            }
         });
         combobox.setSelectedItem(null);
         return combobox;
@@ -490,23 +491,23 @@ public class ProjectSettingsControlBuilder extends AbstractExternalProjectSettin
                 mavenCustomPathField.setText(null);
             }
         }
-        if (wrapperHintLabel != null && value != null) {
-            wrapperHintLabel.setVisible(value.getType() != CUSTOM);
-            if (value.getType() == DistributionType.MVN) {
-                wrapperHintLabel.setText(value.getPath().toString());
+
+        if (mavenHomeCombobox != null && value != null) {
+            if (value.getType() == DistributionType.MVN || value.getType() == CUSTOM) {
+                mavenHomeCombobox.setToolTipText(value.getPath().toString());
             } else {
-                wrapperHintLabel.setText(value.getUrl());
+                mavenHomeCombobox.setToolTipText(value.getUrl());
             }
         }
     }
 
-    private static void setupProjectSdksModel(@NotNull ProjectSdksModel sdksModel, @NotNull Project project, @Nullable Sdk projectSdk) {
+    private static void setupProjectSdksModel(@NotNull ProjectSdksModel sdksModel, @NotNull Project project) {
         sdksModel.reset(project);
         deduplicateSdkNames(sdksModel);
-        if (projectSdk == null) {
-            projectSdk = sdksModel.getProjectSdk();
-            projectSdk = sdksModel.findSdk(projectSdk);
-        }
+
+        Sdk projectSdk = sdksModel.getProjectSdk();
+        projectSdk = sdksModel.findSdk(projectSdk);
+
         if (projectSdk != null) {
             projectSdk = ExternalSystemJdkUtil.resolveDependentJdk(projectSdk);
             projectSdk = sdksModel.findSdk(projectSdk.getName());
