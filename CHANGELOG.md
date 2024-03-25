@@ -5,6 +5,7 @@
 ## [232.25] - 2024-03-23
 ### Fixed
 - Project settings UI
+- Windows paths ([issue](https://github.com/grisha9/gmaven-plugin/issues/5))
 - Action: download all sources(Not worked) [wiki](https://github.com/grisha9/gmaven-plugin/wiki/Actions#download-all-sources)
 ### Added
 - Improvement artifacts completion and navigation
