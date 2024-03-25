@@ -136,6 +136,8 @@
                      description="New import logic for library"/>
         <registryKey key="gmaven.search.artifact.maven.central" defaultValue="true"
                      description="Search artifacts in maven central"/>
+        <registryKey key="gmaven.show.all.errors" defaultValue="false"
+                     description="Print all GMaven errors in idea.log"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
 
