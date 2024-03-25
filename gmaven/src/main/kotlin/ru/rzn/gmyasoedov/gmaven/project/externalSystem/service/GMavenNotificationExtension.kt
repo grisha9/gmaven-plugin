@@ -6,9 +6,11 @@ import com.intellij.openapi.externalSystem.service.notification.ExternalSystemNo
 import com.intellij.openapi.externalSystem.service.notification.NotificationData
 import com.intellij.openapi.externalSystem.service.notification.callback.OpenExternalSystemSettingsCallback
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.registry.Registry
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification.OpenGMavenSettingsCallback
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification.ShowFullLogCallback
+import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 
 class GMavenNotificationExtension : ExternalSystemNotificationExtension {
 
@@ -17,6 +19,7 @@ class GMavenNotificationExtension : ExternalSystemNotificationExtension {
     override fun customize(
         notificationData: NotificationData, project: Project, externalProjectPath: String, error: Throwable?
     ) {
+        printError(error)
         val e = (if (error is ExternalSystemException) error else null) ?: return
         for (fix in e.quickFixes) {
             if (OpenGMavenSettingsCallback.ID == fix) {
@@ -31,6 +34,13 @@ class GMavenNotificationExtension : ExternalSystemNotificationExtension {
                     OpenExternalSystemSettingsCallback(project, GMavenConstants.SYSTEM_ID, linkedProjectPath)
                 )
             }
+        }
+    }
+
+    private fun printError(error: Throwable?) {
+        if (!Registry.`is`("gmaven.show.all.errors")) return
+        if (error?.stackTrace?.any { it.className.contains("ru.rzn.gmyasoedov.gmaven") } == true) {
+            MavenLog.LOG.error(error)
         }
     }
 }

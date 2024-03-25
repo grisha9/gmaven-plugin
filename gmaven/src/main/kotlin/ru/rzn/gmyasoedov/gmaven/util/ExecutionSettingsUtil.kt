@@ -46,10 +46,12 @@ fun fillExecutionWorkSpace(
         ?.externalProjectStructure ?: return
 
     val allModules = ExternalSystemApiUtil.findAll(projectDataNode, ProjectKeys.MODULE)
-    val mainModuleNode = allModules.first { it.data.linkedExternalProjectPath == projectSettings.externalProjectPath }
+
+    val mainModuleNode = allModules
+        .find { MavenUtils.equalsPaths(it.data.linkedExternalProjectPath, projectSettings.externalProjectPath) }
     workspace.externalProjectPath = projectSettings.externalProjectPath
     workspace.projectBuildFile = if (projectSettings.projectBuildFile != null) projectSettings.projectBuildFile else
-        mainModuleNode.data.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
+        mainModuleNode?.data?.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
 
     val isRootPath = MavenUtils.equalsPaths(projectSettings.externalProjectPath, projectPath)
     var targetModuleNode: DataNode<ModuleData>? = null

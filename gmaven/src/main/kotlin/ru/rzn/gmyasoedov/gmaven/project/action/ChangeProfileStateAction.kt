@@ -38,6 +38,6 @@ class ChangeProfileStateAction : ExternalSystemNodeAction<ProfileData>(ProfileDa
         val state = ProfileState()
         state.simpleProfile = simpleProfile
         state.activationProfile = activationProfile
-        ProjectProfilesStateService.getInstance(project).state.mapping.put(profileData.stateKey, state)
+        ProjectProfilesStateService.getInstance(project).state.mapping[profileData.stateKey] = state
     }
 }
