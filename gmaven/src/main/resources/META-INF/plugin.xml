@@ -16,6 +16,7 @@
         <h3>Fixed</h3>
         <ul>
             <li>Project settings UI</li>
+            <li>Windows paths <a href="https://github.com/grisha9/gmaven-plugin/issues/5" target="_blank" rel="nofollow">Issue</a></li>
             <li>Action: download all sources(Not worked) (<a href="https://github.com/grisha9/gmaven-plugin/wiki/Actions#download-all-sources" target="_blank" rel="nofollow">Wiki</a>)</li>
         </ul>
         <h3>Added</h3>
