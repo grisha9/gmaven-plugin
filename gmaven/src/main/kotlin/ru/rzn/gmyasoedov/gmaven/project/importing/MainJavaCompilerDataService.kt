@@ -13,11 +13,15 @@ import com.intellij.openapi.externalSystem.service.project.manage.AbstractProjec
 import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
 import com.intellij.openapi.externalSystem.util.Order
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.registry.Registry
+import org.jetbrains.jps.model.java.compiler.CompilerOptions
 import org.jetbrains.plugins.groovy.compiler.GreclipseIdeaCompiler
 import org.jetbrains.plugins.groovy.compiler.GreclipseIdeaCompilerSettings
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData.Companion.ASPECTJ_COMPILER_ID
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData.Companion.ECLIPSE_COMPILER_ID
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData.Companion.GROOVY_ECLIPSE_COMPILER_ID
+import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 
 @Order(ExternalSystemConstants.UNORDERED)
@@ -33,20 +37,22 @@ class MainJavaCompilerDataService : AbstractProjectDataService<MainJavaCompilerD
         project: Project,
         modifiableModelsProvider: IdeModifiableModelsProvider
     ) {
+        if (Registry.`is`("gmaven.not.change.java.compiler")) return
+
         val config = CompilerConfiguration.getInstance(project) as CompilerConfigurationImpl
         val javacCompiler = config.registeredJavaCompilers.firstOrNull { it is JavacCompiler } ?: return
         if (toImport.isEmpty()) {
-            setupJavacOrEclipse(config, javacCompiler)
+            setCompilerInSettings(config, javacCompiler)
             return
         }
 
-        val javaCompilerData = toImport.first().data
+        val javaCompilerData = getJavaCompilerData(toImport) ?: return
         if (javaCompilerData.compilerId == ECLIPSE_COMPILER_ID) {
             val compiler = config.registeredJavaCompilers.firstOrNull { it is EclipseCompiler } ?: return
-            setupJavacOrEclipse(config, compiler)
+            setCompilerInSettings(config, compiler)
         } else if (javaCompilerData.compilerId == GROOVY_ECLIPSE_COMPILER_ID) {
             if (!MavenUtils.groovyPluginEnabled()) {
-                setupJavacOrEclipse(config, javacCompiler)
+                setCompilerInSettings(config, javacCompiler)
                 return
             }
             val compiler = config.registeredJavaCompilers.firstOrNull { it is GreclipseIdeaCompiler } ?: return
@@ -56,12 +62,34 @@ class MainJavaCompilerDataService : AbstractProjectDataService<MainJavaCompilerD
                 GreclipseIdeaCompilerSettings.setGrCmdParams(project, javaCompilerData.arguments.joinToString(" "))
                 GreclipseIdeaCompilerSettings.setGrEclipsePath(project, pathToBatch)
             }
+        } else if (javaCompilerData.compilerId == ASPECTJ_COMPILER_ID) {
+            val compilerAjc = config.registeredJavaCompilers.firstOrNull { it.id == ASPECTJ_COMPILER_ID } ?: return
+            val options = compilerAjc.options
+            setAjcPath(options, javaCompilerData)
+            setCompilerInSettings(config, compilerAjc)
         } else {
-            setupJavacOrEclipse(config, javacCompiler)
+            setCompilerInSettings(config, javacCompiler)
         }
     }
 
-    private fun setupJavacOrEclipse(
+    private fun getJavaCompilerData(toImport: Collection<DataNode<MainJavaCompilerData>>): MainJavaCompilerData? {
+        val ajcCompiler = toImport.find { it.data.compilerId == ASPECTJ_COMPILER_ID }
+        return ajcCompiler?.data ?: toImport.firstOrNull()?.data
+    }
+
+    private fun setAjcPath(options: CompilerOptions, javaCompilerData: MainJavaCompilerData) {
+        val aspectJCompilerJar = javaCompilerData.dependenciesPath.firstOrNull() ?: return
+        try {
+            val ajCompilerSettingsClass = options.javaClass
+            val declaredField = ajCompilerSettingsClass.getDeclaredField("ajcPath") ?: return
+            declaredField.setAccessible(true)
+            declaredField.set(options, aspectJCompilerJar)
+        } catch (e: Exception) {
+            MavenLog.LOG.error("error set ajc path", e)
+        }
+    }
+
+    private fun setCompilerInSettings(
         config: CompilerConfigurationImpl,
         backendCompiler: BackendCompiler
     ) {

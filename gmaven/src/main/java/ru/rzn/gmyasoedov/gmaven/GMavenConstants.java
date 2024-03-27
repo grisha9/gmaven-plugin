@@ -36,6 +36,8 @@ public final class GMavenConstants {
     public static final String MODULE_PROP_PARENT_GA = "parentGA";
     public static final String MODULE_PROP_LOCAL_REPO = "localRepo";
     public static final String MODULE_PROP_HAS_DEPENDENCIES = "hasDependencies";
+    public static final String APECTJ_COMPILER_LIB = "org.aspectj:aspectjtools";
+
     @NotNull @NonNls
     public static final String SOURCE_SET_MODULE_TYPE_KEY = "sourceSet";
     public static final String IDEA_PSI_EDIT_TOKEN = "IntellijIdeaRulezzz";

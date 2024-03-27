@@ -5,10 +5,9 @@ package ru.rzn.gmyasoedov.gmaven.project
 import com.intellij.externalSystem.MavenRepositoryData
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
-import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
-import com.intellij.openapi.externalSystem.model.project.ModuleData
-import com.intellij.openapi.externalSystem.model.project.ProjectData
+import com.intellij.openapi.externalSystem.model.project.*
 import com.intellij.openapi.module.ModuleTypeManager
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin
@@ -18,6 +17,7 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPluginData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData.Companion.ASPECTJ_COMPILER_ID
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification.OpenGMavenSettingsCallback
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
@@ -50,6 +50,7 @@ fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.Pro
 
     val localRepoPath: String? = context.mavenResult.settings.localRepository
     for (plugin in mavenProject.plugins) {
+        checkMavenAspectJPlugin(plugin, context)
         val pluginExtension = context.pluginExtensionMap.get(MavenUtils.toGAString(plugin)) ?: continue
         val pluginContentRoot = pluginExtension.getContentRoots(mavenProject, plugin, context)
         contentRoots += pluginContentRoot.contentRoots
@@ -84,6 +85,19 @@ fun getMainJavaCompilerData(
     return MavenFullImportPlugin.EP_NAME
         .findExtensionOrFail(MavenCompilerFullImportPlugin::class.java)
         .getJavaCompilerData(mavenProject, plugin, compilerData, Path.of(localRepoPath), context.contextElementMap)
+}
+
+fun getAjcCompilerData(context: MavenProjectResolver.ProjectResolverContext): MainJavaCompilerData? {
+    if (context.aspectJCompiler) {
+        val aspectJCompilerPaths = context.libraryDataMap.asSequence()
+            .filter { it.key.startsWith(GMavenConstants.APECTJ_COMPILER_LIB) }
+            .mapNotNull { getLibraryPath(it) }
+            .toList()
+        if (aspectJCompilerPaths.isNotEmpty()) {
+            return MainJavaCompilerData.create(ASPECTJ_COMPILER_ID, aspectJCompilerPaths, emptyList())
+        }
+    }
+    return null
 }
 
 fun getContentRootPath(paths: List<String>, type: ExternalSystemSourceType): List<MavenContentRoot> {
@@ -148,6 +162,17 @@ fun populateAnnotationProcessorData(
 fun getDefaultModuleTypeId(): String {
     return ModuleTypeManager.getInstance().defaultModuleType.id
 }
+
+private fun checkMavenAspectJPlugin(plugin: MavenPlugin?, context: MavenProjectResolver.ProjectResolverContext) {
+    if (!context.aspectJCompiler && plugin?.artifactId == "aspectj-maven-plugin") {
+        context.aspectJCompiler = true
+    }
+}
+
+private fun getLibraryPath(it: Map.Entry<String, DataNode<LibraryData>>): String? {
+    return it.value.data.getPaths(LibraryPathType.BINARY).firstOrNull()
+}
+
 
 class PluginsData(
     val compilerPlugin: MavenPlugin?, val compilerData: CompilerData,

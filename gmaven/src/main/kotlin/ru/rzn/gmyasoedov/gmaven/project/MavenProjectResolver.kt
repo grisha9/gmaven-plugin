@@ -19,6 +19,7 @@ import com.intellij.pom.java.LanguageLevel
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
 import ru.rzn.gmyasoedov.gmaven.project.policy.ReadProjectResolverPolicy
 import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
@@ -140,6 +141,8 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         addDependencies(container, projectDataNode, context)
         populateProfiles(projectDataNode, context.mavenResult.settings)
         moduleNode.data.setProperty(GMavenConstants.MODULE_PROP_LOCAL_REPO, mavenResult.settings.localRepository)
+
+        getAjcCompilerData(context)?.let { projectDataNode.createChild(MainJavaCompilerData.KEY, it) }
         return projectDataNode
     }
 
@@ -158,6 +161,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val ideaProjectPath: String,
         val mavenResult: MavenResult,
         val projectLanguageLevel: LanguageLevel,
+        var aspectJCompiler: Boolean = false,
         val contextElementMap: MutableMap<String, Element> = HashMap(),
         val moduleDataByArtifactId: MutableMap<String, ModuleContextHolder> = TreeMap(),
         val libraryDataMap: MutableMap<String, DataNode<LibraryData>> = TreeMap(),
