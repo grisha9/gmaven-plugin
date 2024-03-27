@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [233.25] - 2024-03-27
+### Fixed
+- Project settings UI
+- Windows OS: error when opening a project ([issue](https://github.com/grisha9/gmaven-plugin/issues/5))
+- Action: download all sources(Not worked) [wiki](https://github.com/grisha9/gmaven-plugin/wiki/Actions#download-all-sources)
+### Added
+- Improvement artifacts completion and navigation
+
+
 ## [233.24] - 2024-03-17
 ### Fixed
 - Kotlin content roots
