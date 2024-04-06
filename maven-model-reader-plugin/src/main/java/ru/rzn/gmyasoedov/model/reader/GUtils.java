@@ -15,11 +15,11 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.repository.RepositorySystem;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+
+import static java.util.Objects.requireNonNull;
 
 public abstract class GUtils {
 
@@ -100,5 +100,23 @@ public abstract class GUtils {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static String getAbsolutePath(String mavenPath, MavenProject mavenProject) {
+        if (mavenPath == null) return null;
+        try {
+            Path path = Paths.get(mavenPath);
+            if (path.isAbsolute()) {
+                return mavenPath;
+            } else {
+                return Paths.get(mavenProject.getBasedir().getAbsolutePath(), mavenPath).toAbsolutePath().toString();
+            }
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static <T> T defaultIfNull(T obj, T defaultObj) {
+        return (obj != null) ? obj : requireNonNull(defaultObj, "defaultObj");
     }
 }
