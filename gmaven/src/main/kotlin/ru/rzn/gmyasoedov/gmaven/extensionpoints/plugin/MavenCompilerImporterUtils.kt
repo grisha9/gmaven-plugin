@@ -60,11 +60,12 @@ fun collectCompilerArgs(mavenProject: MavenProject, pluginConfiguration: Element
 
     val compilerArgs = pluginConfiguration.getChild("compilerArgs")
     if (compilerArgs != null) {
-        for (arg in compilerArgs.getChildren("arg")) {
-            ContainerUtil.addIfNotNull(options, getResolvedText(arg))
-        }
-        for (compilerArg in compilerArgs.getChildren("compilerArg")) {
-            ContainerUtil.addIfNotNull(options, getResolvedText(compilerArg))
+        if (compilerArgs.children.isEmpty()) {
+            ContainerUtil.addIfNotNull(options, getResolvedText(compilerArgs.value))
+        } else {
+            for (arg in compilerArgs.children) {
+                ContainerUtil.addIfNotNull(options, getResolvedText(arg))
+            }
         }
     }
     return options;
