@@ -9,6 +9,7 @@ import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
+import org.intellij.lang.annotations.Language
 import org.jetbrains.jps.model.java.JavaResourceRootType
 import org.jetbrains.jps.model.java.JavaSourceRootType
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
@@ -24,6 +25,13 @@ abstract class MavenImportingTestCase : MavenTestCase() {
         val mavenProjectSettings = createMavenProjectSettings(projectFile, project)
 
         GOpenProjectProvider().attachProjectAndRefresh(mavenProjectSettings, project)
+    }
+
+    protected fun import(
+        @Language(value = "XML", prefix = "<project>", suffix = "</project>") xml: String
+    ) {
+        val createPomFile = createProjectPom(xml)
+        import(createPomFile)
     }
 
     protected fun assertModules(vararg expectedNames: String) {

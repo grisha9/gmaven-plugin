@@ -2,6 +2,7 @@
 
 package ru.rzn.gmyasoedov.gmaven.project
 
+import com.intellij.execution.configurations.JavaParameters
 import com.intellij.externalSystem.JavaModuleData
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ProjectKeys
@@ -66,7 +67,7 @@ fun createModuleData(
     val contentRoot = ContentRoots(rootPaths, generatedPaths, project.buildDirectory)
 
     val compilerData = pluginsData.compilerData
-    val sourceLanguageLevel: LanguageLevel = compilerData.sourceLevel
+    val sourceLanguageLevel: LanguageLevel = getSourceLevel(compilerData.sourceLevel, compilerData)
     val targetBytecodeLevel: LanguageLevel = compilerData.targetLevel
     moduleDataNode.createChild(ModuleSdkData.KEY, ModuleSdkData(null))
 
@@ -182,7 +183,9 @@ private fun createSourceSetModule(
 
     val sourceLevel = if (isTest) compilerData.testSourceLevel else compilerData.sourceLevel
     val targetLevel = (if (isTest) compilerData.testTargetLevel else compilerData.targetLevel)
-    moduleNode.createChild(JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, sourceLevel, targetLevel.toFeatureString()))
+
+    val level = getSourceLevel(sourceLevel, compilerData)
+    moduleNode.createChild(JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, level, targetLevel.toFeatureString()))
     moduleNode.createChild(ModuleSdkData.KEY, ModuleSdkData(null))
     return moduleNode
 }
@@ -311,6 +314,11 @@ private fun getGeneratedContentRoot(
         .filter { !excludedRoots.contains(it.absolutePath) }
         .map { it.absolutePath }.toList()
     return MavenGeneratedContentRoot(type, rootPath, paths)
+}
+
+private fun getSourceLevel(level: LanguageLevel, compilerData: CompilerData): LanguageLevel {
+    return if (compilerData.arguments.contains(JavaParameters.JAVA_ENABLE_PREVIEW_PROPERTY))
+        level.previewLevel ?: level else level
 }
 
 private class ContentRoots(

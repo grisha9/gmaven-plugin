@@ -228,11 +228,7 @@ abstract class MavenTestCase : UsefulTestCase() {
 
 
     protected fun createProjectPom(
-        @Language(
-            value = "XML",
-            prefix = "<project>",
-            suffix = "</project>"
-        ) xml: String
+        @Language(value = "XML", prefix = "<project>", suffix = "</project>") xml: String
     ): VirtualFile {
         return createPomFile(myProjectRoot, xml).also { myProjectPom = it }
     }
