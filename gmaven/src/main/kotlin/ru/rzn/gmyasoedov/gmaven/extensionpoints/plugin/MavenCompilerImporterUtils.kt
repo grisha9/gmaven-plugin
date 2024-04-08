@@ -1,6 +1,7 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
 import com.intellij.openapi.util.text.Strings
+import com.intellij.pom.java.LanguageLevel
 import com.intellij.util.containers.ContainerUtil
 import org.jdom.Element
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
@@ -10,6 +11,10 @@ private const val propEndTag = "}"
 
 const val PROC_NONE = "-proc:none"
 const val PROC_ONLY = "-proc:only"
+
+fun getLanguageLevel(value: Any?): LanguageLevel? {
+    return if (value is String) LanguageLevel.parse(value) else null
+}
 
 fun collectCompilerArgs(mavenProject: MavenProject, pluginConfiguration: Element?): List<String> {
     val options = mutableListOf<String>()
@@ -84,12 +89,12 @@ private fun findClosingBraceOrNextUnresolvedProperty(index: Int, s: String): Int
     return findClosingBraceOrNextUnresolvedProperty(nextIndex, s)
 }
 
-private fun getResolvedText(txt: String?): String? {
+fun getResolvedText(txt: String?): String? {
     val result = Strings.nullize(txt) ?: return null
     if (hasUnresolvedProperty(result)) return null
     return result
 }
 
-private fun getResolvedText(it: Element): String? {
+fun getResolvedText(it: Element): String? {
     return getResolvedText(it.textTrim)
 }

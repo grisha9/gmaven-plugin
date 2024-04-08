@@ -16,7 +16,7 @@ import org.jetbrains.concurrency.Promise
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.IDEA_PSI_EDIT_TOKEN
 import ru.rzn.gmyasoedov.gmaven.dom.XmlPsiUtil
 import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
-import ru.rzn.gmyasoedov.gmaven.util.MavenCentralArtifactInfo
+import ru.rzn.gmyasoedov.gmaven.util.MavenArtifactInfo
 import ru.rzn.gmyasoedov.gmaven.util.MavenCentralClient.find
 import ru.rzn.gmyasoedov.gmaven.util.MavenCentralClient.findArtifact
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil.*
@@ -124,7 +124,7 @@ private class VersionContributor(val artifactId: String, val groupId: String) :
     Consumer<CompletionResultSet> {
 
     override fun accept(result: CompletionResultSet) {
-        val promise = AsyncPromise<List<MavenCentralArtifactInfo>>()
+        val promise = AsyncPromise<List<MavenArtifactInfo>>()
         ApplicationManager.getApplication().executeOnPooledThread {
             promise.setResult(find(groupId, artifactId))
         }
@@ -174,16 +174,16 @@ private class GAVContributor(val artifactIdTag: XmlTag, val parentXmlTag: XmlTag
         setLookupResult(artifactInfoList, result)
     }
 
-    private fun asyncPromise(queryText: String, groupId: String?): AsyncPromise<List<MavenCentralArtifactInfo>>? {
+    private fun asyncPromise(queryText: String, groupId: String?): AsyncPromise<List<MavenArtifactInfo>>? {
         if (!Registry.`is`("gmaven.search.artifact.maven.central")) return null
-        val promise = AsyncPromise<List<MavenCentralArtifactInfo>>()
+        val promise = AsyncPromise<List<MavenArtifactInfo>>()
         ApplicationManager.getApplication()
             .executeOnPooledThread { promise.setResult(findArtifact(queryText, groupId)) }
         return promise
     }
 
     private fun setLookupResult(
-        artifactInfoList: Collection<MavenCentralArtifactInfo>, result: CompletionResultSet
+        artifactInfoList: Collection<MavenArtifactInfo>, result: CompletionResultSet
     ) {
         artifactInfoList.forEach {
             result.addElement(
@@ -194,16 +194,16 @@ private class GAVContributor(val artifactIdTag: XmlTag, val parentXmlTag: XmlTag
         }
     }
 
-    private fun findInModule(artifactIdTag: XmlTag, query: String): List<MavenCentralArtifactInfo> {
+    private fun findInModule(artifactIdTag: XmlTag, query: String): List<MavenArtifactInfo> {
         if (query.length < 2) return emptyList()
         return CachedModuleDataService
             .getDataHolder(artifactIdTag.project).modules.asSequence()
             .filter { it.artifactId.contains(query, true) }
-            .map { MavenCentralArtifactInfo(it.groupId + ":" + it.artifactId, it.groupId, it.artifactId, it.version) }
+            .map { MavenArtifactInfo(it.groupId + ":" + it.artifactId, it.groupId, it.artifactId, it.version) }
             .toList()
     }
 
-    private fun filterArtifact(groupId: String?, artifactId: String, data: MavenCentralArtifactInfo): Boolean {
+    private fun filterArtifact(groupId: String?, artifactId: String, data: MavenArtifactInfo): Boolean {
         if (artifactId.length < 2) return false
         return if (groupId == null || groupId.length < 3) {
             data.a.contains(artifactId)
@@ -216,7 +216,7 @@ private class GAVContributor(val artifactIdTag: XmlTag, val parentXmlTag: XmlTag
 private object GAVInsertHandler : InsertHandler<LookupElement> {
 
     override fun handleInsert(context: InsertionContext, item: LookupElement) {
-        val artifactInfo: MavenCentralArtifactInfo = item.`object` as? MavenCentralArtifactInfo ?: return
+        val artifactInfo: MavenArtifactInfo = item.`object` as? MavenArtifactInfo ?: return
         val contextFile = context.file as? XmlFile ?: return
         val element = contextFile.findElementAt(context.startOffset)
         val xmlTag = PsiTreeUtil.getParentOfType(element, XmlTag::class.java) ?: return

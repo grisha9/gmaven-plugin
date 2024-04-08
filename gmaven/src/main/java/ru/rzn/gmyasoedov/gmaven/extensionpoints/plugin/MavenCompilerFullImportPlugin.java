@@ -27,6 +27,8 @@ public interface MavenCompilerFullImportPlugin extends MavenFullImportPlugin {
 
 
     @Nullable
-    String getAnnotationProcessorTagName();
+    default String getAnnotationProcessorTagName() {
+        return null;
+    }
 
 }

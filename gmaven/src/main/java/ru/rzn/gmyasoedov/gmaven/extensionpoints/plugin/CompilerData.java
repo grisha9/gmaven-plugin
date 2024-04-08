@@ -6,6 +6,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 import java.util.Objects;
 
+import static java.util.Collections.emptyList;
+
 public class CompilerData {
     private final LanguageLevel sourceLevel;
     private final LanguageLevel targetLevel;
@@ -13,6 +15,23 @@ public class CompilerData {
     private final LanguageLevel testTargetLevel;
     private final Collection<String> annotationProcessorPaths;
     private final Collection<String> arguments;
+    private final Collection<String> pluginSpecificArguments;
+
+    public CompilerData(@NotNull LanguageLevel sourceLevel,
+                        @NotNull LanguageLevel targetLevel,
+                        @NotNull LanguageLevel testSourceLevel,
+                        @NotNull LanguageLevel testTargetLevel,
+                        @NotNull Collection<String> annotationProcessorPaths,
+                        @NotNull Collection<String> arguments,
+                        @NotNull Collection<String> pluginSpecificArguments) {
+        this.sourceLevel = Objects.requireNonNull(sourceLevel);
+        this.targetLevel = Objects.requireNonNull(targetLevel);
+        this.testSourceLevel = Objects.requireNonNull(testSourceLevel);
+        this.testTargetLevel = Objects.requireNonNull(testTargetLevel);
+        this.annotationProcessorPaths = Objects.requireNonNull(annotationProcessorPaths);
+        this.arguments = Objects.requireNonNull(arguments);
+        this.pluginSpecificArguments = Objects.requireNonNull(pluginSpecificArguments);
+    }
 
     public CompilerData(@NotNull LanguageLevel sourceLevel,
                         @NotNull LanguageLevel targetLevel,
@@ -20,18 +39,21 @@ public class CompilerData {
                         @NotNull LanguageLevel testTargetLevel,
                         @NotNull Collection<String> annotationProcessorPaths,
                         @NotNull Collection<String> arguments) {
-        this.sourceLevel = Objects.requireNonNull(sourceLevel);
-        this.targetLevel = Objects.requireNonNull(targetLevel);
-        this.testSourceLevel = Objects.requireNonNull(testSourceLevel);
-        this.testTargetLevel = Objects.requireNonNull(testTargetLevel);
-        this.annotationProcessorPaths = Objects.requireNonNull(annotationProcessorPaths);
-        this.arguments = Objects.requireNonNull(arguments);
+        this(sourceLevel, targetLevel, testSourceLevel, testTargetLevel,
+                annotationProcessorPaths, arguments, emptyList());
     }
 
     public CompilerData(@NotNull LanguageLevel defaultLevel,
                         @NotNull Collection<String> annotationProcessorPaths,
                         @NotNull Collection<String> arguments) {
-        this(defaultLevel, defaultLevel, defaultLevel, defaultLevel, annotationProcessorPaths, arguments);
+        this(defaultLevel, defaultLevel, defaultLevel, defaultLevel, annotationProcessorPaths, arguments, emptyList());
+    }
+
+    public CompilerData(@NotNull LanguageLevel defaultLevel,
+                        @NotNull Collection<String> annotationProcessorPaths,
+                        @NotNull Collection<String> arguments,
+                        @NotNull Collection<String> pluginSpecificArguments) {
+        this(defaultLevel, defaultLevel, defaultLevel, defaultLevel, annotationProcessorPaths, arguments, pluginSpecificArguments);
     }
 
     @NotNull
@@ -62,6 +84,10 @@ public class CompilerData {
     @NotNull
     public Collection<String> getArguments() {
         return arguments;
+    }
+
+    public Collection<String> getPluginSpecificArguments() {
+        return pluginSpecificArguments;
     }
 
     @Override
