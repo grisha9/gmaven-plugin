@@ -36,8 +36,22 @@ class ProjectProfilesStateService : PersistentStateComponent<ProjectProfilesStat
 
     fun getProfileExecution(profileData: ProfileData): ProfileExecution? {
         val profileState = state.mapping[profileData.stateKey] ?: return null
+        return getProfileExecution(profileData.name, profileState)
+    }
 
-        val execution = ProfileExecution(profileData.name)
+    fun getProfileExecutions(): List<ProfileExecution> {
+        val result = ArrayList<ProfileExecution>()
+        for (entry in state.mapping) {
+            val name = entry.key.substringAfter(":")
+            val profileState = entry.value
+            if (name.isEmpty()) continue
+            getProfileExecution(name, profileState)?.let { result.add(it) }
+        }
+        return result
+    }
+
+    private fun getProfileExecution(profileName: String, profileState: ProfileState): ProfileExecution? {
+        val execution = ProfileExecution(profileName)
         if (profileState.simpleProfile != null && profileState.simpleProfile == SimpleProfile.ACTIVE) {
             execution.isEnabled = true;
             return execution
