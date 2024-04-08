@@ -17,14 +17,15 @@ import com.intellij.pom.java.LanguageLevel
 import com.intellij.util.io.isDirectory
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
 import ru.rzn.gmyasoedov.gmaven.project.policy.ReadProjectResolverPolicy
 import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
+import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import java.io.File
 import java.nio.file.Path
@@ -139,7 +140,6 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         populateProfiles(projectDataNode, context.mavenResult.settings)
         moduleNode.data.setProperty(GMavenConstants.MODULE_PROP_LOCAL_REPO, mavenResult.settings.localRepository)
 
-        getAjcCompilerData(context)?.let { projectDataNode.createChild(MainJavaCompilerData.KEY, it) }
         return projectDataNode
     }
 
@@ -155,7 +155,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val ideaProjectPath: String,
         val mavenResult: MavenResult,
         val projectLanguageLevel: LanguageLevel,
-        var aspectJCompiler: Boolean = false,
+        var aspectJCompilerData: MutableList<CompilerDataHolder> = ArrayList(0),
         val contextElementMap: MutableMap<String, Element> = HashMap(),
         val moduleDataByArtifactId: MutableMap<String, ModuleContextHolder> = TreeMap(),
         val libraryDataMap: MutableMap<String, DataNode<LibraryData>> = TreeMap(),
@@ -176,4 +176,6 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val mainNode: DataNode<SourceSetData>,
         val testNode: DataNode<SourceSetData>,
     )
+
+    class CompilerDataHolder(val plugin: MavenPlugin, val compilerData: CompilerData)
 }

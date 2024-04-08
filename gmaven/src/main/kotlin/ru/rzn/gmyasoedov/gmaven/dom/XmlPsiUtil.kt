@@ -16,7 +16,7 @@ import com.intellij.psi.xml.XmlTag
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
-import ru.rzn.gmyasoedov.gmaven.util.MavenCentralArtifactInfo
+import ru.rzn.gmyasoedov.gmaven.util.MavenArtifactInfo
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import java.nio.file.Path
 import java.util.*
@@ -94,7 +94,7 @@ object XmlPsiUtil {
         fillProperties(parentXmlFile, propertiesMap, localRepos, deepCount + 1)
     }
 
-    fun getDependencyManagementLibraryCache(xmlFile: PsiFile): Set<MavenCentralArtifactInfo> {
+    fun getDependencyManagementLibraryCache(xmlFile: PsiFile): Set<MavenArtifactInfo> {
         return CachedValuesManager.getManager(xmlFile.project).getCachedValue(xmlFile) {
             CachedValueProvider.Result
                 .create(
@@ -104,10 +104,10 @@ object XmlPsiUtil {
         }
     }
 
-    private fun getDependencyManagementLibrary(xmlFile: PsiFile): Set<MavenCentralArtifactInfo> {
+    private fun getDependencyManagementLibrary(xmlFile: PsiFile): Set<MavenArtifactInfo> {
         if (xmlFile !is XmlFile) return emptySet()
         val repos = getLocalRepos(xmlFile)
-        val librarySet = mutableSetOf<MavenCentralArtifactInfo>()
+        val librarySet = mutableSetOf<MavenArtifactInfo>()
         fillDependencyManagement(xmlFile, librarySet, mutableMapOf(), repos, 0)
         return librarySet
     }
@@ -117,7 +117,7 @@ object XmlPsiUtil {
     }
 
     private fun fillDependencyManagement(
-        xmlFile: XmlFile, librarySet: MutableSet<MavenCentralArtifactInfo>,
+        xmlFile: XmlFile, librarySet: MutableSet<MavenArtifactInfo>,
         propertiesMap: MutableMap<String, String>, localRepos: List<String>, deepCount: Int = 0
     ) {
         if (deepCount > 500) return
@@ -153,11 +153,11 @@ object XmlPsiUtil {
         fillDependencyManagement(parentXmlFile, librarySet, propertiesMap, localRepos, deepCount + 1)
     }
 
-    private fun dependencyToLibrary(xmlTag: XmlTag): MavenCentralArtifactInfo? {
+    private fun dependencyToLibrary(xmlTag: XmlTag): MavenArtifactInfo? {
         val groupId = xmlTag.getSubTagText(MavenArtifactUtil.GROUP_ID) ?: return null
         val artifactId = xmlTag.getSubTagText(MavenArtifactUtil.ARTIFACT_ID) ?: return null
         val version = xmlTag.getSubTagText(MavenArtifactUtil.VERSION) ?: return null
         val id = "$groupId:$artifactId:$version"
-        return MavenCentralArtifactInfo(id, groupId, artifactId, version)
+        return MavenArtifactInfo(id, groupId, artifactId, version)
     }
 }

@@ -28,7 +28,7 @@ import java.util.zip.ZipFile;
 public final class MavenArtifactUtil {
     public static final String GROUP_ID = "groupId";
     public static final String VERSION = "version";
-    public static final String ARTIFACT_ID="artifactId";
+    public static final String ARTIFACT_ID = "artifactId";
     public static final String RELATIVE_PATH = "relativePath";
     public static final String PARENT = "parent";
     public static final String MODULE = "module";
@@ -56,13 +56,20 @@ public final class MavenArtifactUtil {
 
     @Nullable
     public static MavenPluginDescription readPluginDescriptor(Path localRepository, MavenPlugin plugin) {
+        return readPluginDescriptor(localRepository, plugin, false, true);
+    }
+
+    @Nullable
+    public static MavenPluginDescription readPluginDescriptor(
+            Path localRepository, MavenPlugin plugin, boolean loadDependencies, boolean useCache
+    ) {
         MavenPluginDescription description = PLUGIN_DESCRIPTOR_CACHE.get(plugin);
-        if (description != null) {
+        if (description != null && useCache) {
             return description;
         }
         Path path = getArtifactNioPath(localRepository, plugin.getGroupId(),
                 plugin.getArtifactId(), plugin.getVersion(), "jar");
-        MavenPluginDescription pluginDescriptor = getPluginDescriptor(path);
+        MavenPluginDescription pluginDescriptor = getPluginDescriptor(path, loadDependencies);
         if (pluginDescriptor != null) {
             PLUGIN_DESCRIPTOR_CACHE.putIfAbsent(plugin, pluginDescriptor);
         }
@@ -71,10 +78,18 @@ public final class MavenArtifactUtil {
 
     @NotNull
     public static Path getArtifactNioPathPom(@NotNull Path localRepository,
-                                          @NotNull String groupId,
-                                          @NotNull String artifactId,
-                                          @NotNull String version) {
+                                             @NotNull String groupId,
+                                             @NotNull String artifactId,
+                                             @NotNull String version) {
         return getArtifactNioPath(localRepository, groupId, artifactId, version, "pom", null);
+    }
+
+    @NotNull
+    public static Path getArtifactNioPathJar(@NotNull Path localRepository,
+                                             @NotNull String groupId,
+                                             @NotNull String artifactId,
+                                             @NotNull String version) {
+        return getArtifactNioPath(localRepository, groupId, artifactId, version, "jar", null);
     }
 
     @NotNull
@@ -130,7 +145,7 @@ public final class MavenArtifactUtil {
 
 
     @Nullable
-    private static MavenPluginDescription getPluginDescriptor(Path file) {
+    private static MavenPluginDescription getPluginDescriptor(Path file, boolean loadDependencies) {
         try {
             if (!Files.exists(file)) return null;
 
@@ -146,7 +161,7 @@ public final class MavenArtifactUtil {
                     byte[] bytes = FileUtil.loadBytes(is);
                     try {
                         Element pluginDescriptionElement = JDOMUtil.load(bytes);
-                        return new MavenPluginDescription(pluginDescriptionElement);
+                        return new MavenPluginDescription(pluginDescriptionElement, loadDependencies);
                     } catch (Exception e) {
                         MavenLog.LOG.error("repository.plugin.corrupt " + file, e);
                         return null;

@@ -41,15 +41,22 @@ fun getLocalRepoPath(project: Project, externalProjectPath: String): String? {
 fun fillExecutionWorkSpace(
     project: Project, projectSettings: MavenProjectSettings, projectPath: String, workspace: MavenExecutionWorkspace
 ) {
+    workspace.externalProjectPath = projectSettings.externalProjectPath
     val projectDataNode = ProjectDataManager.getInstance()
         .getExternalProjectData(project, GMavenConstants.SYSTEM_ID, projectSettings.externalProjectPath)
-        ?.externalProjectStructure ?: return
+        ?.externalProjectStructure
+    if (projectDataNode == null) {
+        addedProfiles(ProjectProfilesStateService.getInstance(project), workspace)
+        if (projectSettings.projectBuildFile != null) {
+            workspace.projectBuildFile = projectSettings.projectBuildFile
+        }
+        return
+    }
 
     val allModules = ExternalSystemApiUtil.findAll(projectDataNode, ProjectKeys.MODULE)
 
     val mainModuleNode = allModules
         .find { MavenUtils.equalsPaths(it.data.linkedExternalProjectPath, projectSettings.externalProjectPath) }
-    workspace.externalProjectPath = projectSettings.externalProjectPath
     workspace.projectBuildFile = if (projectSettings.projectBuildFile != null) projectSettings.projectBuildFile else
         mainModuleNode?.data?.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
 
@@ -143,6 +150,10 @@ private fun addedProfiles(
     for (profileDataNode in ExternalSystemApiUtil.findAll(projectDataNode, ProfileData.KEY)) {
         profilesStateService.getProfileExecution(profileDataNode.data)?.let { workspace.addProfile(it) }
     }
+}
+
+private fun addedProfiles(profilesStateService: ProjectProfilesStateService, workspace: MavenExecutionWorkspace) {
+    profilesStateService.getProfileExecutions().forEach { workspace.addProfile(it) }
 }
 
 private fun setMultiModuleProjectDirectory(

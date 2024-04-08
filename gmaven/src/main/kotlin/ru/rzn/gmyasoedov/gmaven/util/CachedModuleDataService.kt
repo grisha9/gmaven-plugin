@@ -40,7 +40,7 @@ object CachedModuleDataService {
         }
     }
 
-    fun getLibrary(project: Project): List<MavenCentralArtifactInfo> {
+    fun getLibrary(project: Project): List<MavenArtifactInfo> {
         return CachedValuesManager.getManager(project).getCachedValue(project) {
             CachedValueProvider.Result
                 .create(
@@ -81,7 +81,7 @@ object CachedModuleDataService {
         return CachedModuleData(data.moduleName, groupId, version, moduleNode.isIgnored, configPath)
     }
 
-    private fun getCachedLibrary(project: Project): List<MavenCentralArtifactInfo> {
+    private fun getCachedLibrary(project: Project): List<MavenArtifactInfo> {
         return ProjectDataManager.getInstance().getExternalProjectsData(project, SYSTEM_ID)
             .asSequence()
             .mapNotNull { it.externalProjectStructure }
@@ -90,13 +90,13 @@ object CachedModuleDataService {
             .toList()
     }
 
-    private fun mapToLibraryData(moduleNode: DataNode<LibraryData>): MavenCentralArtifactInfo? {
+    private fun mapToLibraryData(moduleNode: DataNode<LibraryData>): MavenArtifactInfo? {
         val data = moduleNode.data
         val groupId = data.groupId ?: return null
         val artifactId = data.artifactId ?: return null
         val version = data.version ?: return null
         val id = "$groupId:$artifactId:$version"
-        return MavenCentralArtifactInfo(id, groupId, artifactId, version)
+        return MavenArtifactInfo(id, groupId, artifactId, version)
     }
 }
 
