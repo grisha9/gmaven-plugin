@@ -25,6 +25,7 @@ class MainJavaCompilerData @PropertyMapping("compilerId", "dependenciesPath", "a
     companion object {
         const val GROOVY_ECLIPSE_COMPILER_ID = "groovy-eclipse-compiler"
         const val ECLIPSE_COMPILER_ID = "eclipse"
+        const val ASPECTJ_COMPILER_ID = "ajc"
         private const val JAVAC_COMPILER_ID = "javac"
 
         val KEY = Key.create(

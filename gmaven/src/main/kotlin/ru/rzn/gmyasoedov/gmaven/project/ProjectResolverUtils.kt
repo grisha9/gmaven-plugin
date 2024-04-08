@@ -11,13 +11,11 @@ import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.module.ModuleTypeManager
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
-import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin
-import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
-import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin
-import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.*
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPluginData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData.Companion.ASPECTJ_COMPILER_ID
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.service.OpenGMavenSettingsCallback
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
@@ -28,6 +26,7 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.MavenRemoteRepository
 import ru.rzn.gmyasoedov.serverapi.model.MavenSettings
 import java.nio.file.Path
+import kotlin.io.path.Path
 
 fun getMavenHome(distributionSettings: DistributionSettings): Path {
     if (distributionSettings.path != null) return distributionSettings.path
@@ -64,6 +63,7 @@ fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.Pro
             kotlinPluginData = pluginExtension.getCompilerData(mavenProject, plugin, context)
         }
     }
+    addedMavenAspectJPluginInfo(compilerPlugin, compilerData, context)
     return PluginsData(
         compilerPlugin,
         compilerData ?: ApacheMavenCompilerPlugin.getDefaultCompilerData(mavenProject, context.projectLanguageLevel),
@@ -147,6 +147,35 @@ fun populateAnnotationProcessorData(
 
 fun getDefaultModuleTypeId(): String {
     return ModuleTypeManager.getInstance().defaultModuleType.id
+}
+
+private fun addedMavenAspectJPluginInfo(
+    plugin: MavenPlugin?,
+    compilerData: CompilerData?,
+    context: MavenProjectResolver.ProjectResolverContext,
+) {
+    if (plugin?.artifactId == "aspectj-maven-plugin" && compilerData != null) {
+        context.aspectJCompilerData.add(MavenProjectResolver.CompilerDataHolder(plugin, compilerData))
+    }
+}
+
+fun getAjcCompilerData(context: MavenProjectResolver.ProjectResolverContext): MainJavaCompilerData? {
+    val aspectJCompilerData = context.aspectJCompilerData
+    if (aspectJCompilerData.isNotEmpty()) {
+        val localRepository = context.mavenResult.settings.localRepository?.let { Path(it) } ?: return null
+        var dependenciesPath = aspectJCompilerData
+            .firstNotNullOfOrNull { DevAspectjMavenPlugin.getDependencyPath(it.plugin, localRepository) }
+        if (dependenciesPath == null) {
+            dependenciesPath = aspectJCompilerData
+                .firstNotNullOfOrNull {
+                    DevAspectjMavenPlugin.getDependencyPathFromDescriptor(it.plugin, localRepository)
+                }
+        }
+        dependenciesPath ?: return null
+        val arguments = aspectJCompilerData.flatMapTo(mutableSetOf()) { it.compilerData.pluginSpecificArguments }
+        return MainJavaCompilerData.create(ASPECTJ_COMPILER_ID, listOf(dependenciesPath), arguments)
+    }
+    return null
 }
 
 class PluginsData(

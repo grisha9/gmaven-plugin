@@ -93,10 +93,9 @@ fun createModuleData(
     }
 
     if (parentModuleDataNode == null) {
-        projectDataNode.createChild(
-            MainJavaCompilerData.KEY,
-            getMainJavaCompilerData(pluginsData.compilerPlugin, project, compilerData, context)
-        )
+        val mainCompilerData = getAjcCompilerData(context)
+            ?: getMainJavaCompilerData(pluginsData.compilerPlugin, project, compilerData, context)
+        projectDataNode.createChild(MainJavaCompilerData.KEY, mainCompilerData)
     }
     return moduleDataNode
 }

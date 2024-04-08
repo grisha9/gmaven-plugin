@@ -1,12 +1,12 @@
 package ru.rzn.gmyasoedov.gmaven.plugins;
 
 import org.jdom.Element;
+import ru.rzn.gmyasoedov.gmaven.util.MavenArtifactInfo;
+import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil;
+import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class MavenPluginDescription {
     private static final String UNKNOWN = "<unknown>";
@@ -17,13 +17,15 @@ public class MavenPluginDescription {
     private final String myGoalPrefix;
     private final Map<String, Mojo> myMojos;
     private final Map<String, String> myParams = new HashMap<>();
+    private final Map<String, MavenArtifactInfo> dependencyByGA;
 
-    public MavenPluginDescription(Element plugin) {
+    public MavenPluginDescription(Element plugin, boolean loadDependencies) {
         myGroupId = MavenJDOMUtil.findChildValueByPath(plugin, "groupId", "unknown");
         myArtifactId = MavenJDOMUtil.findChildValueByPath(plugin, "artifactId", "unknown");
         myVersion = MavenJDOMUtil.findChildValueByPath(plugin, "version", "unknown");
         myGoalPrefix = MavenJDOMUtil.findChildValueByPath(plugin, "goalPrefix", "unknown");
         myMojos = readMojos(plugin);
+        dependencyByGA = readDependencies(plugin, loadDependencies);
     }
 
     private Map<String, Mojo> readMojos(Element plugin) {
@@ -42,6 +44,21 @@ public class MavenPluginDescription {
             }
             String goal = MavenJDOMUtil.findChildValueByPath(each, "goal", "unknown");
             result.put(goal, new Mojo(goal));
+        }
+        return result;
+    }
+
+    private Map<String, MavenArtifactInfo> readDependencies(Element plugin, boolean loadDependencies) {
+        if (!loadDependencies) return Collections.emptyMap();
+        Map<String, MavenArtifactInfo> result = new TreeMap<>();
+        for (Element each : MavenJDOMUtil.findChildrenByPath(plugin, "dependencies", "dependency")) {
+            var artifactId = each.getChildTextTrim(MavenArtifactUtil.ARTIFACT_ID);
+            var groupId = each.getChildTextTrim(MavenArtifactUtil.GROUP_ID);
+            var version = each.getChildTextTrim(MavenArtifactUtil.VERSION);
+            if (artifactId == null || groupId == null || version == null) continue;
+
+            String ga = MavenUtils.toGAString(groupId, artifactId);
+            result.put(ga, new MavenArtifactInfo(ga, groupId, artifactId, version));
         }
         return result;
     }
@@ -68,6 +85,10 @@ public class MavenPluginDescription {
 
     public Mojo findMojo(String name) {
         return myMojos.get(name);
+    }
+
+    public MavenArtifactInfo findDependency(String artifactId) {
+        return dependencyByGA.values().stream().filter(it -> it.getA().equals(artifactId)).findFirst().orElse(null);
     }
 
     public Map<String, String> getMyParams() {
@@ -101,7 +122,7 @@ public class MavenPluginDescription {
     }
 
     private static void append(StringBuilder builder, String part) {
-        if (builder.length() != 0) builder.append(':');
+        if (!builder.isEmpty()) builder.append(':');
         builder.append(part == null ? UNKNOWN : part);
     }
 }

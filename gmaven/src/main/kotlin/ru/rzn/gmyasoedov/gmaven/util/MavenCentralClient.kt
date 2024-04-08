@@ -24,14 +24,14 @@ object MavenCentralClient {
     private val isPerform = AtomicBoolean(false)
 
     @JvmStatic
-    fun find(group: String, artifact: String): List<MavenCentralArtifactInfo> {
+    fun find(group: String, artifact: String): List<MavenArtifactInfo> {
         return if (group.length > 1 && artifact.length > 1)
             findByUrl(SEARCH_BY_GROUP_AND_ARTIFACT_URL.format(group, artifact))
         else emptyList()
     }
 
     @JvmStatic
-    fun findArtifact(query: String, groupId: String?): List<MavenCentralArtifactInfo> {
+    fun findArtifact(query: String, groupId: String?): List<MavenArtifactInfo> {
         if (query.length < 3) return emptyList()
         if (groupId != null && groupId.length > 4) {
             return findByUrl(SEARCH_ARTIFACT_BY_ARTIFACT_AND_GROUP_URL.format(query, groupId))
@@ -39,7 +39,7 @@ object MavenCentralClient {
         return findByUrl(SEARCH_BY_ARTIFACT_URL.format(query))
     }
 
-    private fun findByUrl(url: String): List<MavenCentralArtifactInfo> {
+    private fun findByUrl(url: String): List<MavenArtifactInfo> {
         if (errorCount.get() > 30) return emptyList()
         return try {
             if (isPerform.get()) return emptyList()
@@ -51,7 +51,7 @@ object MavenCentralClient {
                 .readString()
             gson.fromJson(string, MavenCentralResponse::class.java)?.response?.docs?.asSequence()
                 ?.filter { it.id != null && it.g != null && it.a != null }
-                ?.map { MavenCentralArtifactInfo(it.id!!, it.g!!, it.a!!, it.v ?: it.latestVersion) }
+                ?.map { MavenArtifactInfo(it.id!!, it.g!!, it.a!!, it.v ?: it.latestVersion) }
                 ?.toList() ?: emptyList()
         } catch (e: Exception) {
             errorCount.incrementAndGet()
@@ -63,7 +63,7 @@ object MavenCentralClient {
     }
 }
 
-data class MavenCentralArtifactInfo(val id: String, val g: String, val a: String, val v: String?)
+data class MavenArtifactInfo(val id: String, val g: String, val a: String, val v: String?)
 
 private data class MavenCentralResponse(val response: ResponseBody?)
 

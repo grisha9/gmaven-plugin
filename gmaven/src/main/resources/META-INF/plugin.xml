@@ -56,6 +56,8 @@
     <extensions defaultExtensionNs="ru.rzn.gmyasoedov.gmaven">
         <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin"/>
         <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.BuildHelperMavenPlugin"/>
+        <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.DevAspectjMavenPlugin"/>
+        <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CodehausAspectjMavenPlugin"/>
     </extensions>
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
@@ -138,6 +140,8 @@
                      description="Search artifacts in maven central"/>
         <registryKey key="gmaven.show.all.errors" defaultValue="false"
                      description="Print all GMaven errors in idea.log"/>
+        <registryKey key="gmaven.not.change.java.compiler" defaultValue="false"
+                     description="Not change IDEA settings in: 'File | Settings | Build, Execution, Deployment | Compiler | Java Compiler'"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
 
