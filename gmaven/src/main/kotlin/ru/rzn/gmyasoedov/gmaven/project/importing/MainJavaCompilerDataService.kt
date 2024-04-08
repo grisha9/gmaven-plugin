@@ -66,6 +66,7 @@ class MainJavaCompilerDataService : AbstractProjectDataService<MainJavaCompilerD
             val compilerAjc = config.registeredJavaCompilers.firstOrNull { it.id == ASPECTJ_COMPILER_ID } ?: return
             val options = compilerAjc.options
             setAjcPath(options, javaCompilerData)
+            setCmdParams(options, javaCompilerData)
             setCompilerInSettings(config, compilerAjc)
         } else {
             setCompilerInSettings(config, javacCompiler)
@@ -86,6 +87,34 @@ class MainJavaCompilerDataService : AbstractProjectDataService<MainJavaCompilerD
             declaredField.set(options, aspectJCompilerJar)
         } catch (e: Exception) {
             MavenLog.LOG.error("error set ajc path", e)
+        }
+    }
+
+    private fun setCmdParams(options: CompilerOptions, javaCompilerData: MainJavaCompilerData) {
+        if (javaCompilerData.arguments.isEmpty()) return
+        val params = javaCompilerData.arguments.joinToString(separator = " ")
+        try {
+            val ajCompilerSettingsClass = options.javaClass
+            val declaredFields = ajCompilerSettingsClass.declaredFields
+            for (declaredField in declaredFields) {
+                println("!!! " + declaredField)
+            }
+            val declaredField = ajCompilerSettingsClass.getDeclaredField("cmdLineParams") ?: return
+            declaredField.setAccessible(true)
+            declaredField.set(options, params)
+        } catch (e: Exception) {
+            MavenLog.LOG.error("error set cmdLineParams $params", e)
+        }
+    }
+
+    private fun setDelegateToJavac(options: CompilerOptions) {
+        try {
+            val ajCompilerSettingsClass = options.javaClass
+            val declaredField = ajCompilerSettingsClass.getDeclaredField("delegateToJavac") ?: return
+            declaredField.setAccessible(true)
+            declaredField.setBoolean(options, true)
+        } catch (e: Exception) {
+            MavenLog.LOG.error("error delegateToJavac", e)
         }
     }
 

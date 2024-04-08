@@ -93,10 +93,9 @@ fun createModuleData(
     }
 
     if (parentModuleDataNode == null) {
-        projectDataNode.createChild(
-            MainJavaCompilerData.KEY,
-            getMainJavaCompilerData(pluginsData.compilerPlugin, project, compilerData, context)
-        )
+        val mainCompilerData = getAjcCompilerData(context)
+            ?: getMainJavaCompilerData(pluginsData.compilerPlugin, project, compilerData, context)
+        projectDataNode.createChild(MainJavaCompilerData.KEY, mainCompilerData)
     }
     return moduleDataNode
 }
@@ -182,9 +181,10 @@ private fun createSourceSetModule(
 
     val sourceLevel = if (isTest) compilerData.testSourceLevel else compilerData.sourceLevel
     val targetLevel = (if (isTest) compilerData.testTargetLevel else compilerData.targetLevel)
+        .toJavaVersion().toFeatureString()
 
     val level = getSourceLevel(sourceLevel, compilerData)
-    moduleNode.createChild(JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, level, targetLevel.toFeatureString()))
+    moduleNode.createChild(JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, level, targetLevel))
     moduleNode.createChild(ModuleSdkData.KEY, ModuleSdkData(null))
     return moduleNode
 }

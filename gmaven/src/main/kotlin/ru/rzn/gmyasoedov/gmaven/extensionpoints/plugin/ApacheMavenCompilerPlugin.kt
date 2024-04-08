@@ -205,10 +205,6 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
             return CompilerData(source, target, testSource, testTarget, emptyList(), emptyList())
         }
 
-        private fun getLanguageLevel(value: Any?): LanguageLevel? {
-            return if (value is String) LanguageLevel.parse(value) else null
-        }
-
         private fun fillCompilerPropFromMavenProjectProperies(
             compilerProp: CompilerProp,
             project: MavenProject
