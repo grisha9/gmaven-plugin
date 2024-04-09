@@ -1,6 +1,9 @@
 package ru.rzn.gmyasoedov.gmaven
 
+import com.intellij.externalSystem.JavaModuleData
 import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
+import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.roots.ContentEntry
@@ -9,22 +12,50 @@ import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.pom.java.LanguageLevel
 import org.intellij.lang.annotations.Language
 import org.jetbrains.jps.model.java.JavaResourceRootType
 import org.jetbrains.jps.model.java.JavaSourceRootType
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
+import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.wizard.GOpenProjectProvider
 import ru.rzn.gmyasoedov.gmaven.wizard.createMavenProjectSettings
 import java.util.*
 
 abstract class MavenImportingTestCase : MavenTestCase() {
+    protected var mavenSettings: MavenSettings? = null
+    protected var mavenProjectSettings: MavenProjectSettings? = null
+
+    protected fun getProjectSettings() = mavenProjectSettings!!
+
+    protected fun getExternalProjectPath() = mavenProjectSettings!!.externalProjectPath
+
+    protected fun getLanguageLevel(): LanguageLevel {
+        return ProjectDataManager.getInstance().getExternalProjectData(project,
+            GMavenConstants.SYSTEM_ID, getExternalProjectPath())
+            ?.externalProjectStructure
+            ?.let { ExternalSystemApiUtil.findAllRecursively(it, JavaModuleData.KEY) }
+            ?.map { it.data }
+            ?.firstOrNull()
+            ?.languageLevel!!
+    }
+
+    protected fun getMainJavaCompilerData(): MainJavaCompilerData {
+        return ProjectDataManager.getInstance().getExternalProjectData(project,
+            GMavenConstants.SYSTEM_ID, getExternalProjectPath())
+            ?.externalProjectStructure
+            ?.let { ExternalSystemApiUtil.findAllRecursively(it, MainJavaCompilerData.KEY) }
+            ?.map { it.data }
+            ?.first()!!
+    }
 
     protected fun import(projectFile: VirtualFile) {
-        val mavenSettings = MavenSettings.getInstance(project)
-        mavenSettings.storeProjectFilesExternally = true
-        val mavenProjectSettings = createMavenProjectSettings(projectFile, project)
+        mavenSettings = MavenSettings.getInstance(project)
+        mavenSettings!!.storeProjectFilesExternally = true
+        mavenProjectSettings = createMavenProjectSettings(projectFile, project)
 
-        GOpenProjectProvider().attachProjectAndRefresh(mavenProjectSettings, project)
+        GOpenProjectProvider().attachProjectAndRefresh(mavenProjectSettings!!, project)
     }
 
     protected fun import(

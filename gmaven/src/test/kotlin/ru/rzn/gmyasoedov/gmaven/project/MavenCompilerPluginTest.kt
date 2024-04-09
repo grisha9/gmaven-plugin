@@ -3,6 +3,7 @@ package ru.rzn.gmyasoedov.gmaven.project
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.compiler.CompilerConfigurationImpl
 import com.intellij.pom.java.LanguageLevel
+import junit.framework.TestCase
 import ru.rzn.gmyasoedov.gmaven.MavenImportingTestCase
 
 class MavenCompilerPluginTest : MavenImportingTestCase() {
@@ -40,7 +41,9 @@ class MavenCompilerPluginTest : MavenImportingTestCase() {
         assertEquals("Javac", compilerConfiguration.defaultCompiler.id)
         assertUnorderedElementsAreEqual(
             compilerConfiguration.getAdditionalOptions(getModule("project")),
-            "--enable-preview")
+            "--enable-preview"
+        )
+        TestCase.assertTrue(getLanguageLevel().isPreview)
     }
 
     fun testCompilerArgs() {
@@ -79,98 +82,86 @@ class MavenCompilerPluginTest : MavenImportingTestCase() {
         assertEquals("Javac", compilerConfiguration.defaultCompiler.id)
         assertUnorderedElementsAreEqual(
             compilerConfiguration.getAdditionalOptions(getModule("project")),
-            "--enable-preview", "-Xlint:unchecked")
+            "--enable-preview", "-Xlint:unchecked"
+        )
+        TestCase.assertTrue(getLanguageLevel().isPreview)
     }
 
-    fun testCompilerPluginConfigurationCompilerArguments()  {
-        import("<groupId>test</groupId>" +
-                "<artifactId>project</artifactId>" +
-                "<version>1</version>" +
-                "<build>" +
-                "  <plugins>" +
-                "    <plugin>" +
-                "      <groupId>org.apache.maven.plugins</groupId>" +
-                "      <artifactId>maven-compiler-plugin</artifactId>" +
-                "      <configuration>" +
-                "        <compilerArguments>" +
-                "          <Averbose>true</Averbose>" +
-                "          <parameters></parameters>" +
-                "          <bootclasspath>rt.jar_path_here</bootclasspath>" +
-                "        </compilerArguments>" +
-                "      </configuration>" +
-                "    </plugin>" +
-                "  </plugins>" +
-                "</build>")
+    fun testCompilerPluginConfigurationCompilerArguments() {
+        import(
+            "<groupId>test</groupId>" +
+                    "<artifactId>project</artifactId>" +
+                    "<version>1</version>" +
+                    "<build>" +
+                    "  <plugins>" +
+                    "    <plugin>" +
+                    "      <groupId>org.apache.maven.plugins</groupId>" +
+                    "      <artifactId>maven-compiler-plugin</artifactId>" +
+                    "      <configuration>" +
+                    "        <compilerArguments>" +
+                    "          <Averbose>true</Averbose>" +
+                    "          <parameters></parameters>" +
+                    "          <bootclasspath>rt.jar_path_here</bootclasspath>" +
+                    "        </compilerArguments>" +
+                    "      </configuration>" +
+                    "    </plugin>" +
+                    "  </plugins>" +
+                    "</build>"
+        )
 
         assertModules("project")
         val compilerConfiguration = CompilerConfiguration.getInstance(project) as CompilerConfigurationImpl
         assertEquals("Javac", compilerConfiguration.defaultCompiler.id)
-        assertUnorderedElementsAreEqual(compilerConfiguration.getAdditionalOptions(getModule("project")),
-            "-Averbose=true", "-parameters", "-bootclasspath", "rt.jar_path_here")
+        assertUnorderedElementsAreEqual(
+            compilerConfiguration.getAdditionalOptions(getModule("project")),
+            "-Averbose=true", "-parameters", "-bootclasspath", "rt.jar_path_here"
+        )
     }
 
-    fun testCompilerPluginConfigurationCompilerArgumentsParameters()  {
-        import("<groupId>test</groupId>" +
-                "<artifactId>project</artifactId>" +
-                "<version>1</version>" +
-                "<build>" +
-                "  <plugins>" +
-                "    <plugin>" +
-                "      <groupId>org.apache.maven.plugins</groupId>" +
-                "      <artifactId>maven-compiler-plugin</artifactId>" +
-                "      <configuration>" +
-                "        <parameters>true</parameters>" +
-                "      </configuration>" +
-                "    </plugin>" +
-                "  </plugins>" +
-                "</build>")
+    fun testCompilerPluginConfigurationCompilerArgumentsParameters() {
+        import(
+            "<groupId>test</groupId>" +
+                    "<artifactId>project</artifactId>" +
+                    "<version>1</version>" +
+                    "<build>" +
+                    "  <plugins>" +
+                    "    <plugin>" +
+                    "      <groupId>org.apache.maven.plugins</groupId>" +
+                    "      <artifactId>maven-compiler-plugin</artifactId>" +
+                    "      <configuration>" +
+                    "        <parameters>true</parameters>" +
+                    "      </configuration>" +
+                    "    </plugin>" +
+                    "  </plugins>" +
+                    "</build>"
+        )
 
         assertModules("project")
         val ideCompilerConfiguration = CompilerConfiguration.getInstance(project) as CompilerConfigurationImpl
         assertEquals("Javac", ideCompilerConfiguration.defaultCompiler.id)
-        assertUnorderedElementsAreEqual(ideCompilerConfiguration.getAdditionalOptions(getModule("project")), "-parameters")
+        assertUnorderedElementsAreEqual(
+            ideCompilerConfiguration.getAdditionalOptions(getModule("project")),
+            "-parameters"
+        )
     }
 
-    fun testCompilerPluginConfigurationCompilerArgumentsParametersFalse()  {
-        import("<groupId>test</groupId>" +
-                "<artifactId>project</artifactId>" +
-                "<version>1</version>" +
-                "<build>" +
-                "  <plugins>" +
-                "    <plugin>" +
-                "      <groupId>org.apache.maven.plugins</groupId>" +
-                "      <artifactId>maven-compiler-plugin</artifactId>" +
-                "      <configuration>" +
-                "        <parameters>false</parameters>" +
-                "      </configuration>" +
-                "    </plugin>" +
-                "  </plugins>" +
-                "</build>")
-
-        assertModules("project")
-        val ideCompilerConfiguration = CompilerConfiguration.getInstance(project) as CompilerConfigurationImpl
-        assertEquals("Javac", ideCompilerConfiguration.defaultCompiler.id)
-        assertEmpty(ideCompilerConfiguration.getAdditionalOptions(getModule("project")))
-    }
-
-    fun testCompilerPluginConfigurationCompilerArgumentsParametersPropertyOverride()  {
-        import("<groupId>test</groupId>" +
-                "<artifactId>project</artifactId>" +
-                "<version>1</version>" +
-                "<properties>" +
-                "  <maven.compiler.parameters>true</maven.compiler.parameters>" +
-                "</properties>" +
-                "<build>" +
-                "  <plugins>" +
-                "    <plugin>" +
-                "      <groupId>org.apache.maven.plugins</groupId>" +
-                "      <artifactId>maven-compiler-plugin</artifactId>" +
-                "      <configuration>" +
-                "        <parameters>false</parameters>" +
-                "      </configuration>" +
-                "    </plugin>" +
-                "  </plugins>" +
-                "</build>")
+    fun testCompilerPluginConfigurationCompilerArgumentsParametersFalse() {
+        import(
+            "<groupId>test</groupId>" +
+                    "<artifactId>project</artifactId>" +
+                    "<version>1</version>" +
+                    "<build>" +
+                    "  <plugins>" +
+                    "    <plugin>" +
+                    "      <groupId>org.apache.maven.plugins</groupId>" +
+                    "      <artifactId>maven-compiler-plugin</artifactId>" +
+                    "      <configuration>" +
+                    "        <parameters>false</parameters>" +
+                    "      </configuration>" +
+                    "    </plugin>" +
+                    "  </plugins>" +
+                    "</build>"
+        )
 
         assertModules("project")
         val ideCompilerConfiguration = CompilerConfiguration.getInstance(project) as CompilerConfigurationImpl
@@ -178,68 +169,107 @@ class MavenCompilerPluginTest : MavenImportingTestCase() {
         assertEmpty(ideCompilerConfiguration.getAdditionalOptions(getModule("project")))
     }
 
-    fun testCompilerPluginConfigurationCompilerArgumentsParametersPropertyOverride1()  {
-        import("<groupId>test</groupId>" +
-                "<artifactId>project</artifactId>" +
-                "<version>1</version>" +
-                "<properties>" +
-                "  <maven.compiler.parameters>false</maven.compiler.parameters>" +
-                "</properties>" +
-                "<build>" +
-                "  <plugins>" +
-                "    <plugin>" +
-                "      <groupId>org.apache.maven.plugins</groupId>" +
-                "      <artifactId>maven-compiler-plugin</artifactId>" +
-                "      <configuration>" +
-                "        <parameters>true</parameters>" +
-                "      </configuration>" +
-                "    </plugin>" +
-                "  </plugins>" +
-                "</build>")
+    fun testCompilerPluginConfigurationCompilerArgumentsParametersPropertyOverride() {
+        import(
+            "<groupId>test</groupId>" +
+                    "<artifactId>project</artifactId>" +
+                    "<version>1</version>" +
+                    "<properties>" +
+                    "  <maven.compiler.parameters>true</maven.compiler.parameters>" +
+                    "</properties>" +
+                    "<build>" +
+                    "  <plugins>" +
+                    "    <plugin>" +
+                    "      <groupId>org.apache.maven.plugins</groupId>" +
+                    "      <artifactId>maven-compiler-plugin</artifactId>" +
+                    "      <configuration>" +
+                    "        <parameters>false</parameters>" +
+                    "      </configuration>" +
+                    "    </plugin>" +
+                    "  </plugins>" +
+                    "</build>"
+        )
 
         assertModules("project")
         val ideCompilerConfiguration = CompilerConfiguration.getInstance(project) as CompilerConfigurationImpl
         assertEquals("Javac", ideCompilerConfiguration.defaultCompiler.id)
-        assertUnorderedElementsAreEqual(ideCompilerConfiguration.getAdditionalOptions(getModule("project")), "-parameters")
+        assertEmpty(ideCompilerConfiguration.getAdditionalOptions(getModule("project")))
     }
 
-    fun testCompilerPluginConfigurationCompilerArgumentsParametersProperty()  {
-        import("<groupId>test</groupId>" +
-                "<artifactId>project</artifactId>" +
-                "<version>1</version>" +
-                "<properties>" +
-                "  <maven.compiler.parameters>true</maven.compiler.parameters>" +
-                "</properties>" +
-                "<build>" +
-                "  <plugins>" +
-                "    <plugin>" +
-                "      <groupId>org.apache.maven.plugins</groupId>" +
-                "      <artifactId>maven-compiler-plugin</artifactId>" +
-                "    </plugin>" +
-                "  </plugins>" +
-                "</build>")
+    fun testCompilerPluginConfigurationCompilerArgumentsParametersPropertyOverride1() {
+        import(
+            "<groupId>test</groupId>" +
+                    "<artifactId>project</artifactId>" +
+                    "<version>1</version>" +
+                    "<properties>" +
+                    "  <maven.compiler.parameters>false</maven.compiler.parameters>" +
+                    "</properties>" +
+                    "<build>" +
+                    "  <plugins>" +
+                    "    <plugin>" +
+                    "      <groupId>org.apache.maven.plugins</groupId>" +
+                    "      <artifactId>maven-compiler-plugin</artifactId>" +
+                    "      <configuration>" +
+                    "        <parameters>true</parameters>" +
+                    "      </configuration>" +
+                    "    </plugin>" +
+                    "  </plugins>" +
+                    "</build>"
+        )
 
         assertModules("project")
         val ideCompilerConfiguration = CompilerConfiguration.getInstance(project) as CompilerConfigurationImpl
         assertEquals("Javac", ideCompilerConfiguration.defaultCompiler.id)
-        assertUnorderedElementsAreEqual(ideCompilerConfiguration.getAdditionalOptions(getModule("project")), "-parameters")
+        assertUnorderedElementsAreEqual(
+            ideCompilerConfiguration.getAdditionalOptions(getModule("project")),
+            "-parameters"
+        )
     }
 
-   fun testCompilerPluginConfigurationCompilerArgumentsParametersPropertyFalse()  {
-        import("<groupId>test</groupId>" +
-                "<artifactId>project</artifactId>" +
-                "<version>1</version>" +
-                "<properties>" +
-                "  <maven.compiler.parameters>false</maven.compiler.parameters>" +
-                "</properties>" +
-                "<build>" +
-                "  <plugins>" +
-                "    <plugin>" +
-                "      <groupId>org.apache.maven.plugins</groupId>" +
-                "      <artifactId>maven-compiler-plugin</artifactId>" +
-                "    </plugin>" +
-                "  </plugins>" +
-                "</build>")
+    fun testCompilerPluginConfigurationCompilerArgumentsParametersProperty() {
+        import(
+            "<groupId>test</groupId>" +
+                    "<artifactId>project</artifactId>" +
+                    "<version>1</version>" +
+                    "<properties>" +
+                    "  <maven.compiler.parameters>true</maven.compiler.parameters>" +
+                    "</properties>" +
+                    "<build>" +
+                    "  <plugins>" +
+                    "    <plugin>" +
+                    "      <groupId>org.apache.maven.plugins</groupId>" +
+                    "      <artifactId>maven-compiler-plugin</artifactId>" +
+                    "    </plugin>" +
+                    "  </plugins>" +
+                    "</build>"
+        )
+
+        assertModules("project")
+        val ideCompilerConfiguration = CompilerConfiguration.getInstance(project) as CompilerConfigurationImpl
+        assertEquals("Javac", ideCompilerConfiguration.defaultCompiler.id)
+        assertUnorderedElementsAreEqual(
+            ideCompilerConfiguration.getAdditionalOptions(getModule("project")),
+            "-parameters"
+        )
+    }
+
+    fun testCompilerPluginConfigurationCompilerArgumentsParametersPropertyFalse() {
+        import(
+            "<groupId>test</groupId>" +
+                    "<artifactId>project</artifactId>" +
+                    "<version>1</version>" +
+                    "<properties>" +
+                    "  <maven.compiler.parameters>false</maven.compiler.parameters>" +
+                    "</properties>" +
+                    "<build>" +
+                    "  <plugins>" +
+                    "    <plugin>" +
+                    "      <groupId>org.apache.maven.plugins</groupId>" +
+                    "      <artifactId>maven-compiler-plugin</artifactId>" +
+                    "    </plugin>" +
+                    "  </plugins>" +
+                    "</build>"
+        )
 
         assertModules("project")
         val ideCompilerConfiguration = CompilerConfiguration.getInstance(project) as CompilerConfigurationImpl
