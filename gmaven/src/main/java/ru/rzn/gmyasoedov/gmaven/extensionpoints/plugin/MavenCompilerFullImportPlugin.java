@@ -31,4 +31,7 @@ public interface MavenCompilerFullImportPlugin extends MavenFullImportPlugin {
         return null;
     }
 
+    default boolean resolvePlugin() {
+        return false;
+    }
 }

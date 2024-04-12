@@ -22,6 +22,8 @@ class DevAspectjMavenPlugin : MavenCompilerFullImportPlugin {
 
     override fun getArtifactId() = "aspectj-maven-plugin"
 
+    override fun resolvePlugin() = true
+
     override fun getCompilerData(
         project: MavenProject,
         plugin: MavenPlugin,
