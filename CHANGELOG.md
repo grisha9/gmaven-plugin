@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+
+## [232.26] - 2024-04-12
+### Added
+- Support aspectj-maven-plugin ([issue](https://github.com/grisha9/gmaven-plugin/issues/7))
+- Support --enable-preview
+
 ## [232.25] - 2024-03-23
 ### Fixed
 - Project settings UI
