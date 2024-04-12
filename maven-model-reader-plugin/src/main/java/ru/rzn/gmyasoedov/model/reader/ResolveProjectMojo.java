@@ -36,14 +36,19 @@ public class ResolveProjectMojo extends AbstractMojo {
     private ArtifactHandlerManager artifactHandlerManager;
     @Component
     private ResolutionErrorHandler resolutionErrorHandler;
-    @Parameter(defaultValue = "${session}", readonly = true)
+    @Component
     private MavenSession session;
+    @Parameter(property = "gmaven.resolvedArtifactIds")
+    protected Set<String> resolvedArtifactIds;
 
     private final Map<String, Field> dependencyCoordinateFieldMap = getDependencyCoordinateFieldMap();
     private List<ArtifactResolutionException> resolveArtifactErrors;
 
     @Override
     public void execute() throws MojoExecutionException {
+        if (!getResolvedArtifactIds().isEmpty()) {
+            getLog().info("resolvedArtifactIds " + resolvedArtifactIds);
+        }
         resolveArtifactErrors = new ArrayList<>();
         Set<String> gPluginSet = getPluginForBodyProcessing();
         getLog().info("ResolveProjectMojo: " + gPluginSet);
@@ -80,6 +85,18 @@ public class ResolveProjectMojo extends AbstractMojo {
         if (!pluginBody.isEmpty()) {
             String key = "gPlugin" + pluginKey;
             project.setContextValue(key, pluginBody);
+        }
+        if (getResolvedArtifactIds().contains(each.getArtifactId())) {
+            DependencyCoordinate coordinate = new DependencyCoordinate();
+            coordinate.setArtifactId(each.getArtifactId());
+            coordinate.setGroupId(each.getGroupId());
+            coordinate.setVersion(each.getVersion());
+            getLog().info("gmaven.resolvedArtifactId " + coordinate);
+            GUtils.resolveArtifacts(
+                    Collections.singletonList(coordinate),project,
+                    repositorySystem, artifactHandlerManager, resolutionErrorHandler, session,
+                    new ArrayList<ArtifactResolutionException>()
+            );
         }
     }
 
@@ -193,5 +210,9 @@ public class ResolveProjectMojo extends AbstractMojo {
             map.put(field.getName().toLowerCase(), field);
         }
         return map;
+    }
+
+    private Set<String> getResolvedArtifactIds() {
+        return resolvedArtifactIds != null ? resolvedArtifactIds : Collections.<String>emptySet();
     }
 }
