@@ -4,10 +4,7 @@ import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ResolutionErrorHandler;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.model.Build;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.Plugin;
-import org.apache.maven.model.PluginExecution;
+import org.apache.maven.model.*;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
@@ -36,14 +33,19 @@ public class ResolveProjectMojo extends AbstractMojo {
     private ArtifactHandlerManager artifactHandlerManager;
     @Component
     private ResolutionErrorHandler resolutionErrorHandler;
-    @Parameter(defaultValue = "${session}", readonly = true)
+    @Component
     private MavenSession session;
+    @Parameter(property = "gmaven.resolvedArtifactIds")
+    protected Set<String> resolvedArtifactIds;
 
     private final Map<String, Field> dependencyCoordinateFieldMap = getDependencyCoordinateFieldMap();
     private List<ArtifactResolutionException> resolveArtifactErrors;
 
     @Override
     public void execute() throws MojoExecutionException {
+        if (!getResolvedArtifactIds().isEmpty()) {
+            getLog().info("resolvedArtifactIds " + resolvedArtifactIds);
+        }
         resolveArtifactErrors = new ArrayList<>();
         Set<String> gPluginSet = getPluginForBodyProcessing();
         getLog().info("ResolveProjectMojo: " + gPluginSet);
@@ -81,6 +83,28 @@ public class ResolveProjectMojo extends AbstractMojo {
             String key = "gPlugin" + pluginKey;
             project.setContextValue(key, pluginBody);
         }
+        if (getResolvedArtifactIds().contains(each.getArtifactId())) {
+            resolve(each.getArtifactId(), each.getGroupId(), each.getVersion(), project);
+            List<Dependency> dependencies = each.getDependencies();
+            if (dependencies == null) return;
+            for (Dependency dependency : dependencies) {
+                resolve(dependency.getArtifactId(), dependency.getGroupId(), dependency.getVersion(), project);
+            }
+        }
+    }
+
+    private void resolve(String artifactId, String groupId, String version, MavenProject project)
+            throws MojoExecutionException {
+        DependencyCoordinate coordinateDep = new DependencyCoordinate();
+        coordinateDep.setArtifactId(artifactId);
+        coordinateDep.setGroupId(groupId);
+        coordinateDep.setVersion(version);
+        getLog().info("gmaven.resolvedArtifactId " + coordinateDep);
+        GUtils.resolveArtifacts(
+                Collections.singletonList(coordinateDep), project,
+                repositorySystem, artifactHandlerManager, resolutionErrorHandler, session,
+                new ArrayList<ArtifactResolutionException>()
+        );
     }
 
     private Map<String, Object> convertPluginBody(MavenProject project, Plugin plugin)
@@ -193,5 +217,9 @@ public class ResolveProjectMojo extends AbstractMojo {
             map.put(field.getName().toLowerCase(), field);
         }
         return map;
+    }
+
+    private Set<String> getResolvedArtifactIds() {
+        return resolvedArtifactIds != null ? resolvedArtifactIds : Collections.<String>emptySet();
     }
 }
