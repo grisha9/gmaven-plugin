@@ -3,6 +3,7 @@ package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 import com.intellij.pom.java.LanguageLevel
 import com.jetbrains.rd.util.getOrCreate
 import org.jdom.Element
+import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
 import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
@@ -18,6 +19,12 @@ class CodehausAspectjMavenPlugin : MavenCompilerFullImportPlugin {
     override fun getArtifactId() = "aspectj-maven-plugin"
 
     override fun resolvePlugin() = true
+
+    override fun getContentRoots(
+        mavenProject: MavenProject,
+        plugin: MavenPlugin,
+        context: MavenProjectResolver.ProjectResolverContext
+    ) = DevAspectjMavenPlugin.getAspectJContentRoots(mavenProject, plugin, context)
 
     override fun getCompilerData(
         project: MavenProject,
