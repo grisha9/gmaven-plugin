@@ -1,10 +1,14 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
+import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
 import com.intellij.pom.java.LanguageLevel
 import com.jetbrains.rd.util.getOrCreate
 import org.jdom.Element
+import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData.Companion.ASPECTJ_COMPILER_ID
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenContentRoot
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginContentRoots
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
@@ -13,6 +17,7 @@ import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.PluginBody
 import ru.rzn.gmyasoedov.serverapi.model.PluginExecution
 import java.nio.file.Path
+
 
 const val aspectjToolsArtifactId = "aspectjtools"
 
@@ -23,6 +28,12 @@ class DevAspectjMavenPlugin : MavenCompilerFullImportPlugin {
     override fun getArtifactId() = "aspectj-maven-plugin"
 
     override fun resolvePlugin() = true
+
+    override fun getContentRoots(
+        mavenProject: MavenProject,
+        plugin: MavenPlugin,
+        context: MavenProjectResolver.ProjectResolverContext
+    ) = getAspectJContentRoots(mavenProject, plugin, context)
 
     override fun getCompilerData(
         project: MavenProject,
@@ -159,10 +170,6 @@ class DevAspectjMavenPlugin : MavenCompilerFullImportPlugin {
         return CompilerProp(source, target)
     }
 
-    private fun getElement(body: String, contextElementMap: MutableMap<String, Element>): Element {
-        return contextElementMap.getOrCreate(body) { MavenJDOMUtil.parseConfiguration(it) }
-    }
-
     data class CompilerProp(
         var source: LanguageLevel, var target: LanguageLevel,
     )
@@ -203,6 +210,47 @@ class DevAspectjMavenPlugin : MavenCompilerFullImportPlugin {
         fun addBooleanParam(configurationElement: Element, aspectjAgrs: ArrayList<String>, paramName: String) {
             configurationElement.getChildTextTrim(paramName)
                 ?.let { if (it.equals("true", true)) aspectjAgrs.add("-$paramName") }
+        }
+
+        private fun getElement(body: String, contextElementMap: MutableMap<String, Element>): Element {
+            return contextElementMap.getOrCreate(body) { MavenJDOMUtil.parseConfiguration(it) }
+        }
+
+        fun getAspectJContentRoots(
+            mavenProject: MavenProject,
+            plugin: MavenPlugin,
+            context: MavenProjectResolver.ProjectResolverContext
+        ): PluginContentRoots {
+            val configuration = getConfiguration(plugin, context)
+            val srcPath = MavenJDOMUtil.findChildValueByPath(configuration, "aspectDirectory", "src/main/aspect")
+            val testPath = MavenJDOMUtil.findChildValueByPath(configuration, "testAspectDirectory", "src/test/aspect")
+            val roots = mutableListOf<MavenContentRoot>()
+            if (srcPath.isNotEmpty()) {
+                MavenFullImportPlugin.getAbsoluteContentPath(srcPath, mavenProject)
+                    ?.let { roots.add(MavenContentRoot(ExternalSystemSourceType.SOURCE, it)) }
+            }
+            if (testPath.isNotEmpty()) {
+                MavenFullImportPlugin.getAbsoluteContentPath(srcPath, mavenProject)
+                    ?.let { roots.add(MavenContentRoot(ExternalSystemSourceType.TEST, it)) }
+            }
+            return PluginContentRoots(roots, emptySet())
+        }
+
+        private fun getConfiguration(plugin: MavenPlugin, context: MavenProjectResolver.ProjectResolverContext): Element? {
+            plugin.body ?: return null
+            var configuration = plugin.body.configuration?.let { getElement(it, context.contextElementMap) }
+
+            if (configuration == null) {
+                configuration = plugin.body.executions.find { it.goals.contains("compile") }
+                    ?.configuration
+                    ?.let { getElement(it, context.contextElementMap) }
+            }
+            if (configuration == null) {
+                configuration = plugin.body.executions.find { it.goals.contains("test-compile") }
+                    ?.configuration
+                    ?.let { getElement(it, context.contextElementMap) }
+            }
+            return configuration
         }
     }
 }
