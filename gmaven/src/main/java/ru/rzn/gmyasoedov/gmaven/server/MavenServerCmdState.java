@@ -73,18 +73,25 @@ public class MavenServerCmdState extends CommandLineState {
     private void setupGmavenPluginsProperty(SimpleJavaParameters params) {
         List<MavenFullImportPlugin> extensionList = MavenFullImportPlugin.EP_NAME.getExtensionList();
         List<String> pluginsForImport = new ArrayList<>(extensionList.size());
+        List<String> pluginsForResolve = new ArrayList<>(1);
         for (MavenFullImportPlugin plugin : extensionList) {
             pluginsForImport.add(plugin.getKey());
-            String annotationPath = plugin instanceof MavenCompilerFullImportPlugin
-                    ? ((MavenCompilerFullImportPlugin) plugin).getAnnotationProcessorTagName() : null;
-            if (StringUtilRt.isEmpty(annotationPath)) continue;
-
-            params.getVMParametersList()
-                    .addProperty(format(GMAVEN_PLUGIN_ANNOTATION_PROCESSOR, plugin.getArtifactId()), annotationPath);
+            if (plugin instanceof MavenCompilerFullImportPlugin) {
+                if (((MavenCompilerFullImportPlugin) plugin).resolvePlugin()) {
+                    pluginsForResolve.add(plugin.getArtifactId());
+                }
+                String annotationPath = ((MavenCompilerFullImportPlugin) plugin).getAnnotationProcessorTagName();
+                if (StringUtilRt.isEmpty(annotationPath)) continue;
+                params.getVMParametersList()
+                        .addProperty(format(GMAVEN_PLUGIN_ANNOTATION_PROCESSOR, plugin.getArtifactId()), annotationPath);
+            }
         }
 
         if (!pluginsForImport.isEmpty()) {
             params.getVMParametersList().addProperty(GMAVEN_PLUGINS, String.join(";", pluginsForImport));
+        }
+        if (!pluginsForResolve.isEmpty()) {
+            params.getVMParametersList().addProperty(GMAVEN_PLUGINS_RESOLVE, String.join(",", pluginsForResolve));
         }
     }
 

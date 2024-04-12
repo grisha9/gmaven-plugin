@@ -15,16 +15,12 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.repository.RepositorySystem;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public abstract class GUtils {
 
     public static List<String> resolveArtifacts(
-            List<DependencyCoordinate> annotationProcessorPaths,
+            List<DependencyCoordinate> dependencyCoordinates,
             MavenProject project,
             RepositorySystem repositorySystem,
             ArtifactHandlerManager artifactHandlerManager,
@@ -32,13 +28,13 @@ public abstract class GUtils {
             MavenSession session,
             List<ArtifactResolutionException> resolveArtifactErrors
     ) throws MojoExecutionException {
-        if (annotationProcessorPaths == null || annotationProcessorPaths.isEmpty()) {
+        if (dependencyCoordinates == null || dependencyCoordinates.isEmpty()) {
             return null;
         }
 
         try {
             Set<String> elements = new LinkedHashSet<>();
-            for (DependencyCoordinate coord : annotationProcessorPaths) {
+            for (DependencyCoordinate coord : dependencyCoordinates) {
                 ArtifactHandler handler = artifactHandlerManager.getArtifactHandler(coord.getType());
 
                 Artifact artifact = new DefaultArtifact(
