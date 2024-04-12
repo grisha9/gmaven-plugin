@@ -2,8 +2,11 @@ package ru.rzn.gmyasoedov.gmaven
 
 import com.intellij.externalSystem.JavaModuleData
 import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder
+import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.roots.ContentEntry
@@ -56,6 +59,14 @@ abstract class MavenImportingTestCase : MavenTestCase() {
         mavenProjectSettings = createMavenProjectSettings(projectFile, project)
 
         GOpenProjectProvider().attachProjectAndRefresh(mavenProjectSettings!!, project)
+    }
+
+    protected fun reimport() {
+        ExternalSystemUtil.refreshProject(
+            mavenProjectSettings!!.externalProjectPath,
+            ImportSpecBuilder(project, GMavenConstants.SYSTEM_ID)
+                .use(ProgressExecutionMode.MODAL_SYNC)
+        )
     }
 
     protected fun import(

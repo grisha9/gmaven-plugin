@@ -2,9 +2,14 @@ package ru.rzn.gmyasoedov.gmaven.project
 
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.compiler.CompilerConfigurationImpl
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.pom.java.LanguageLevel
 import junit.framework.TestCase
 import ru.rzn.gmyasoedov.gmaven.MavenImportingTestCase
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
+import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
+import kotlin.io.path.Path
+import kotlin.io.path.exists
 
 class AspectJMavenPluginTest : MavenImportingTestCase() {
 
@@ -185,7 +190,57 @@ class AspectJMavenPluginTest : MavenImportingTestCase() {
         val level = getLanguageLevel()
         TestCase.assertEquals(LanguageLevel.JDK_17, level)
         val mainJavaCompilerData = getMainJavaCompilerData()
+        TestCase.assertEquals(MainJavaCompilerData.ASPECTJ_COMPILER_ID, mainJavaCompilerData.compilerId)
         TestCase.assertTrue(mainJavaCompilerData.dependenciesPath.isNotEmpty())
         TestCase.assertTrue(mainJavaCompilerData.dependenciesPath.first().contains("aspectjtools-1.9.22.jar"))
+    }
+
+    fun testResolveAspectjToolsJar() {
+        val aspectJToolVersion = "1.9.21"
+        val pomXml = """
+        <groupId>org.example</groupId>
+        <artifactId>project</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    
+        <dependencies> 
+            <dependency>
+                <groupId>org.aspectj</groupId>
+                <artifactId>aspectjrt</artifactId> 
+                <version>$aspectJToolVersion</version>
+            </dependency> 
+        </dependencies>
+        
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>dev.aspectj</groupId>
+                    <artifactId>aspectj-maven-plugin</artifactId>
+                    <version>1.14</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.aspectj</groupId>
+                            <artifactId>aspectjtools</artifactId> 
+                            <version>$aspectJToolVersion</version>
+                        </dependency>
+                    </dependencies>
+                    <configuration> 
+                        <complianceLevel>17</complianceLevel>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </build>
+        """
+        import(pomXml)
+        assertModules("project")
+
+        val localRepoPath = MavenSettings.getInstance(project).linkedProjectsSettings
+            .firstNotNullOf { it.localRepositoryPath }
+        val path = Path(localRepoPath, "org", "aspectj", "aspectjtools")
+        FileUtil.delete(path)
+        TestCase.assertFalse(path.resolve(aspectJToolVersion).exists())
+
+        reimport()
+        TestCase.assertTrue(path.resolve(aspectJToolVersion).exists())
+        TestCase.assertEquals(MainJavaCompilerData.ASPECTJ_COMPILER_ID, getMainJavaCompilerData().compilerId)
     }
 }
