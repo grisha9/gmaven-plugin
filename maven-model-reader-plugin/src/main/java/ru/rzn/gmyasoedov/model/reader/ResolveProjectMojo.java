@@ -4,10 +4,7 @@ import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ResolutionErrorHandler;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.model.Build;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.Plugin;
-import org.apache.maven.model.PluginExecution;
+import org.apache.maven.model.*;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
@@ -87,17 +84,27 @@ public class ResolveProjectMojo extends AbstractMojo {
             project.setContextValue(key, pluginBody);
         }
         if (getResolvedArtifactIds().contains(each.getArtifactId())) {
-            DependencyCoordinate coordinate = new DependencyCoordinate();
-            coordinate.setArtifactId(each.getArtifactId());
-            coordinate.setGroupId(each.getGroupId());
-            coordinate.setVersion(each.getVersion());
-            getLog().info("gmaven.resolvedArtifactId " + coordinate);
-            GUtils.resolveArtifacts(
-                    Collections.singletonList(coordinate),project,
-                    repositorySystem, artifactHandlerManager, resolutionErrorHandler, session,
-                    new ArrayList<ArtifactResolutionException>()
-            );
+            resolve(each.getArtifactId(), each.getGroupId(), each.getVersion(), project);
+            List<Dependency> dependencies = each.getDependencies();
+            if (dependencies == null) return;
+            for (Dependency dependency : dependencies) {
+                resolve(dependency.getArtifactId(), dependency.getGroupId(), dependency.getVersion(), project);
+            }
         }
+    }
+
+    private void resolve(String artifactId, String groupId, String version, MavenProject project)
+            throws MojoExecutionException {
+        DependencyCoordinate coordinateDep = new DependencyCoordinate();
+        coordinateDep.setArtifactId(artifactId);
+        coordinateDep.setGroupId(groupId);
+        coordinateDep.setVersion(version);
+        getLog().info("gmaven.resolvedArtifactId " + coordinateDep);
+        GUtils.resolveArtifacts(
+                Collections.singletonList(coordinateDep), project,
+                repositorySystem, artifactHandlerManager, resolutionErrorHandler, session,
+                new ArrayList<ArtifactResolutionException>()
+        );
     }
 
     private Map<String, Object> convertPluginBody(MavenProject project, Plugin plugin)
