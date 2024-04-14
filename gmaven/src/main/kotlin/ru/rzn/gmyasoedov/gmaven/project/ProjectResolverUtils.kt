@@ -40,6 +40,7 @@ fun getMavenHome(distributionSettings: DistributionSettings): Path {
 fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.ProjectResolverContext): PluginsData {
     val contentRoots = ArrayList<MavenContentRoot>()
     val excludedRoots = HashSet<String>(4)
+    val annotationProcessorPaths = ArrayList<String>(1)
 
     var compilerPlugin: MavenPlugin? = null
     var compilerData: CompilerData? = null
@@ -51,16 +52,18 @@ fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.Pro
         val pluginContentRoot = pluginExtension.getContentRoots(mavenProject, plugin, context)
         contentRoots += pluginContentRoot.contentRoots
         excludedRoots += pluginContentRoot.excludedRoots
-        if (pluginExtension is MavenCompilerFullImportPlugin && isPriorityCompiler(compilerPlugin, plugin, context)) {
-            compilerPlugin = plugin
-            if (localRepoPath != null) {
-                compilerData = pluginExtension
-                    .getCompilerData(mavenProject, plugin, Path.of(localRepoPath), context.contextElementMap)
+        if (pluginExtension is MavenCompilerFullImportPlugin) {
+            val compilerDataPlugin = getCompilerData(localRepoPath, pluginExtension, mavenProject, plugin, context)
+            annotationProcessorPaths += compilerDataPlugin?.annotationProcessorPaths ?: emptyList()
+            if (isPriorityCompiler(compilerPlugin, plugin, context)) {
+                compilerPlugin = plugin
+                compilerData = compilerDataPlugin
             }
         } else if (pluginExtension is KotlinMavenPlugin && kotlinPluginData == null) {
             kotlinPluginData = pluginExtension.getCompilerData(mavenProject, plugin, context)
         }
     }
+    compilerData = applyAnnotationProcessorsPath(compilerData, annotationProcessorPaths)
     addedMavenAspectJPluginInfo(compilerPlugin, compilerData, context)
     return PluginsData(
         compilerPlugin,
@@ -68,6 +71,17 @@ fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.Pro
         kotlinPluginData,
         PluginContentRoots(contentRoots, excludedRoots)
     )
+}
+
+private fun getCompilerData(
+    localRepoPath: String?,
+    pluginExtension: MavenCompilerFullImportPlugin,
+    mavenProject: MavenProject,
+    plugin: MavenPlugin,
+    context: MavenProjectResolver.ProjectResolverContext
+): CompilerData? {
+    localRepoPath ?: return null
+    return pluginExtension.getCompilerData(mavenProject, plugin, Path.of(localRepoPath), context.contextElementMap)
 }
 
 fun getMainJavaCompilerData(
@@ -145,6 +159,19 @@ fun populateAnnotationProcessorData(
 
 fun getDefaultModuleTypeId(): String {
     return ModuleTypeManager.getInstance().defaultModuleType.id
+}
+
+private fun applyAnnotationProcessorsPath(
+    compilerData: CompilerData?,  annotationProcessorPaths: List<String>
+): CompilerData? {
+    compilerData ?: return null
+    if (annotationProcessorPaths.isEmpty()) return compilerData
+    if (compilerData.annotationProcessorPaths == annotationProcessorPaths) return compilerData
+    return CompilerData(
+        compilerData.sourceLevel, compilerData.targetLevel,
+        compilerData.testSourceLevel, compilerData.testTargetLevel,
+        annotationProcessorPaths, compilerData.arguments, compilerData.pluginSpecificArguments
+    )
 }
 
 private fun addedMavenAspectJPluginInfo(
