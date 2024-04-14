@@ -1,11 +1,10 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
 import com.intellij.pom.java.LanguageLevel
-import com.jetbrains.rd.util.getOrCreate
 import org.jdom.Element
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin.Companion.getElement
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
-import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.model.PluginBody
@@ -20,7 +19,7 @@ class CodehausAspectjMavenPlugin : MavenCompilerFullImportPlugin {
 
     override fun resolvePlugin() = true
 
-    override fun priority() = 20
+    override fun priority() = 30
 
     override fun getContentRoots(
         mavenProject: MavenProject,
@@ -135,9 +134,6 @@ class CodehausAspectjMavenPlugin : MavenCompilerFullImportPlugin {
         return CompilerProp(source, target)
     }
 
-    private fun getElement(body: String, contextElementMap: MutableMap<String, Element>): Element {
-        return contextElementMap.getOrCreate(body) { MavenJDOMUtil.parseConfiguration(it) }
-    }
 
     data class CompilerProp(
         var source: LanguageLevel, var target: LanguageLevel,

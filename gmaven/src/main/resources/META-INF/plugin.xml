@@ -68,6 +68,7 @@
         <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.BuildHelperMavenPlugin"/>
         <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.DevAspectjMavenPlugin"/>
         <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CodehausAspectjMavenPlugin"/>
+        <import.full.plugin implementation="ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.TychoCompilerPlugin"/>
     </extensions>
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->

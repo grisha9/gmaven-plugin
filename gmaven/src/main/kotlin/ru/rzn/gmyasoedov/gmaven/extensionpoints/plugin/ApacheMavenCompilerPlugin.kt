@@ -150,10 +150,6 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         )
     }
 
-    private fun getElement(body: String, contextElementMap: MutableMap<String, Element>): Element {
-        return contextElementMap.getOrCreate(body) { MavenJDOMUtil.parseConfiguration(it) }
-    }
-
     private fun getDefaultCompilerData(plugin: MavenPlugin, localRepositoryPath: Path): CompilerData {
         val descriptor = MavenArtifactUtil.readPluginDescriptor(localRepositoryPath, plugin)
         if (descriptor == null) {
@@ -181,6 +177,10 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
     )
 
     companion object {
+        fun getElement(body: String, contextElementMap: MutableMap<String, Element>): Element {
+            return contextElementMap.getOrCreate(body) { MavenJDOMUtil.parseConfiguration(it) }
+        }
+
         fun getDefaultCompilerData(mavenProject: MavenProject, defaultLanguageLevel: LanguageLevel): CompilerData {
             val compilerProp = CompilerProp(null, null, null, null, null, null)
             fillCompilerPropFromMavenProjectProperies(compilerProp, mavenProject)
