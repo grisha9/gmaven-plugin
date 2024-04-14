@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [233.25.2] - 2024-04-09
+## [233.26] - 2024-04-14
 ### Added
 - Support aspectj-maven-plugin ([issue](https://github.com/grisha9/gmaven-plugin/issues/7))
 - Support --enable-preview
