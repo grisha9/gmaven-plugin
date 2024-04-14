@@ -20,6 +20,8 @@ class CodehausAspectjMavenPlugin : MavenCompilerFullImportPlugin {
 
     override fun resolvePlugin() = true
 
+    override fun priority() = 20
+
     override fun getContentRoots(
         mavenProject: MavenProject,
         plugin: MavenPlugin,
@@ -64,7 +66,7 @@ class CodehausAspectjMavenPlugin : MavenCompilerFullImportPlugin {
         configurationElement ?: return emptyList()
         val aspectjArgs = ArrayList<String>()
 
-        DevAspectjMavenPlugin.addStringParam(configurationElement, aspectjArgs, "Xlint")
+        DevAspectjMavenPlugin.addStringParam(configurationElement, aspectjArgs, "Xlint", false)
         DevAspectjMavenPlugin.addStringParam(configurationElement, aspectjArgs, "ajdtBuildDefFile")
         DevAspectjMavenPlugin.addStringParam(configurationElement, aspectjArgs, "argumentFileName")
         DevAspectjMavenPlugin.addStringParam(configurationElement, aspectjArgs, "bootclasspath")

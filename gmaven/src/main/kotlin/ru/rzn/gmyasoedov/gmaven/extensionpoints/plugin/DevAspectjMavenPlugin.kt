@@ -29,6 +29,8 @@ class DevAspectjMavenPlugin : MavenCompilerFullImportPlugin {
 
     override fun resolvePlugin() = true
 
+    override fun priority() = 30
+
     override fun getContentRoots(
         mavenProject: MavenProject,
         plugin: MavenPlugin,
@@ -91,9 +93,10 @@ class DevAspectjMavenPlugin : MavenCompilerFullImportPlugin {
             }
         }
 
-        addStringParam(configurationElement, aspectjArgs, "Xlint")
-        addStringParam(configurationElement, aspectjArgs, "Xajruntimetarget")
-        addStringParam(configurationElement, aspectjArgs, "Xjoinpoints")
+        addStringParam(configurationElement, aspectjArgs, "Xlint", false)
+        addStringParam(configurationElement, aspectjArgs, "Xajruntimetarget", false)
+        addStringParam(configurationElement, aspectjArgs, "Xjoinpoints", false)
+        addStringParam(configurationElement, aspectjArgs, "proc", false)
         addStringParam(configurationElement, aspectjArgs, "Xlintfile")
         addStringParam(configurationElement, aspectjArgs, "ajdtBuildDefFile")
         addStringParam(configurationElement, aspectjArgs, "argumentFileDirectory")
@@ -202,9 +205,14 @@ class DevAspectjMavenPlugin : MavenCompilerFullImportPlugin {
             ).toString()
         }
 
-        fun addStringParam(configurationElement: Element, aspectjAgrs: ArrayList<String>, paramName: String) {
+        fun addStringParam(
+            configurationElement: Element,
+            aspectjAgrs: ArrayList<String>,
+            paramName: String,
+            useSpace: Boolean = true
+        ) {
             configurationElement.getChildTextTrim(paramName)
-                ?.let { if (it.isNotEmpty()) aspectjAgrs.add("-$paramName:$it") }
+                ?.let { if (it.isNotEmpty()) aspectjAgrs.add(if (useSpace) "-$paramName $it" else "-$paramName:$it") }
         }
 
         fun addBooleanParam(configurationElement: Element, aspectjAgrs: ArrayList<String>, paramName: String) {
@@ -236,7 +244,10 @@ class DevAspectjMavenPlugin : MavenCompilerFullImportPlugin {
             return PluginContentRoots(roots, emptySet())
         }
 
-        private fun getConfiguration(plugin: MavenPlugin, context: MavenProjectResolver.ProjectResolverContext): Element? {
+        private fun getConfiguration(
+            plugin: MavenPlugin,
+            context: MavenProjectResolver.ProjectResolverContext
+        ): Element? {
             plugin.body ?: return null
             var configuration = plugin.body.configuration?.let { getElement(it, context.contextElementMap) }
 
