@@ -47,6 +47,8 @@ class AspectJMavenPluginTest : MavenImportingTestCase() {
 						<Xlint>ignore</Xlint>
 						<deprecation>true</deprecation>
                         <enablePreview>true</enablePreview>
+                        <encoding>UTF-8</encoding>
+                        <proc>only</proc>
 					</configuration>
 				</plugin>
                 </plugins>
@@ -64,7 +66,7 @@ class AspectJMavenPluginTest : MavenImportingTestCase() {
         TestCase.assertTrue(mainJavaCompilerData.dependenciesPath.isNotEmpty())
         TestCase.assertTrue(mainJavaCompilerData.dependenciesPath.first().contains("aspectjtools-1.9.7.jar"))
         assertUnorderedElementsAreEqual(
-            listOf("-Xlint:ignore", "-XnotReweavable", "-deprecation", "-enablePreview"),
+            listOf("-Xlint:ignore", "-XnotReweavable", "-deprecation", "-enablePreview", "-encoding UTF-8", "-proc:only"),
             mainJavaCompilerData.arguments
         )
         TestCase.assertTrue(getLanguageLevel().isPreview)
@@ -241,6 +243,36 @@ class AspectJMavenPluginTest : MavenImportingTestCase() {
 
         reimport()
         TestCase.assertTrue(path.resolve(aspectJToolVersion).exists())
+        TestCase.assertEquals(MainJavaCompilerData.ASPECTJ_COMPILER_ID, getMainJavaCompilerData().compilerId)
+    }
+
+    fun testBothMavenCompilerAndAspectjCompiler() {
+        val pomXml = """
+        <groupId>org.example</groupId>
+        <artifactId>project</artifactId>
+        <version>1.0-SNAPSHOT</version> 
+        
+        <build>
+            <plugins>
+                <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
+                <configuration>
+                    <release>17</release>
+                </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>dev.aspectj</groupId>
+                    <artifactId>aspectj-maven-plugin</artifactId>
+                    <version>1.14</version> 
+                    <configuration> 
+                        <complianceLevel>17</complianceLevel>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </build>
+        """
+        import(pomXml)
         TestCase.assertEquals(MainJavaCompilerData.ASPECTJ_COMPILER_ID, getMainJavaCompilerData().compilerId)
     }
 }
