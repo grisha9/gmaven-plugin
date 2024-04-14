@@ -34,4 +34,6 @@ public interface MavenCompilerFullImportPlugin extends MavenFullImportPlugin {
     default boolean resolvePlugin() {
         return false;
     }
+
+    int priority();
 }
