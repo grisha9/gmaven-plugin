@@ -2,8 +2,8 @@ package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
 import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
 import com.intellij.pom.java.LanguageLevel
-import com.jetbrains.rd.util.getOrCreate
 import org.jdom.Element
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin.Companion.getElement
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData.Companion.ASPECTJ_COMPILER_ID
@@ -29,7 +29,7 @@ class DevAspectjMavenPlugin : MavenCompilerFullImportPlugin {
 
     override fun resolvePlugin() = true
 
-    override fun priority() = 30
+    override fun priority() = 40
 
     override fun getContentRoots(
         mavenProject: MavenProject,
@@ -218,10 +218,6 @@ class DevAspectjMavenPlugin : MavenCompilerFullImportPlugin {
         fun addBooleanParam(configurationElement: Element, aspectjAgrs: ArrayList<String>, paramName: String) {
             configurationElement.getChildTextTrim(paramName)
                 ?.let { if (it.equals("true", true)) aspectjAgrs.add("-$paramName") }
-        }
-
-        private fun getElement(body: String, contextElementMap: MutableMap<String, Element>): Element {
-            return contextElementMap.getOrCreate(body) { MavenJDOMUtil.parseConfiguration(it) }
         }
 
         fun getAspectJContentRoots(
