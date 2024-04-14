@@ -47,11 +47,11 @@ fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.Pro
 
     val localRepoPath: String? = context.mavenResult.settings.localRepository
     for (plugin in mavenProject.plugins) {
-        val pluginExtension = context.pluginExtensionMap.get(MavenUtils.toGAString(plugin)) ?: continue
+        val pluginExtension = context.pluginExtensionMap[MavenUtils.toGAString(plugin)] ?: continue
         val pluginContentRoot = pluginExtension.getContentRoots(mavenProject, plugin, context)
         contentRoots += pluginContentRoot.contentRoots
         excludedRoots += pluginContentRoot.excludedRoots
-        if (pluginExtension is MavenCompilerFullImportPlugin && compilerPlugin == null) {
+        if (pluginExtension is MavenCompilerFullImportPlugin && isPriorityCompiler(compilerPlugin, plugin, context)) {
             compilerPlugin = plugin
             if (localRepoPath != null) {
                 compilerData = pluginExtension
@@ -82,25 +82,6 @@ fun getMainJavaCompilerData(
     return MavenFullImportPlugin.EP_NAME
         .findExtensionOrFail(MavenCompilerFullImportPlugin::class.java)
         .getJavaCompilerData(mavenProject, plugin, compilerData, Path.of(localRepoPath), context.contextElementMap)
-}
-
-fun getAjcCompilerData(context: MavenProjectResolver.ProjectResolverContext): MainJavaCompilerData? {
-    val aspectJCompilerData = context.aspectJCompilerData
-    if (aspectJCompilerData.isNotEmpty()) {
-        val localRepository = context.mavenResult.settings.localRepository?.let { Path(it) } ?: return null
-        var dependenciesPath = aspectJCompilerData
-            .firstNotNullOfOrNull { DevAspectjMavenPlugin.getDependencyPath(it.plugin, localRepository) }
-        if (dependenciesPath == null) {
-            dependenciesPath = aspectJCompilerData
-                .firstNotNullOfOrNull {
-                    DevAspectjMavenPlugin.getDependencyPathFromDescriptor(it.plugin, localRepository)
-                }
-        }
-        dependenciesPath ?: return null
-        val arguments = aspectJCompilerData.flatMapTo(mutableSetOf()) { it.compilerData.pluginSpecificArguments }
-        return MainJavaCompilerData.create(ASPECTJ_COMPILER_ID, listOf(dependenciesPath), arguments)
-    }
-    return null
 }
 
 fun getContentRootPath(paths: List<String>, type: ExternalSystemSourceType): List<MavenContentRoot> {
@@ -180,6 +161,35 @@ private fun getLibraryPath(it: Map.Entry<String, DataNode<LibraryData>>): String
     return it.value.data.getPaths(LibraryPathType.BINARY).firstOrNull()
 }
 
+fun getAjcCompilerData(context: MavenProjectResolver.ProjectResolverContext): MainJavaCompilerData? {
+    val aspectJCompilerData = context.aspectJCompilerData
+    if (aspectJCompilerData.isNotEmpty()) {
+        val localRepository = context.mavenResult.settings.localRepository?.let { Path(it) } ?: return null
+        var dependenciesPath = aspectJCompilerData
+            .firstNotNullOfOrNull { DevAspectjMavenPlugin.getDependencyPath(it.plugin, localRepository) }
+        if (dependenciesPath == null) {
+            dependenciesPath = aspectJCompilerData
+                .firstNotNullOfOrNull {
+                    DevAspectjMavenPlugin.getDependencyPathFromDescriptor(it.plugin, localRepository)
+                }
+        }
+        dependenciesPath ?: return null
+        val arguments = aspectJCompilerData.flatMapTo(mutableSetOf()) { it.compilerData.pluginSpecificArguments }
+        return MainJavaCompilerData.create(ASPECTJ_COMPILER_ID, listOf(dependenciesPath), arguments)
+    }
+    return null
+}
+
+private fun isPriorityCompiler(
+    currentPlugin: MavenPlugin?, plugin: MavenPlugin, context: MavenProjectResolver.ProjectResolverContext
+): Boolean {
+    currentPlugin ?: return true
+    val currentPriority = (context.pluginExtensionMap[MavenUtils.toGAString(currentPlugin)]
+            as? MavenCompilerFullImportPlugin)?.priority() ?: 0
+    val priority = (context.pluginExtensionMap[MavenUtils.toGAString(plugin)]
+            as? MavenCompilerFullImportPlugin)?.priority() ?: 0
+    return priority > currentPriority
+}
 
 class PluginsData(
     val compilerPlugin: MavenPlugin?, val compilerData: CompilerData,

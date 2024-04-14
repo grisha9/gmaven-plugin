@@ -21,6 +21,8 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
 
     override fun getAnnotationProcessorTagName() = "annotationProcessorPaths"
 
+    override fun priority() = 10
+
     override fun getContentRoots(
         mavenProject: MavenProject, plugin: MavenPlugin, context: MavenProjectResolver.ProjectResolverContext
     ): PluginContentRoots {
