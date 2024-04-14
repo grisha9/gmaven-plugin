@@ -57,7 +57,7 @@ class CodehausAspectjMavenPlugin : MavenCompilerFullImportPlugin {
         val aspectjArgs = collectAjcCompilerArgs(configurationElement)
         return CompilerData(
             compilerProp.source, compilerProp.target, compilerProp.source, compilerProp.target,
-            plugin.body.annotationProcessorPaths, emptyList(), aspectjArgs
+            emptyList(), emptyList(), aspectjArgs
         )
     }
 
