@@ -69,7 +69,7 @@ class DevAspectjMavenPlugin : MavenCompilerFullImportPlugin {
         val args = collectAjcCompilerArgs(configurationElement)
         return CompilerData(
             compilerProp.source, compilerProp.target, compilerProp.source, compilerProp.target,
-            plugin.body.annotationProcessorPaths, args.first, args.second
+            emptyList(), args.first, args.second
         )
     }
 
