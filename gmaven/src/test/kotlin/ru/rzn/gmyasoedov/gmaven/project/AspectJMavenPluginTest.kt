@@ -275,4 +275,86 @@ class AspectJMavenPluginTest : MavenImportingTestCase() {
         import(pomXml)
         TestCase.assertEquals(MainJavaCompilerData.ASPECTJ_COMPILER_ID, getMainJavaCompilerData().compilerId)
     }
+
+    fun testMavenCompilerAndAspectjCompilerAnnotationProcessor() {
+        val pomXml = """
+        <groupId>org.example</groupId>
+        <artifactId>project</artifactId>
+        <version>1.0-SNAPSHOT</version> 
+        
+        <build>
+            <plugins>
+                <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
+                <configuration>
+                    <release>17</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.32</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>dev.aspectj</groupId>
+                    <artifactId>aspectj-maven-plugin</artifactId>
+                    <version>1.14</version> 
+                    <configuration> 
+                        <complianceLevel>17</complianceLevel>
+                        <proc>only</proc>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </build>
+        """
+        import(pomXml)
+        TestCase.assertEquals(MainJavaCompilerData.ASPECTJ_COMPILER_ID, getMainJavaCompilerData().compilerId)
+        val compilerData = getCompilerData()
+        TestCase.assertTrue(compilerData.isNotEmpty())
+        TestCase.assertTrue(compilerData[0].path.isNotEmpty())
+    }
+
+    fun testMavenCompilerAndAspectjCompilerAnnotationProcessorReverse() {
+        val pomXml = """
+        <groupId>org.example</groupId>
+        <artifactId>project</artifactId>
+        <version>1.0-SNAPSHOT</version> 
+        
+        <build>
+            <plugins> 
+                <plugin>
+                    <groupId>dev.aspectj</groupId>
+                    <artifactId>aspectj-maven-plugin</artifactId>
+                    <version>1.14</version> 
+                    <configuration> 
+                        <complianceLevel>17</complianceLevel>
+                        <proc>only</proc>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.12.1</version>
+                    <configuration>
+                        <release>17</release>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>1.18.32</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </build>
+        """
+        import(pomXml)
+        TestCase.assertEquals(MainJavaCompilerData.ASPECTJ_COMPILER_ID, getMainJavaCompilerData().compilerId)
+        val compilerData = getCompilerData()
+        TestCase.assertTrue(compilerData.isNotEmpty())
+        TestCase.assertTrue(compilerData[0].path.isNotEmpty())
+    }
 }

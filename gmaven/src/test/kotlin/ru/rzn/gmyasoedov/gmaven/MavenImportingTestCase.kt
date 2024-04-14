@@ -19,6 +19,8 @@ import com.intellij.pom.java.LanguageLevel
 import org.intellij.lang.annotations.Language
 import org.jetbrains.jps.model.java.JavaResourceRootType
 import org.jetbrains.jps.model.java.JavaSourceRootType
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.CompilerPluginData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
@@ -35,8 +37,10 @@ abstract class MavenImportingTestCase : MavenTestCase() {
     protected fun getExternalProjectPath() = mavenProjectSettings!!.externalProjectPath
 
     protected fun getLanguageLevel(): LanguageLevel {
-        return ProjectDataManager.getInstance().getExternalProjectData(project,
-            GMavenConstants.SYSTEM_ID, getExternalProjectPath())
+        return ProjectDataManager.getInstance().getExternalProjectData(
+            project,
+            SYSTEM_ID, getExternalProjectPath()
+        )
             ?.externalProjectStructure
             ?.let { ExternalSystemApiUtil.findAllRecursively(it, JavaModuleData.KEY) }
             ?.map { it.data }
@@ -45,12 +49,21 @@ abstract class MavenImportingTestCase : MavenTestCase() {
     }
 
     protected fun getMainJavaCompilerData(): MainJavaCompilerData {
-        return ProjectDataManager.getInstance().getExternalProjectData(project,
-            GMavenConstants.SYSTEM_ID, getExternalProjectPath())
+        return ProjectDataManager.getInstance().getExternalProjectData(
+            project,
+            SYSTEM_ID, getExternalProjectPath()
+        )
             ?.externalProjectStructure
             ?.let { ExternalSystemApiUtil.findAllRecursively(it, MainJavaCompilerData.KEY) }
             ?.map { it.data }
             ?.first()!!
+    }
+
+    protected fun getCompilerData(): List<CompilerPluginData> {
+        return ProjectDataManager.getInstance().getExternalProjectData(project, SYSTEM_ID, getExternalProjectPath())
+            ?.externalProjectStructure
+            ?.let { ExternalSystemApiUtil.findAllRecursively(it, CompilerPluginData.KEY) }
+            ?.map { it.data } ?: emptyList()
     }
 
     protected fun import(projectFile: VirtualFile) {
@@ -64,7 +77,7 @@ abstract class MavenImportingTestCase : MavenTestCase() {
     protected fun reimport() {
         ExternalSystemUtil.refreshProject(
             mavenProjectSettings!!.externalProjectPath,
-            ImportSpecBuilder(project, GMavenConstants.SYSTEM_ID)
+            ImportSpecBuilder(project, SYSTEM_ID)
                 .use(ProgressExecutionMode.MODAL_SYNC)
         )
     }
