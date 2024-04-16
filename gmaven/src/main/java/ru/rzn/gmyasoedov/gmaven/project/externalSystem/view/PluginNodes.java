@@ -8,7 +8,7 @@ import com.intellij.openapi.externalSystem.view.TasksNode;
 
 import java.util.Collection;
 
-@Order(ExternalSystemNode.BUILTIN_TASKS_DATA_NODE_ORDER)
+@Order(ExternalSystemNode.BUILTIN_TASKS_DATA_NODE_ORDER + 1)
 public class PluginNodes extends TasksNode {
 
     @SuppressWarnings("unchecked")
