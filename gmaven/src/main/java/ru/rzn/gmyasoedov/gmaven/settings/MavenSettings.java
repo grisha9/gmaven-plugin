@@ -23,6 +23,7 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
     private boolean offlineMode = false;
     private boolean skipTests = false;
     private boolean checkSourcesInLocalRepo = false;
+    private boolean showAllPhases = false;
 
     public MavenSettings(@NotNull Project project) {
         super(MavenSettingsListener.TOPIC, project);
@@ -53,6 +54,7 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
         state.setOfflineMode(isOfflineMode());
         state.setSkipTests(isSkipTests());
         state.setCheckSourcesInLocalRepo(isCheckSourcesInLocalRepo());
+        state.setShowAllPhases(showAllPhases);
         return state;
     }
 
@@ -62,6 +64,7 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
         setOfflineMode(state.isOfflineMode());
         setSkipTests(state.skipTests);
         setCheckSourcesInLocalRepo(state.checkSourcesInLocalRepo);
+        setShowAllPhases(state.showAllPhases);
     }
 
     public boolean isOfflineMode() {
@@ -88,6 +91,14 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
         this.checkSourcesInLocalRepo = checkSourcesInLocalRepo;
     }
 
+    public boolean isShowAllPhases() {
+        return showAllPhases;
+    }
+
+    public void setShowAllPhases(boolean showAllPhases) {
+        this.showAllPhases = showAllPhases;
+    }
+
     public boolean getStoreProjectFilesExternally() {
         return ExternalStorageConfigurationManager.getInstance(getProject()).isEnabled();
     }
@@ -105,6 +116,7 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
         private boolean isOfflineMode = false;
         private boolean skipTests = false;
         private boolean checkSourcesInLocalRepo = false;
+        private boolean showAllPhases = false;
 
         @Override
         @XCollection(elementTypes = MavenProjectSettings.class)
@@ -141,6 +153,14 @@ public class MavenSettings extends AbstractExternalSystemSettings<MavenSettings,
 
         public void setCheckSourcesInLocalRepo(boolean checkSourcesInLocalRepo) {
             this.checkSourcesInLocalRepo = checkSourcesInLocalRepo;
+        }
+
+        public boolean isShowAllPhases() {
+            return showAllPhases;
+        }
+
+        public void setShowAllPhases(boolean showAllPhases) {
+            this.showAllPhases = showAllPhases;
         }
     }
 }

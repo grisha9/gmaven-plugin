@@ -35,6 +35,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private boolean nonRecursive = false;
     private boolean useMvndForTasks = false;
     private boolean showPluginNodes = true;
+    private boolean showAllPhase = false;
     @NotNull
     private ProjectSettingsControlBuilder.OutputLevelType outputLevel = DEFAULT;
     @NotNull
@@ -157,6 +158,14 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     public void setShowPluginNodes(boolean showPluginNodes) {
         this.showPluginNodes = showPluginNodes;
+    }
+
+    public boolean isShowAllPhase() {
+        return showAllPhase;
+    }
+
+    public void setShowAllPhase(boolean showAllPhase) {
+        this.showAllPhase = showAllPhase;
     }
 
     public boolean isUseMvndForTasks() {
