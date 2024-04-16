@@ -5,9 +5,11 @@ package ru.rzn.gmyasoedov.gmaven.project
 import com.intellij.externalSystem.MavenRepositoryData
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
+import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.model.project.ProjectData
+import com.intellij.openapi.externalSystem.model.task.TaskData
 import com.intellij.openapi.module.ModuleTypeManager
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
@@ -17,6 +19,7 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin.KotlinMavenPluginD
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData.Companion.ASPECTJ_COMPILER_ID
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.service.OpenGMavenSettingsCallback
+import ru.rzn.gmyasoedov.gmaven.project.task.Phase
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
@@ -111,8 +114,17 @@ fun populateTasks(
     moduleDataNode: DataNode<ModuleData>, mavenProject: MavenProject,
     context: MavenProjectResolver.ProjectResolverContext
 ) {
-    for (basicPhase in context.lifecycles) {
-        moduleDataNode.createChild(LifecycleData.KEY, LifecycleData(SYSTEM_ID, basicPhase, mavenProject.basedir))
+    if (context.settings.isShowAllPhase) {
+        for (p in Phase.values()) {
+            val taskData =
+                TaskData(SYSTEM_ID, p.phaseName, mavenProject.basedir, p.lifecycle.lifecycleName + ":" + p.phaseName)
+            taskData.group = p.lifecycle.lifecycleName
+            moduleDataNode.createChild(ProjectKeys.TASK, taskData)
+        }
+    } else {
+        for (basicPhase in context.lifecycles) {
+            moduleDataNode.createChild(LifecycleData.KEY, LifecycleData(SYSTEM_ID, basicPhase, mavenProject.basedir))
+        }
     }
     if (!context.settings.isShowPluginNodes) {
         MavenArtifactUtil.clearPluginDescriptorCache()
@@ -164,7 +176,7 @@ fun getDefaultModuleTypeId(): String {
 }
 
 private fun applyAnnotationProcessorsPath(
-    compilerData: CompilerData?,  annotationProcessorPaths: List<String>
+    compilerData: CompilerData?, annotationProcessorPaths: List<String>
 ): CompilerData? {
     compilerData ?: return null
     if (annotationProcessorPaths.isEmpty()) return compilerData
