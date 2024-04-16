@@ -10,6 +10,7 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUt
 import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundException
 import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager
 import com.intellij.openapi.util.registry.Registry
+import org.jetbrains.annotations.VisibleForTesting
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
 import ru.rzn.gmyasoedov.gmaven.project.getMavenHome
@@ -98,6 +99,7 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         return prepareTaskOrder(taskNames)
     }
 
+    @VisibleForTesting
     fun prepareTaskOrder(taskNames: List<String>): List<String> {
         if (taskNames.size < 2) return taskNames
         val phaseTasks = TreeMap<Int, String>()
