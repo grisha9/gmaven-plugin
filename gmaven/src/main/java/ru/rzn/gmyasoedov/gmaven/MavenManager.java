@@ -214,6 +214,7 @@ public final class MavenManager
             result.setThreadCount(projectSettings.getThreadCount());
             result.setOutputLevel(projectSettings.getOutputLevel());
             result.setShowPluginNodes(projectSettings.getShowPluginNodes());
+            result.setShowAllPhase(settings.isShowAllPhases());
             result.setUseMvndForTasks(projectSettings.getUseMvndForTasks());
             result.setCheckSources(settings.isCheckSourcesInLocalRepo());
             fillExecutionWorkSpace(project, projectSettings, projectPath, result.getExecutionWorkspace());

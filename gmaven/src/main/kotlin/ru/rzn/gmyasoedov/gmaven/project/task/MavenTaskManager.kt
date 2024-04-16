@@ -20,6 +20,7 @@ import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import java.nio.file.Path
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.Path
 import kotlin.io.path.notExists
@@ -68,7 +69,7 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         } else {
             taskNames
         }
-        return preprocessSettings(tasks, settings)
+        return preprocessSettingsAndOrder(tasks, settings)
     }
 
     override fun cancelTask(id: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
@@ -86,7 +87,7 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         )
     }
 
-    private fun preprocessSettings(taskNames: List<String>, settings: MavenExecutionSettings): List<String> {
+    private fun preprocessSettingsAndOrder(taskNames: List<String>, settings: MavenExecutionSettings): List<String> {
         if (taskNames.size == 3 && taskNames[0] == GMavenConstants.TASK_EFFECTIVE_POM) {
             if (taskNames[taskNames.size - 2] != "-f") return taskNames
             val buildFile = taskNames[taskNames.size - 1]
@@ -94,6 +95,17 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
             settings.executionWorkspace.subProjectBuildFile = buildFile
             return listOf(taskNames[0])
         }
-        return taskNames
+        return prepareTaskOrder(taskNames)
+    }
+
+    fun prepareTaskOrder(taskNames: List<String>): List<String> {
+        if (taskNames.size < 2) return taskNames
+        val phaseTasks = TreeMap<Int, String>()
+        val otherTasks = mutableListOf<String>()
+        for (taskName in taskNames) {
+            val phase = Phase.find(taskName)
+            if (phase != null) phaseTasks[phase.ordinal] = phase.phaseName else otherTasks.add(taskName)
+        }
+        return phaseTasks.values + otherTasks
     }
 }
