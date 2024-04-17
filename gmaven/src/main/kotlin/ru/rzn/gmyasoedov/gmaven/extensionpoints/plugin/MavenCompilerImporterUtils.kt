@@ -1,5 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
+import com.intellij.execution.configurations.JavaParameters
 import com.intellij.openapi.util.text.Strings
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.util.containers.ContainerUtil
@@ -24,6 +25,12 @@ fun collectCompilerArgs(mavenProject: MavenProject, pluginConfiguration: Element
         options += "-parameters"
     } else if (parameters == null && propertyCompilerParameters?.toBoolean() == true) {
         options += "-parameters"
+    }
+
+    val enablePreview = pluginConfiguration?.getChild("enablePreview")?.textTrim
+        ?: mavenProject.properties["maven.compiler.enablePreview"] as? String
+    if (enablePreview?.toBoolean() == true) {
+        options += JavaParameters.JAVA_ENABLE_PREVIEW_PROPERTY
     }
 
     if (pluginConfiguration == null) return options
