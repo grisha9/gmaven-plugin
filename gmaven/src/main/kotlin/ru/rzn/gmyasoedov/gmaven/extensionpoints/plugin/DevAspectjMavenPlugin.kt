@@ -1,5 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
+import com.intellij.execution.configurations.JavaParameters
 import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
 import com.intellij.pom.java.LanguageLevel
 import org.jdom.Element
@@ -81,7 +82,7 @@ class DevAspectjMavenPlugin : MavenCompilerFullImportPlugin {
         configurationElement.getChildTextTrim("parameters")
             ?.let { if (it.equals("true", true)) javacArgs.add("-parameters") }
         configurationElement.getChildTextTrim("enablePreview")
-            ?.let { if (it.equals("true", true)) javacArgs.add("--enable-preview") }
+            ?.let { if (it.equals("true", true)) javacArgs.add(JavaParameters.JAVA_ENABLE_PREVIEW_PROPERTY) }
         val compilerArgs = configurationElement.getChild("additionalCompilerArgs")
         if (compilerArgs != null) {
             if (compilerArgs.children.isEmpty()) {
