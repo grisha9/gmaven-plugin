@@ -2,6 +2,7 @@ package ru.rzn.gmyasoedov.gmaven.project
 
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.compiler.CompilerConfigurationImpl
+import com.intellij.execution.configurations.JavaParameters
 import com.intellij.pom.java.LanguageLevel
 import junit.framework.TestCase
 import ru.rzn.gmyasoedov.gmaven.MavenImportingTestCase
@@ -275,5 +276,182 @@ class MavenCompilerPluginTest : MavenImportingTestCase() {
         val ideCompilerConfiguration = CompilerConfiguration.getInstance(project) as CompilerConfigurationImpl
         assertEquals("Javac", ideCompilerConfiguration.defaultCompiler.id)
         assertEmpty(ideCompilerConfiguration.getAdditionalOptions(getModule("project")))
+    }
+
+    fun testCompilerReleasePriority() {
+        import(
+            """
+            <groupId>org.example</groupId>
+            <artifactId>project</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <properties> 
+                <maven.compiler.release>1.8</maven.compiler.release>
+                <maven.compiler.source>1.6</maven.compiler.source>
+                <maven.compiler.target>1.6</maven.compiler.target>
+                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            </properties>
+        
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.12.0</version>
+                        <configuration>
+                            <release>11</release>
+                            <source>1.5</source>
+                            <target>1.5</target>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        """
+        )
+        assertModules("project")
+        TestCase.assertEquals(LanguageLevel.JDK_11, getLanguageLevel())
+    }
+
+    fun testCompilerReleasePriorityProperty() {
+        import(
+            """
+            <groupId>org.example</groupId>
+            <artifactId>project</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <properties> 
+                <maven.compiler.release>1.8</maven.compiler.release>
+                <maven.compiler.source>1.6</maven.compiler.source>
+                <maven.compiler.target>1.6</maven.compiler.target>
+                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            </properties>
+        
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.12.0</version>
+                        <configuration> 
+                            <source>1.5</source>
+                            <target>1.5</target>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        """
+        )
+        assertModules("project")
+        TestCase.assertEquals(LanguageLevel.JDK_1_8, getLanguageLevel())
+    }
+
+    fun testCompilerSource() {
+        import(
+            """
+            <groupId>org.example</groupId>
+            <artifactId>project</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <properties>  
+                <maven.compiler.source>11</maven.compiler.source>
+                <maven.compiler.target>11</maven.compiler.target>
+                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            </properties>
+        
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.12.0</version>
+                        <configuration> 
+                            <source>12</source>
+                            <target>12</target>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        """
+        )
+        assertModules("project")
+        TestCase.assertEquals(LanguageLevel.JDK_12, getLanguageLevel())
+    }
+
+    fun testEnablePreviewOption() {
+        import(
+            """
+            <groupId>org.example</groupId>
+            <artifactId>project</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <properties>  
+                <maven.compiler.release>17</maven.compiler.release>
+                <maven.compiler.enablePreview>false</maven.compiler.enablePreview>
+                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            </properties>
+        
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId> 
+                        <configuration> 
+                            <enablePreview>true</enablePreview> 
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        """
+        )
+        assertModules("project")
+        val compilerData = getCompilerData()
+        TestCase.assertTrue(compilerData.isNotEmpty())
+        TestCase.assertEquals(listOf(JavaParameters.JAVA_ENABLE_PREVIEW_PROPERTY), compilerData[0].arguments)
+    }
+
+    fun testEnablePreviewOptionFalse() {
+        import(
+            """
+            <groupId>org.example</groupId>
+            <artifactId>project</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <properties>  
+                <maven.compiler.release>17</maven.compiler.release>
+                <maven.compiler.enablePreview>true</maven.compiler.enablePreview>
+                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            </properties>
+        
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId> 
+                        <configuration> 
+                            <enablePreview>false</enablePreview> 
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        """
+        )
+        assertModules("project")
+        val compilerData = getCompilerData()
+        TestCase.assertTrue(compilerData.isNotEmpty())
+        TestCase.assertTrue(compilerData[0].arguments.isEmpty())
+    }
+
+    fun testEnablePreviewOptionTrueProperty() {
+        import(
+            """
+            <groupId>org.example</groupId>
+            <artifactId>project</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <properties>  
+                <maven.compiler.release>17</maven.compiler.release>
+                <maven.compiler.enablePreview>true</maven.compiler.enablePreview>
+                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            </properties>
+        """
+        )
+        assertModules("project")
+        val compilerData = getCompilerData()
+        TestCase.assertTrue(compilerData.isNotEmpty())
+        TestCase.assertEquals(listOf(JavaParameters.JAVA_ENABLE_PREVIEW_PROPERTY), compilerData[0].arguments)
     }
 }
