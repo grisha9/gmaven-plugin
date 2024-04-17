@@ -1,6 +1,5 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
-import com.intellij.openapi.util.text.StringUtil
 import com.intellij.pom.java.LanguageLevel
 import com.jetbrains.rd.util.getOrCreate
 import org.jdom.Element
@@ -67,17 +66,11 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         localRepositoryPath: Path,
         contextElementMap: MutableMap<String, Element>
     ): CompilerData {
-        val isReleaseEnabled = StringUtil.compareVersionNumbers(plugin.version, "3.6") >= 0
-        var source: LanguageLevel? = null
-        var target: LanguageLevel? = null
-        var testSource: LanguageLevel? = null
-        var testTarget: LanguageLevel? = null
-        if (isReleaseEnabled) {
-            source = compilerProp.release
-            target = compilerProp.release
-            testSource = compilerProp.testRelease
-            testTarget = compilerProp.testRelease
-        }
+        var source: LanguageLevel? = compilerProp.release
+        var target: LanguageLevel? = compilerProp.release
+        var testSource: LanguageLevel? = compilerProp.testRelease
+        var testTarget: LanguageLevel? = compilerProp.testRelease
+
         if (source == null) {
             source = compilerProp.source
         }
