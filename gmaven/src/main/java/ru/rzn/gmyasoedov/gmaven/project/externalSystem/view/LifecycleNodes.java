@@ -60,4 +60,7 @@ public class LifecycleNodes extends ExternalSystemNode<Object> {
   protected List<? extends ExternalSystemNode<?>> doBuildChildren() {
     return tasks;
   }
+
+  @Override
+  protected void sort(List<? extends ExternalSystemNode<?>> list) {  }
 }

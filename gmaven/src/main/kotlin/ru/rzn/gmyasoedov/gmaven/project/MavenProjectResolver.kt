@@ -14,7 +14,6 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUt
 import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
 import com.intellij.openapi.projectRoots.Sdk
-import com.intellij.openapi.util.registry.Registry
 import com.intellij.pom.java.LanguageLevel
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
@@ -167,11 +166,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val libraryDataMap: MutableMap<String, DataNode<LibraryData>> = TreeMap(),
         val pluginExtensionMap: Map<String, MavenFullImportPlugin> = MavenFullImportPlugin.EP_NAME.extensions
             .associateBy { it.key }
-    ) {
-        val lifecycles = Registry.stringValue("gmaven.lifecycles").split(",")
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-    }
+    )
 
     class ModuleContextHolder(
         val moduleNode: DataNode<ModuleData>,

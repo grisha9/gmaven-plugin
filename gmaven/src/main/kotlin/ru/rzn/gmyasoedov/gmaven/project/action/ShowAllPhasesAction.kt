@@ -3,11 +3,10 @@ package ru.rzn.gmyasoedov.gmaven.project.action
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.externalSystem.action.ExternalSystemNodeAction
-import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder
 import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.externalSystem.model.project.ProjectData
-import com.intellij.openapi.externalSystem.util.ExternalSystemUtil.refreshProject
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
@@ -47,6 +46,6 @@ class ShowAllPhasesAction :
         project: Project, projectSystemId: ProjectSystemId, projectData: ProjectData, e: AnActionEvent
     ) {
         MavenSettings.getInstance(project).isShowAllPhases = !MavenSettings.getInstance(project).isShowAllPhases
-        refreshProject(projectData.linkedExternalProjectPath, ImportSpecBuilder(project, projectSystemId))
+        ExternalSystemUtil.scheduleExternalViewStructureUpdate(project, projectSystemId)
     }
 }

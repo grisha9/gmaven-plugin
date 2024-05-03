@@ -7,17 +7,18 @@ import com.intellij.openapi.externalSystem.model.task.TaskData
 import com.intellij.openapi.externalSystem.view.ExternalProjectsView
 import com.intellij.openapi.externalSystem.view.ExternalSystemNode
 import com.intellij.openapi.externalSystem.view.ExternalSystemViewContributor
+import com.intellij.openapi.util.registry.Registry
 import com.intellij.util.SmartList
 import com.intellij.util.containers.MultiMap
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.DependencyAnalyzerData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.LifecycleData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginData
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.DependencyAnalyzerNode
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.LifecycleNodes
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.PluginNodes
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.ProfileNodes
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.view.*
+import ru.rzn.gmyasoedov.gmaven.project.task.Phase
+import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 
 class MavenExternalViewContributor : ExternalSystemViewContributor() {
     override fun getSystemId() = GMavenConstants.SYSTEM_ID
@@ -32,30 +33,59 @@ class MavenExternalViewContributor : ExternalSystemViewContributor() {
     ): List<ExternalSystemNode<*>> {
         val result: MutableList<ExternalSystemNode<*>> = SmartList()
 
-        // add profiles
-        val profilesNodes = dataNodes[ProfileData.KEY]
-        if (!profilesNodes.isEmpty()) {
-            result.add(ProfileNodes(externalProjectsView, profilesNodes))
-        }
-
         // add base lifecycle tasks
         val tasksNodes = dataNodes[LifecycleData.KEY]
-        if (!tasksNodes.isEmpty()) {
-            result.add(LifecycleNodes(externalProjectsView, tasksNodes))
+        if (tasksNodes.isNotEmpty()) {
+            createTasks(tasksNodes, result, externalProjectsView)
+        }
+
+        // add profiles
+        val profilesNodes = dataNodes[ProfileData.KEY]
+        if (profilesNodes.isNotEmpty()) {
+            result.add(ProfileNodes(externalProjectsView, profilesNodes))
         }
 
         // add plugin tasks
         val pluginsNode = dataNodes[PluginData.KEY]
-        if (!pluginsNode.isEmpty()) {
+        if (pluginsNode.isNotEmpty()) {
             result.add(PluginNodes(externalProjectsView, replacePluginDataOnTaskData(pluginsNode)))
         }
 
         // add DA node
         val dependencyAnalyzerNodes = dataNodes[DependencyAnalyzerData.KEY]
-        if (!dependencyAnalyzerNodes.isEmpty()) {
+        if (dependencyAnalyzerNodes.isNotEmpty()) {
             result.add(DependencyAnalyzerNode(externalProjectsView))
         }
         return result
+    }
+
+    private fun createTasks(
+        tasksNodes: Collection<DataNode<*>?>, result: MutableList<ExternalSystemNode<*>>, view: ExternalProjectsView
+    ) {
+        val baseLifecycleData = tasksNodes.first()!!.data as LifecycleData
+
+        val showAllPhases = MavenSettings.getInstance(view.project).isShowAllPhases
+        if (!showAllPhases) {
+            val lifecyclesDataNode = Registry.stringValue("gmaven.lifecycles").split(",").asSequence()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .map { LifecycleData(SYSTEM_ID, it, baseLifecycleData.linkedExternalProjectPath) }
+                .map { DataNode(LifecycleData.KEY, it, tasksNodes.first()!!.parent) }
+                .toList()
+            if (lifecyclesDataNode.isNotEmpty()) {
+                result.add(LifecycleNodes(view, lifecyclesDataNode))
+            }
+            return
+        }
+
+        val arrayList = ArrayList<DataNode<TaskData>>()
+        for (p in Phase.values()) {
+            val description = p.lifecycle.lifecycleName + ":" + p.phaseName
+            val phaseData = TaskData(SYSTEM_ID, p.phaseName, baseLifecycleData.linkedExternalProjectPath, description)
+            phaseData.group = p.lifecycle.lifecycleName
+            arrayList += DataNode(ProjectKeys.TASK, phaseData, tasksNodes.first()!!.parent)
+        }
+        result.add(MavenTasksNode(view, arrayList))
     }
 
     private fun replacePluginDataOnTaskData(pluginsNode: Collection<DataNode<*>?>): List<DataNode<*>?> {
