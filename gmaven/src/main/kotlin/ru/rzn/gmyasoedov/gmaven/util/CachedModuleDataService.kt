@@ -13,6 +13,7 @@ import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
+import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
@@ -57,8 +58,9 @@ object CachedModuleDataService {
     fun getCurrentData(): CachedDataHolder = lastResult.get()
 
     private fun getCacheDataHolder(project: Project): CachedDataHolder {
-        val cachedModuleDataList = ProjectDataManager.getInstance().getExternalProjectsData(project, SYSTEM_ID)
-            .asSequence()
+        val cachedModuleDataList = MavenSettings.getInstance(project).linkedProjectsSettings.asSequence()
+            .mapNotNull { it.externalProjectPath }
+            .mapNotNull { ProjectDataManager.getInstance().getExternalProjectData(project, SYSTEM_ID, it) }
             .mapNotNull { it.externalProjectStructure }
             .flatMap { ExternalSystemApiUtil.findAll(it, ProjectKeys.MODULE) }
             .mapNotNull { mapToCachedModuleData(it) }

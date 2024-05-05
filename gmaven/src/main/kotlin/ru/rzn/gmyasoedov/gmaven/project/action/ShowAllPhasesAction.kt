@@ -7,14 +7,12 @@ import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
-import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 
-class ShowAllPhasesAction :
-    ExternalSystemNodeAction<ProjectData>(ProjectData::class.java), DumbAware {
+class ShowAllPhasesAction : ExternalSystemNodeAction<ProjectData>(ProjectData::class.java) {
 
     init {
         getTemplatePresentation().text = GBundle.message("gmaven.action.show.all.phases")

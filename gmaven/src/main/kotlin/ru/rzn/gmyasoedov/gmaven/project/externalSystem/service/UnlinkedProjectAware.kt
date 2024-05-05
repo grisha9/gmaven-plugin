@@ -3,11 +3,14 @@ package ru.rzn.gmyasoedov.gmaven.project.externalSystem.service
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.externalSystem.autolink.ExternalSystemProjectLinkListener
 import com.intellij.openapi.externalSystem.autolink.ExternalSystemUnlinkedProjectAware
+import com.intellij.openapi.externalSystem.settings.ExternalSystemSettingsListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.projectImport.ProjectOpenProcessor
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
+import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
+import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.gmaven.wizard.GProjectOpenProcessor
 import java.nio.file.Path
@@ -24,11 +27,22 @@ class UnlinkedProjectAware : ExternalSystemUnlinkedProjectAware {
     }
 
     override fun subscribe(
-        project: Project,
-        listener: ExternalSystemProjectLinkListener,
-        parentDisposable: Disposable
+        project: Project, listener: ExternalSystemProjectLinkListener, parentDisposable: Disposable
     ) {
+        val mavenSettings = MavenSettings.getInstance(project)
+        mavenSettings.subscribe(object : ExternalSystemSettingsListener<MavenProjectSettings> {
+            override fun onProjectsLinked(settings: Collection<MavenProjectSettings>) {
+                CachedModuleDataService.invalidate()
+                CachedModuleDataService.getDataHolder(project)
+                settings.forEach { listener.onProjectLinked(it.externalProjectPath) }
+            }
 
+            override fun onProjectsUnlinked(linkedProjectPaths: Set<String>) {
+                CachedModuleDataService.invalidate()
+                CachedModuleDataService.getDataHolder(project)
+                linkedProjectPaths.forEach { listener.onProjectUnlinked(it) }
+            }
+        }, parentDisposable)
     }
 
     override fun linkAndLoadProject(project: Project, externalProjectPath: String) {
