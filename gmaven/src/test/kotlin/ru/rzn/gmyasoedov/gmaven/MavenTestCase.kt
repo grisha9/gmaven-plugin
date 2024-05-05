@@ -91,9 +91,7 @@ abstract class MavenTestCase : UsefulTestCase() {
         myDir = File(ourTempDir, getTestName(false))
         FileUtil.ensureExists(myDir!!)
 
-        val home = testMavenHome
-
-        EdtTestUtil.runInEdtAndWait<IOException> {
+        runInEdtAndWait {
             try {
                 WriteAction.run<Exception> { this.setUpInWriteAction() }
             } catch (e: Throwable) {
@@ -136,7 +134,7 @@ abstract class MavenTestCase : UsefulTestCase() {
 
     private fun doTearDownFixtures() {
         if (ApplicationManager.getApplication().isDispatchThread) {
-            EdtTestUtil.runInEdtAndWait<Exception> { tearDownFixtures() }
+            runInEdtAndWait { tearDownFixtures() }
         } else {
             runBlockingMaybeCancellable {
                 withContext(Dispatchers.EDT) {

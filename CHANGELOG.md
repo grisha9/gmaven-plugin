@@ -2,10 +2,12 @@
 
 ## [Unreleased]
 
-## [233.26.2] - 2024-04-26
+## [233.27] - 2024-04-26
 ### Added
 - Added "Show all phases" toggle ([issue](https://github.com/grisha9/gmaven-plugin/issues/6))
 - Support Maven Compiler Plugin enablePreview parameter ([issue](https://youtrack.jetbrains.com/issue/IDEA-340737/))
+### Fixed
+- Link/Unlink Maven projects
 
 ## [233.26] - 2024-04-14
 ### Added
