@@ -198,6 +198,7 @@
         <action id="GMaven.Toolbar.SkipTests" class="ru.rzn.gmyasoedov.gmaven.project.action.SkipTestsAction"/>
         <action id="GMaven.Toolbar.Offline" class="ru.rzn.gmyasoedov.gmaven.project.action.OfflineModeAction"/>
         <action id="GMaven.Toolbar.Snapshot" class="ru.rzn.gmyasoedov.gmaven.project.action.UpdateSnapshotAction"/>
+        <action id="GMaven.Toolbar.RunTasksAction" class="ru.rzn.gmyasoedov.gmaven.project.action.RunTasksAction"/>
         <action id="GMaven.ExternalSystem.RefreshProjectWithPlugins" icon="AllIcons.Actions.Refresh"
                 class="ru.rzn.gmyasoedov.gmaven.project.action.ReloadProjectWithPluginsAction">
             <add-to-group group-id="ExternalSystemView.BaseProjectMenu" anchor="after" relative-to-action="ExternalSystem.RefreshProject"/>
@@ -218,6 +219,7 @@
 
         <group id="GMaven.View.ActionsToolbar.CenterPanel">
             <separator/>
+            <reference id="GMaven.Toolbar.RunTasksAction"/>
             <reference id="GMaven.ToolbarDependencyAnalyzer"/>
             <reference id="GMaven.Toolbar.Offline"/>
             <reference id="GMaven.Toolbar.SkipTests"/>
