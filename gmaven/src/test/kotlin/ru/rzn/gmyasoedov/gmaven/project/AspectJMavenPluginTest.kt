@@ -5,6 +5,7 @@ import com.intellij.compiler.CompilerConfigurationImpl
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.pom.java.LanguageLevel
 import junit.framework.TestCase
+import org.jetbrains.jps.model.java.JavaSourceRootType
 import ru.rzn.gmyasoedov.gmaven.MavenImportingTestCase
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
@@ -74,6 +75,10 @@ class AspectJMavenPluginTest : MavenImportingTestCase() {
 
     fun testLanguageLevelFromSource() {
         val aspectJVersion = "1.14"
+        createProjectSubDirs(
+            "src/main/aspect",
+            "src/test/aspect",
+        )
         import(
             """
             <groupId>org.example</groupId>
@@ -108,6 +113,15 @@ class AspectJMavenPluginTest : MavenImportingTestCase() {
         assertModules("project")
         val level = getLanguageLevel()
         TestCase.assertEquals(LanguageLevel.JDK_1_8, level)
+
+        assertContentRootsSources(
+            "project", JavaSourceRootType.SOURCE,
+            "src/main/aspect",
+        )
+        assertContentRootsSources(
+            "project", JavaSourceRootType.TEST_SOURCE,
+            "src/test/aspect",
+        )
     }
 
     fun testLanguageLevelFromReleasePriority() {
