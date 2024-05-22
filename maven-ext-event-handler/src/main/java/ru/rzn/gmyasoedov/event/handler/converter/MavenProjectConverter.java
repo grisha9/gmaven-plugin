@@ -7,6 +7,7 @@ import org.eclipse.aether.graph.DependencyNode;
 import ru.rzn.gmyasoedov.serverapi.model.*;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class MavenProjectConverter {
@@ -63,13 +64,40 @@ public class MavenProjectConverter {
                 .outputDirectory(mavenProject.getBuild().getOutputDirectory())
                 .testOutputDirectory(mavenProject.getBuild().getTestOutputDirectory())
                 .resolvedArtifacts(artifacts)
-               // .dependencyArtifacts(convertMavenArtifact(mavenProject.getDependencyArtifacts()))
                 .parentArtifact(mavenProject.getParent() != null
                         ? MavenArtifactConverter.convert(mavenProject.getParent()) : null)
                 .properties(getProperties(mavenProject))
                 .remoteRepositories(Collections.<MavenRemoteRepository>emptyList())
                 //.remoteRepositories(RemoteRepositoryConverter.convert(mavenProject.getRemoteArtifactRepositories()))
+
+                .excludedPaths(getExcludedPath(mavenProject))
+                .generatedPath(getGeneratedPath(mavenProject))
+                .testGeneratedPath(getGeneratedTestPath(mavenProject))
                 .build();
+    }
+
+    private static List<String> getExcludedPath(org.apache.maven.project.MavenProject project) {
+        Object contextValue = project.getContextValue("GMaven:excludedPaths");
+        if (contextValue instanceof List) {
+            return (List<String>) contextValue;
+        }
+        return Collections.emptyList();
+    }
+
+    private static String getGeneratedPath(org.apache.maven.project.MavenProject project) {
+        Object contextValue = project.getContextValue("GMaven:generatedPath");
+        if (contextValue instanceof String && !((String) contextValue).isEmpty()) {
+            return (String) contextValue;
+        }
+        return Paths.get(project.getBuild().getDirectory(), "generated-sources", "annotations").toString();
+    }
+
+    private static String getGeneratedTestPath(org.apache.maven.project.MavenProject project) {
+        Object contextValue = project.getContextValue("GMaven:generatedTestPath");
+        if (contextValue instanceof String && !((String) contextValue).isEmpty()) {
+            return (String) contextValue;
+        }
+        return Paths.get(project.getBuild().getDirectory(), "generated-test-sources", "test-annotations").toString();
     }
 
     private static Map<Object, Object> getProperties(org.apache.maven.project.MavenProject mavenProject) {

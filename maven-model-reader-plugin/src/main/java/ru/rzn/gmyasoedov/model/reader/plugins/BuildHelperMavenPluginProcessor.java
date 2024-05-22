@@ -5,11 +5,24 @@ import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.model.Resource;
 import org.apache.maven.project.MavenProject;
-import ru.rzn.gmyasoedov.model.reader.GUtils;
+import ru.rzn.gmyasoedov.model.reader.utils.GUtils;
+import ru.rzn.gmyasoedov.model.reader.utils.PluginUtils;
 
 import java.util.List;
 
-public class BuildHelperMavenPluginProcessor {
+public class BuildHelperMavenPluginProcessor implements PluginProcessor {
+
+    @Override
+    public String groupId() {
+        return "org.codehaus.mojo";
+    }
+
+    @Override
+    public String artifactId() {
+        return "build-helper-maven-plugin";
+    }
+
+    @Override
     public void process(MavenProject project, Plugin plugin) {
         List<PluginExecution> executions = plugin.getExecutions();
         for (PluginExecution execution : executions) {

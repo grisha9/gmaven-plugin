@@ -13,6 +13,8 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.repository.RepositorySystem;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import ru.rzn.gmyasoedov.model.reader.plugins.PluginProcessorManager;
+import ru.rzn.gmyasoedov.model.reader.utils.GUtils;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -78,6 +80,7 @@ public class ResolveProjectMojo extends AbstractMojo {
             throws MojoExecutionException {
         String pluginKey = each.getGroupId() + ":" + each.getArtifactId();
         if (!gPlugins.contains(pluginKey)) return;
+        PluginProcessorManager.process(project, each);
         Map<String, Object> pluginBody = convertPluginBody(project, each);
         if (!pluginBody.isEmpty()) {
             String key = "gPlugin" + pluginKey;

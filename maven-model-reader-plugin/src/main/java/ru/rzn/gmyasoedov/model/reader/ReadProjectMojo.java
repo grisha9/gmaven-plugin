@@ -12,6 +12,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import ru.rzn.gmyasoedov.model.reader.plugins.PluginProcessorManager;
 
 import java.util.*;
 
@@ -51,10 +52,10 @@ public class ReadProjectMojo extends AbstractMojo {
         }
     }
 
-    private void processPlugin(Plugin each, Set<String> gPlugins, MavenProject project)
-            throws MojoExecutionException {
+    private void processPlugin(Plugin each, Set<String> gPlugins, MavenProject project) {
         String pluginKey = each.getGroupId() + ":" + each.getArtifactId();
         if (!gPlugins.contains(pluginKey)) return;
+        PluginProcessorManager.process(project, each);
         Map<String, Object> pluginBody = convertPluginBody(each);
         if (!pluginBody.isEmpty()) {
             String key = "gPlugin" + pluginKey;

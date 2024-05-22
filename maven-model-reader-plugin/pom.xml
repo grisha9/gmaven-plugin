@@ -6,7 +6,7 @@
 
     <groupId>ru.rzn.gmyasoedov</groupId>
     <artifactId>model-reader</artifactId>
-    <version>1.2.2</version>
+    <version>1.2.3</version>
     <packaging>maven-plugin</packaging>
 
 

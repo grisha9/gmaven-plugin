@@ -1,4 +1,4 @@
-package ru.rzn.gmyasoedov.model.reader;
+package ru.rzn.gmyasoedov.model.reader.utils;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
@@ -13,6 +13,7 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.repository.RepositorySystem;
+import ru.rzn.gmyasoedov.model.reader.DependencyCoordinate;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -110,6 +111,20 @@ public abstract class GUtils {
                 return mavenPath;
             } else {
                 return Paths.get(mavenProject.getBasedir().getAbsolutePath(), mavenPath).toAbsolutePath().toString();
+            }
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String getAbsolutePath(String mavenPath, String baseAbsolutePath) {
+        if (mavenPath == null) return null;
+        try {
+            Path path = Paths.get(mavenPath);
+            if (path.isAbsolute()) {
+                return mavenPath;
+            } else {
+                return Paths.get(baseAbsolutePath, mavenPath).toAbsolutePath().toString();
             }
         } catch (Exception e) {
             return null;

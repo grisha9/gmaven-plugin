@@ -4,10 +4,23 @@ package ru.rzn.gmyasoedov.model.reader.plugins;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.project.MavenProject;
+import ru.rzn.gmyasoedov.model.reader.utils.PluginUtils;
 
 import java.util.List;
 
-public class KotlinMavenPluginProcessor {
+public class KotlinMavenPluginProcessor implements PluginProcessor {
+
+    @Override
+    public String groupId() {
+        return "org.jetbrains.kotlin";
+    }
+
+    @Override
+    public String artifactId() {
+        return "kotlin-maven-plugin";
+    }
+
+    @Override
     public void process(MavenProject project, Plugin plugin) {
         List<PluginExecution> executions = plugin.getExecutions();
         for (PluginExecution execution : executions) {
