@@ -3,7 +3,6 @@ package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 import com.intellij.pom.java.LanguageLevel
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin.Companion.getElement
-import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
@@ -20,12 +19,6 @@ class CodehausAspectjMavenPlugin : MavenCompilerFullImportPlugin {
     override fun resolvePlugin() = true
 
     override fun priority() = 30
-
-    override fun getContentRoots(
-        mavenProject: MavenProject,
-        plugin: MavenPlugin,
-        context: MavenProjectResolver.ProjectResolverContext
-    ) = DevAspectjMavenPlugin.getAspectJContentRoots(mavenProject, plugin, context)
 
     override fun getCompilerData(
         project: MavenProject,

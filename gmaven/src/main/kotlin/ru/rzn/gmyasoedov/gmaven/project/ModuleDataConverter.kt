@@ -55,15 +55,13 @@ fun createModuleData(
     val moduleDataNode = projectDataNode.createChild(ProjectKeys.MODULE, moduleData)
 
     val pluginsData = getPluginsData(project, context)
-    val pluginContentRoots = pluginsData.contentRoots
     val rootPaths = listOf(
         getContentRootPath(project.sourceRoots, ExternalSystemSourceType.SOURCE),
         getContentRootPath(project.resourceRoots, ExternalSystemSourceType.RESOURCE),
         getContentRootPath(project.testSourceRoots, ExternalSystemSourceType.TEST),
         getContentRootPath(project.testResourceRoots, ExternalSystemSourceType.TEST_RESOURCE),
-        pluginContentRoots.contentRoots
     ).flatten()
-    val generatedPaths = getGeneratedSources(project, pluginContentRoots.excludedRoots)
+    val generatedPaths = getGeneratedSources(project, pluginsData.excludedPaths.toSet())
     val contentRoot = ContentRoots(rootPaths, generatedPaths, project.buildDirectory)
 
     val compilerData = pluginsData.compilerData

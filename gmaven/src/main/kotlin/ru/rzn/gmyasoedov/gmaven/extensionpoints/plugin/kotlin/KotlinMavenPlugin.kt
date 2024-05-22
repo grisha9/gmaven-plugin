@@ -1,43 +1,19 @@
 package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.kotlin
 
-import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
 import com.intellij.pom.java.LanguageLevel
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
-import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin.getAbsoluteContentPath
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin.parseConfiguration
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MavenContentRoot
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginContentRoots
 import ru.rzn.gmyasoedov.gmaven.util.toFeatureString
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject
-import ru.rzn.gmyasoedov.serverapi.model.PluginExecution
 
 class KotlinMavenPlugin : MavenFullImportPlugin {
     override fun getGroupId() = "org.jetbrains.kotlin"
 
     override fun getArtifactId() = "kotlin-maven-plugin"
-
-    override fun getContentRoots(
-        mavenProject: MavenProject, plugin: MavenPlugin, context: MavenProjectResolver.ProjectResolverContext
-    ): PluginContentRoots {
-        val executions = plugin.body?.executions ?: emptyList()
-        val result = ArrayList<MavenContentRoot>()
-        for (execution in executions) {
-            when {
-                execution.goals.contains("compile") ->
-                    getPathList(mavenProject, execution, context)
-                        .forEach { result.add(MavenContentRoot(ExternalSystemSourceType.SOURCE, it)) }
-
-                execution.goals.contains("test-compile") ->
-                    getPathList(mavenProject, execution, context)
-                        .forEach { result.add(MavenContentRoot(ExternalSystemSourceType.TEST, it)) }
-            }
-        }
-        return PluginContentRoots(result, emptySet())
-    }
 
     fun getCompilerData(
         project: MavenProject,
@@ -68,20 +44,6 @@ class KotlinMavenPlugin : MavenFullImportPlugin {
             jvmTarget, jdkHome, kotlinVersion, languageVersion, apiVersion,
             noWarn, arguments, compilerPlugins, pluginOptions
         )
-    }
-
-    private fun getPathList(
-        mavenProject: MavenProject, execution: PluginExecution, context: MavenProjectResolver.ProjectResolverContext
-    ): List<String> {
-        val element = parseConfiguration(execution.configuration, context)
-        val paths = ArrayList<String>()
-        for (sourceDirElement in element.getChild("sourceDirs")?.children ?: emptyList()) {
-            val sourcePath = sourceDirElement.textTrim
-            if (!sourcePath.isNullOrEmpty()) {
-                getAbsoluteContentPath(sourcePath, mavenProject)?.let { paths.add(it) }
-            }
-        }
-        return paths
     }
 
     private fun getArguments(executions: List<Element>, configurationElement: Element): List<String> {

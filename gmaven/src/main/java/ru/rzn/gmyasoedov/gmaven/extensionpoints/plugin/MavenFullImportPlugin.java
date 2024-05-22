@@ -5,14 +5,11 @@ import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver;
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginContentRoots;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil;
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
 import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 
 public interface MavenFullImportPlugin {
     ExtensionPointName<MavenFullImportPlugin> EP_NAME =
@@ -26,17 +23,6 @@ public interface MavenFullImportPlugin {
 
     default String getKey() {
         return getGroupId() + ":" + getArtifactId();
-    }
-
-    default boolean isApplicable(@NotNull MavenPlugin plugin) {
-        return getArtifactId().equals(plugin.getArtifactId()) && getGroupId().equals(plugin.getGroupId());
-    }
-
-    @NotNull
-    default PluginContentRoots getContentRoots(@NotNull MavenProject mavenProject,
-                                               @NotNull MavenPlugin plugin,
-                                               @NotNull MavenProjectResolver.ProjectResolverContext context) {
-        return new PluginContentRoots(Collections.emptyList(), Collections.emptySet());
     }
 
     @NotNull

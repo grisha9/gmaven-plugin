@@ -3,13 +3,10 @@ package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 import com.intellij.pom.java.LanguageLevel
 import com.jetbrains.rd.util.getOrCreate
 import org.jdom.Element
-import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginContentRoots
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
-import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.serverapi.model.*
 import java.nio.file.Path
 
@@ -21,18 +18,6 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
     override fun getAnnotationProcessorTagName() = "annotationProcessorPaths"
 
     override fun priority() = 10
-
-    override fun getContentRoots(
-        mavenProject: MavenProject, plugin: MavenPlugin, context: MavenProjectResolver.ProjectResolverContext
-    ): PluginContentRoots {
-        val groovyDependency = plugin.body.dependencies
-            ?.firstOrNull { it.groupId == "org.codehaus.groovy" && it.artifactId == "groovy-eclipse-compiler" }
-
-        if (groovyDependency == null || !MavenUtils.groovyPluginEnabled()) {
-            return super.getContentRoots(mavenProject, plugin, context)
-        }
-        return GroovyAbstractMavenPlugin.getContentRoots(mavenProject, plugin, context)
-    }
 
     override fun getCompilerData(
         project: MavenProject,

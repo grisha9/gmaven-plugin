@@ -40,8 +40,6 @@ fun getMavenHome(distributionSettings: DistributionSettings): Path {
 }
 
 fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.ProjectResolverContext): PluginsData {
-    val contentRoots = ArrayList<MavenContentRoot>()
-    val excludedRoots = HashSet<String>(4)
     val annotationProcessorPaths = ArrayList<String>(1)
 
     var compilerPlugin: MavenPlugin? = null
@@ -51,9 +49,6 @@ fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.Pro
     val localRepoPath: String? = context.mavenResult.settings.localRepository
     for (plugin in mavenProject.plugins) {
         val pluginExtension = context.pluginExtensionMap[MavenUtils.toGAString(plugin)] ?: continue
-        val pluginContentRoot = pluginExtension.getContentRoots(mavenProject, plugin, context)
-        contentRoots += pluginContentRoot.contentRoots
-        excludedRoots += pluginContentRoot.excludedRoots
         if (pluginExtension is MavenCompilerFullImportPlugin) {
             val compilerDataPlugin = getCompilerData(localRepoPath, pluginExtension, mavenProject, plugin, context)
             annotationProcessorPaths += compilerDataPlugin?.annotationProcessorPaths ?: emptyList()
@@ -71,7 +66,7 @@ fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.Pro
         compilerPlugin,
         compilerData ?: ApacheMavenCompilerPlugin.getDefaultCompilerData(mavenProject, context.projectLanguageLevel),
         kotlinPluginData,
-        PluginContentRoots(contentRoots, excludedRoots)
+        mavenProject.excludedPaths
     )
 }
 
@@ -218,5 +213,5 @@ private fun isPriorityCompiler(
 
 class PluginsData(
     val compilerPlugin: MavenPlugin?, val compilerData: CompilerData,
-    val kotlinPluginData: KotlinMavenPluginData?, val contentRoots: PluginContentRoots
+    val kotlinPluginData: KotlinMavenPluginData?, val excludedPaths: List<String>
 )

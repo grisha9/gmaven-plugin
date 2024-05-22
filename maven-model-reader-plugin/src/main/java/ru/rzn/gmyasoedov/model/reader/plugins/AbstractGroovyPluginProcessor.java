@@ -18,26 +18,9 @@ import static ru.rzn.gmyasoedov.model.reader.utils.MavenContextUtils.EXCLUDED_PA
 
 public abstract class AbstractGroovyPluginProcessor {
 
-//    <configuration>
-//  <sources>
-//    <source>
-//    <directory>${project.basedir}/src/main/java</directory>
-//      <includes>
-//        <include>**/*.groovy</include>
-//      </includes>
-//    </source>
-//  </sources>
-//  <testSources>
-//    <testSource>
-//    <directory>${project.basedir}/src/test/java</directory>
-//      <includes>
-//        <include>**/*.groovy</include>
-//      </includes>
-//    </testSource>
-//  </testSources>
-//<configuration>
-
     public static void process(MavenProject project, Plugin plugin) {
+        Object mainConfiguration = null;
+        Object testConfiguration = null;
         Object stubConfiguration = null;
         Object testStubConfiguration = null;
         List<PluginExecution> executions = plugin.getExecutions();
@@ -45,17 +28,11 @@ public abstract class AbstractGroovyPluginProcessor {
             List<String> goals = execution.getGoals();
             if (goals == null) continue;
             if (goals.contains("compile")) {
-                List<String> paths = getPathList(execution.getConfiguration(), project, false);
-                for (String path : paths) {
-                    project.addCompileSourceRoot(path);
-                }
+                mainConfiguration = execution.getConfiguration();
             }
 
             if (goals.contains("testCompile") || goals.contains("compileTests")) {
-                List<String> paths = getPathList(execution.getConfiguration(), project, true);
-                for (String path : paths) {
-                    project.addCompileSourceRoot(path);
-                }
+                testConfiguration = execution.getConfiguration();
             }
 
             if (goals.contains("generateStubs")) {
@@ -64,9 +41,11 @@ public abstract class AbstractGroovyPluginProcessor {
             if (goals.contains("generateTestStubs")) {
                 testStubConfiguration = execution.getConfiguration();
             }
-            MavenContextUtils.addListStringValue(project, EXCLUDED_PATHS, getExcludedPath(project, stubConfiguration));
-            MavenContextUtils.addListStringValue(project, EXCLUDED_PATHS, getExcludedPath(project, testStubConfiguration));
         }
+        addSourcePaths(mainConfiguration, project, false);
+        addSourcePaths(testConfiguration, project, true);
+        MavenContextUtils.addListStringValue(project, EXCLUDED_PATHS, getExcludedPath(project, stubConfiguration));
+        MavenContextUtils.addListStringValue(project, EXCLUDED_PATHS, getExcludedPath(project, testStubConfiguration));
     }
 
     private static String getExcludedPath(MavenProject mavenProject, Object config) {
@@ -80,17 +59,33 @@ public abstract class AbstractGroovyPluginProcessor {
         return Paths.get(mavenProject.getBuild().getDirectory(), "generated-sources", "groovy-stubs").toString();
     }
 
-    private static List<String> getPathList(Object config, MavenProject mavenProject, Boolean isTest) {
+    private static void addSourcePaths(Object config, MavenProject mavenProject, Boolean isTest) {
         Xpp3Dom currentTag = config instanceof Xpp3Dom ? ((Xpp3Dom) config) : null;
 
+        List<String> paths;
         if (currentTag == null) {
-            return getDefaultPath(mavenProject, isTest);
+            paths = getDefaultPath(mavenProject, isTest);
+        } else {
+            paths = MavenJDOMUtil.findChildrenValuesByPath(currentTag, "sources", "fileset.directory");
+            if (paths.isEmpty()) {
+                paths = MavenJDOMUtil.findChildrenValuesByPath(
+                        currentTag,
+                        isTest ? "testSources" : "sources",
+                        isTest ? "testSource.directory" : "source.directory"
+                );
+            }
+            if (paths.isEmpty()) {
+                paths = getDefaultPath(mavenProject, isTest);
+            }
         }
-        List<String> dirs = MavenJDOMUtil.findChildrenValuesByPath(currentTag, "sources", "fileset.directory");
-        if (dirs.isEmpty()) {
-            return getDefaultPath(mavenProject, isTest);
+
+        for (String path : paths) {
+            if (isTest) {
+                mavenProject.addTestCompileSourceRoot(path);
+            } else {
+                mavenProject.addCompileSourceRoot(path);
+            }
         }
-        return dirs;
 
         /*if (currentTag == null) return Collections.emptyList();
         currentTag = currentTag.getChild(sourcesName);
