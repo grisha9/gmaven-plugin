@@ -156,9 +156,12 @@ class CompilerPluginDataService : AbstractProjectDataService<CompilerPluginData,
     }
 
     private fun getRelativePath(data: CompilerPluginData, isTest: Boolean): String? {
-        val annotationProcessorDirectoryFile = MavenUtils.getGeneratedAnnotationsDirectory(data.buildDirectory, isTest)
+        val annotationProcessorDirectoryFile = if (isTest)
+            data.buildGeneratedAnnotationTestDirectory else data.buildGeneratedAnnotationDirectory
+        val processorAbsolutePath = annotationProcessorDirectoryFile?.let { Path.of(it) }
+            ?: MavenUtils.getGeneratedAnnotationsDirectory(data.buildDirectory, isTest)
         return try {
-            Path.of(data.baseDirectory).relativize(annotationProcessorDirectoryFile).toString()
+            Path.of(data.baseDirectory).relativize(processorAbsolutePath).toString()
         } catch (e: IllegalArgumentException) {
             null
         }

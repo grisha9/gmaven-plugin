@@ -151,6 +151,8 @@ fun populateAnnotationProcessorData(
     val annotationProcessorPaths = compilerData.annotationProcessorPaths
     val data = CompilerPluginData
         .create(annotationProcessorPaths, compilerData.arguments, project.buildDirectory, project.basedir)
+    data.buildGeneratedAnnotationDirectory = project.generatedPath
+    data.buildGeneratedAnnotationTestDirectory = project.testGeneratedPath
     moduleDataNode.createChild(CompilerPluginData.KEY, data)
 }
 

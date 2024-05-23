@@ -40,6 +40,9 @@ class CompilerPluginData @PropertyMapping("path", "arguments", "buildDirectory",
      */
     val baseDirectory: String
 
+    var buildGeneratedAnnotationDirectory: String? = null
+    var buildGeneratedAnnotationTestDirectory: String? = null
+
     init {
         this.path = path.toList()
         this.arguments = arguments.toList()
