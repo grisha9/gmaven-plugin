@@ -104,6 +104,7 @@ class KotlinMavenPluginImportTest : MavenImportingTestCase() {
                                         <source1>src/main/kotlin</source1>
                                         <source2>src/main/java</source2>
                                         <sourceDir>src/main/sourceDir</sourceDir>
+                                        <directory>${'$'}{project.basedir}/src/foo</directory>
                                     </sourceDirs>
                                 </configuration>
                             </execution>
@@ -158,6 +159,7 @@ class KotlinMavenPluginImportTest : MavenImportingTestCase() {
         """
         )
         createProjectSubDirs(
+            "src/foo",
             "src/main/kotlin",
             "src/main/java",
             "src/main/sourceDir",
@@ -173,6 +175,7 @@ class KotlinMavenPluginImportTest : MavenImportingTestCase() {
         assertModules("project")
         assertContentRootsSources(
             "project", JavaSourceRootType.SOURCE,
+            "src/foo",
             "src/main/java",
             "src/main/kotlin",
             "src/main/sourceDir",

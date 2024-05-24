@@ -196,4 +196,13 @@ abstract class MavenImportingTestCase : MavenTestCase() {
             actual, Arrays.asList(*expected)
         )
     }
+
+    protected fun assertExcludes(moduleName: String, vararg expectedExcludes: String) {
+        val contentRoot = getContentRoots(moduleName)[0]
+        doAssertContentFolders(
+            contentRoot,
+            listOf(*contentRoot.excludeFolders),
+            *expectedExcludes
+        )
+    }
 }
