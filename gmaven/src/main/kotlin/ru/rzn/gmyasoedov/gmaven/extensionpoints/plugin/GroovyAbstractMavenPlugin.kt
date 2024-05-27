@@ -59,7 +59,14 @@ object GroovyAbstractMavenPlugin {
         if (element == JDOM_ELEMENT_EMPTY) {
             return getDefaultPath(mavenProject, isTest)
         }
-        val dirs = MavenJDOMUtil.findChildrenValuesByPath(element, "sources", "fileset.directory")
+        var dirs = MavenJDOMUtil.findChildrenValuesByPath(element, "sources", "fileset.directory")
+        if (dirs.isEmpty()) {
+            dirs = MavenJDOMUtil.findChildrenValuesByPath(
+                element,
+                if (isTest) "testSources" else "sources",
+                if (isTest) "testSource.directory" else "source.directory"
+            )
+        }
         if (dirs.isEmpty()) {
             return getDefaultPath(mavenProject, isTest)
         }
