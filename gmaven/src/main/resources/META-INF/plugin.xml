@@ -15,8 +15,12 @@
         <![CDATA[
         <h3>Added</h3>
         <ul>
-            <li>Added "Show all phases" toggle (<a href="https://github.com/grisha9/gmaven-plugin/issues/6" target="_blank" rel="nofollow">Issue</a>)</li>
-            <li>Support Maven Compiler Plugin "enablePreview" parameter</li>
+            <li>Button for run multiple tasks (<a href="https://github.com/grisha9/gmaven-plugin/issues/13" target="_blank" rel="nofollow">Issue</a>)</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+            <li>Unlink\Link GMaven project (<a href="https://github.com/grisha9/gmaven-plugin/issues/12" target="_blank" rel="nofollow">Issue</a>)</li>
+            <li>Groovy content roots path (source/directory)</li>
         </ul>
     ]]>
     </change-notes>
