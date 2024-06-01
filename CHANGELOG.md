@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [233.28] - 2024-05-27
+### Added
+- Button for run multiple tasks ([issue](https://github.com/grisha9/gmaven-plugin/issues/13))
+### Fixed
+- Unlink\Link GMaven project ([issue](https://github.com/grisha9/gmaven-plugin/issues/12))
+- Groovy content roots path (source/directory)
+
 ## [233.27] - 2024-04-26
 ### Added
 - Added "Show all phases" toggle ([issue](https://github.com/grisha9/gmaven-plugin/issues/6))
