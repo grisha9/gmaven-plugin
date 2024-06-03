@@ -130,7 +130,7 @@ public class MavenUtils {
         return result;
     }
 
-    public static boolean isPomFile(@Nullable Project project, @Nullable VirtualFile file) {
+    public static boolean isPomFile(@Nullable VirtualFile file) {
         if (file == null) return false;
 
         String name = file.getName();
@@ -142,9 +142,7 @@ public class MavenUtils {
         if (file == null) return false;
 
         String name = file.getName();
-        if (isPomFileName(name)) return true;
-        if (!isPotentialPomFile(name)) return false;
-        return false;
+        return isPomFileName(name);
     }
 
     public static void showError(Project project, @NlsContexts.NotificationTitle String title, Throwable e) {
