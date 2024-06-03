@@ -29,7 +29,7 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
 
     override val systemId: ProjectSystemId = SYSTEM_ID
 
-    override fun isProjectFile(file: VirtualFile) = MavenUtils.isPomFile(null, file)
+    override fun isProjectFile(file: VirtualFile) = MavenUtils.isPomFile(file)
 
     override fun linkToExistingProject(projectFile: VirtualFile, project: Project) {
         val mavenSettings = MavenSettings.getInstance(project)

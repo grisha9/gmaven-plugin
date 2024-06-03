@@ -5,6 +5,7 @@ import com.intellij.openapi.externalSystem.autolink.ExternalSystemProjectLinkLis
 import com.intellij.openapi.externalSystem.autolink.ExternalSystemUnlinkedProjectAware
 import com.intellij.openapi.externalSystem.settings.ExternalSystemSettingsListener
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.projectImport.ProjectOpenProcessor
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
@@ -24,6 +25,7 @@ class UnlinkedProjectAware : ExternalSystemUnlinkedProjectAware {
 
     override fun isLinkedProject(project: Project, externalProjectPath: String): Boolean {
         return MavenSettings.getInstance(project).getLinkedProjectSettings(externalProjectPath) != null
+                || isLinkedProjectTryCanonical(project, externalProjectPath)
     }
 
     override fun subscribe(
@@ -48,5 +50,16 @@ class UnlinkedProjectAware : ExternalSystemUnlinkedProjectAware {
     override fun linkAndLoadProject(project: Project, externalProjectPath: String) {
         ProjectOpenProcessor.EXTENSION_POINT_NAME.findExtensionOrFail(GProjectOpenProcessor::class.java)
             .importProjectAfterwards(project, MavenUtils.getVFile(Path.of(externalProjectPath).toFile()))
+    }
+
+    private fun isLinkedProjectTryCanonical(project: Project, externalProjectPath: String): Boolean {
+        try {
+            val virtualFile = LocalFileSystem.getInstance().findFileByPath(externalProjectPath) ?: return false
+            val directoryFile = if (!virtualFile.isDirectory) virtualFile.parent else virtualFile
+            val canonicalPath = directoryFile.canonicalPath ?: return false
+            return MavenSettings.getInstance(project).getLinkedProjectSettings(canonicalPath) != null
+        } catch (e: Exception) {
+            return false
+        }
     }
 }
