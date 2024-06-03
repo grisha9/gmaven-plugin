@@ -17,6 +17,6 @@ public class MavenPomFileChooserDescriptor extends FileChooserDescriptor {
   @Override
   public boolean isFileSelectable(@Nullable VirtualFile file) {
     if (!super.isFileSelectable(file)) return false;
-    return Stream.of(file.getChildren()).anyMatch(MavenUtils::isSimplePomFile);
+    return Stream.of(file.getChildren()).anyMatch(MavenUtils::isPomFile);
   }
 }
