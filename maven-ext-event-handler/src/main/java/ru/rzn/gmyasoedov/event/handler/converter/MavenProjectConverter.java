@@ -67,6 +67,7 @@ public class MavenProjectConverter {
                 .excludedPaths(getExcludedPath(mavenProject))
                 .generatedPath(getGeneratedPath(mavenProject))
                 .testGeneratedPath(getGeneratedTestPath(mavenProject))
+                .annotationProcessorPaths(getAnnotationProcessors(plugins))
                 .build();
     }
 
@@ -137,11 +138,12 @@ public class MavenProjectConverter {
         return result;
     }
 
-    private static List<MavenArtifact> convertMavenArtifact(Set<Artifact> artifacts) {
-        if (artifacts == null || artifacts.isEmpty()) return Collections.emptyList();
-        ArrayList<MavenArtifact> result = new ArrayList<>(artifacts.size());
-        for (Artifact item : artifacts) {
-            result.add(MavenArtifactConverter.convert(item));
+    private static List<String> getAnnotationProcessors(List<MavenPlugin> plugins) {
+        ArrayList<String> result = new ArrayList<>(1);
+        for (MavenPlugin plugin : plugins) {
+            if (plugin.getBody() != null) {
+                result.addAll(plugin.getBody().getAnnotationProcessorPaths());
+            }
         }
         return result;
     }

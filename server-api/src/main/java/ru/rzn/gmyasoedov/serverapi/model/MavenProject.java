@@ -34,6 +34,7 @@ public class MavenProject extends MavenId {
     private final Map<Object, Object> properties;
     private final List<MavenRemoteRepository> remoteRepositories;
 
+    private final List<String> annotationProcessorPaths;
     private final List<String> excludedPaths;
     private final String generatedPath;
     private final String testGeneratedPath;
