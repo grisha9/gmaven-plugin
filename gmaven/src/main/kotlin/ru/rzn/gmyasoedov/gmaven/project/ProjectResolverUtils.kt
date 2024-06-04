@@ -40,8 +40,6 @@ fun getMavenHome(distributionSettings: DistributionSettings): Path {
 }
 
 fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.ProjectResolverContext): PluginsData {
-    val annotationProcessorPaths = ArrayList<String>(1)
-
     var compilerPlugin: MavenPlugin? = null
     var compilerData: CompilerData? = null
     var kotlinPluginData: KotlinMavenPluginData? = null
@@ -51,7 +49,6 @@ fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.Pro
         val pluginExtension = context.pluginExtensionMap[MavenUtils.toGAString(plugin)] ?: continue
         if (pluginExtension is MavenCompilerFullImportPlugin) {
             val compilerDataPlugin = getCompilerData(localRepoPath, pluginExtension, mavenProject, plugin, context)
-            annotationProcessorPaths += compilerDataPlugin?.annotationProcessorPaths ?: emptyList()
             if (isPriorityCompiler(compilerPlugin, plugin, context)) {
                 compilerPlugin = plugin
                 compilerData = compilerDataPlugin
@@ -60,7 +57,7 @@ fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.Pro
             kotlinPluginData = pluginExtension.getCompilerData(mavenProject, plugin, context)
         }
     }
-    compilerData = applyAnnotationProcessorsPath(compilerData, annotationProcessorPaths)
+
     addedMavenAspectJPluginInfo(compilerPlugin, compilerData, context)
     return PluginsData(
         compilerPlugin,
@@ -148,7 +145,7 @@ fun populateAnnotationProcessorData(
     moduleDataNode: DataNode<ModuleData>,
     compilerData: CompilerData
 ) {
-    val annotationProcessorPaths = compilerData.annotationProcessorPaths
+    val annotationProcessorPaths = project.annotationProcessorPaths
     val data = CompilerPluginData
         .create(annotationProcessorPaths, compilerData.arguments, project.buildDirectory, project.basedir)
     data.buildGeneratedAnnotationDirectory = project.generatedPath
@@ -158,19 +155,6 @@ fun populateAnnotationProcessorData(
 
 fun getDefaultModuleTypeId(): String {
     return ModuleTypeManager.getInstance().defaultModuleType.id
-}
-
-private fun applyAnnotationProcessorsPath(
-    compilerData: CompilerData?, annotationProcessorPaths: List<String>
-): CompilerData? {
-    compilerData ?: return null
-    if (annotationProcessorPaths.isEmpty()) return compilerData
-    if (compilerData.annotationProcessorPaths == annotationProcessorPaths) return compilerData
-    return CompilerData(
-        compilerData.sourceLevel, compilerData.targetLevel,
-        compilerData.testSourceLevel, compilerData.testTargetLevel,
-        annotationProcessorPaths, compilerData.arguments, compilerData.pluginSpecificArguments
-    )
 }
 
 private fun addedMavenAspectJPluginInfo(

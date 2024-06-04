@@ -50,7 +50,7 @@ class CodehausAspectjMavenPlugin : MavenCompilerFullImportPlugin {
         val aspectjArgs = collectAjcCompilerArgs(configurationElement)
         return CompilerData(
             compilerProp.source, compilerProp.target, compilerProp.source, compilerProp.target,
-            emptyList(), emptyList(), aspectjArgs
+            emptyList(), aspectjArgs
         )
     }
 

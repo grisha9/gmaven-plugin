@@ -80,7 +80,7 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
         }
         val configurationElement = plugin.body.configuration?.let { getElement(it, contextElementMap) }
         val compilerArgs = collectCompilerArgs(mavenProject, configurationElement)
-        return CompilerData(source, target, testSource, testTarget, plugin.body.annotationProcessorPaths, compilerArgs)
+        return CompilerData(source, target, testSource, testTarget, compilerArgs)
     }
 
     private fun getCompilerProp(
@@ -182,7 +182,7 @@ class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {
             if (source == null || target == null || testSource == null || testTarget == null) {
                 return CompilerData(defaultLanguageLevel, emptyList(), emptyList())
             }
-            return CompilerData(source, target, testSource, testTarget, emptyList(), emptyList())
+            return CompilerData(source, target, testSource, testTarget, emptyList())
         }
 
         private fun fillCompilerPropFromMavenProjectProperies(
