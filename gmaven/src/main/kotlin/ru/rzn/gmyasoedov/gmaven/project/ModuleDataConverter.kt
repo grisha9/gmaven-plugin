@@ -16,8 +16,9 @@ import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver.ModuleContextHolder
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
 import ru.rzn.gmyasoedov.gmaven.util.toFeatureString
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject
-import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProjectContainer
+import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import java.io.File
 import java.nio.file.Path
 
@@ -50,16 +51,16 @@ fun createModuleData(
     moduleData.setCompileOutputPath(ExternalSystemSourceType.SOURCE, project.outputDirectory)
     moduleData.setCompileOutputPath(ExternalSystemSourceType.TEST, project.testOutputDirectory)
     moduleData.useExternalCompilerOutput(false)
-    moduleData.setProperty(MODULE_PROP_BUILD_FILE, MavenUtils.getBuildFilePath(project.file.absolutePath))
+    moduleData.setProperty(MODULE_PROP_BUILD_FILE, MavenUtils.getBuildFilePath(project.filePath))
 
     val moduleDataNode = projectDataNode.createChild(ProjectKeys.MODULE, moduleData)
 
     val pluginsData = getPluginsData(project, context)
     val rootPaths = listOf(
         getContentRootPath(project.sourceRoots, ExternalSystemSourceType.SOURCE),
-        getContentRootPath(project.resourceRoots, ExternalSystemSourceType.RESOURCE),
+        getContentRootPathResource(project.resourceRoots, ExternalSystemSourceType.RESOURCE),
         getContentRootPath(project.testSourceRoots, ExternalSystemSourceType.TEST),
-        getContentRootPath(project.testResourceRoots, ExternalSystemSourceType.TEST_RESOURCE),
+        getContentRootPathResource(project.testResourceRoots, ExternalSystemSourceType.TEST_RESOURCE),
     ).flatten()
     val generatedPaths = getGeneratedSources(project, pluginsData.excludedPaths.toSet())
     val contentRoot = ContentRoots(rootPaths, generatedPaths, project.buildDirectory)
@@ -84,7 +85,8 @@ fun createModuleData(
 
     val perSourceSetModules =
         setupContentRootAndSourceSetData(moduleDataNode, contentRoot, context, project, compilerData)
-    context.moduleDataByArtifactId[project.id] = ModuleContextHolder(moduleDataNode, perSourceSetModules)
+    val mavenId = GServerUtils.getMavenId(project)
+    context.moduleDataByArtifactId[mavenId] = ModuleContextHolder(moduleDataNode, perSourceSetModules)
 
     setParentGA(project, context, moduleData)
     for (childContainer in container.modules) {
@@ -105,7 +107,7 @@ private fun setParentGA(
     moduleData: ModuleData
 ) {
     if (project.parentArtifact != null) {
-        val parentModule = context.moduleDataByArtifactId[project.parentArtifact.id]
+        val parentModule = context.moduleDataByArtifactId[GServerUtils.getMavenId(project.parentArtifact)]
         parentModule?.moduleNode?.data?.also {
             moduleData.setProperty(MODULE_PROP_PARENT_GA, MavenUtils.toGAString(it))
         }
@@ -165,7 +167,7 @@ private fun createSourceSetModule(
 
     data.isInheritProjectCompileOutputPath = false
     data.useExternalCompilerOutput(false)
-    data.setProperty(MODULE_PROP_BUILD_FILE, MavenUtils.getBuildFilePath(project.file.absolutePath))
+    data.setProperty(MODULE_PROP_BUILD_FILE, MavenUtils.getBuildFilePath(project.filePath))
 
     val basePath = Path.of(project.basedir)
     val rootModulePath = basePath.resolve("src").resolve(moduleSuffix).toString()

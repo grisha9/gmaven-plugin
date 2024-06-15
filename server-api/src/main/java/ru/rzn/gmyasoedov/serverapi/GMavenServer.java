@@ -1,6 +1,6 @@
 package ru.rzn.gmyasoedov.serverapi;
 
-import ru.rzn.gmyasoedov.serverapi.model.MavenResult;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenMapResult;
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest;
 
 import java.rmi.Remote;
@@ -19,5 +19,5 @@ public interface GMavenServer extends Remote {
     String READ_TASK = "ru.rzn.gmyasoedov:model-reader:" + RESOLVE_TASK_VERSION + ":read";
     String GMAVEN_DEPENDENCY_TREE = "gmaven.event.dependency.tree";
 
-    MavenResult getProjectModel(GetModelRequest request) throws RemoteException;
+    MavenMapResult getProjectModel(GetModelRequest request) throws RemoteException;
 }

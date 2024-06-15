@@ -1,4 +1,4 @@
-package ru.rzn.gmyasoedov.serverapi.model;
+package ru.rzn.gmyasoedov.maven.plugin.reader.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;

@@ -5,7 +5,7 @@ import com.intellij.openapi.util.text.Strings
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.util.containers.ContainerUtil
 import org.jdom.Element
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject
 
 private const val propStartTag = "\${"
 private const val propEndTag = "}"

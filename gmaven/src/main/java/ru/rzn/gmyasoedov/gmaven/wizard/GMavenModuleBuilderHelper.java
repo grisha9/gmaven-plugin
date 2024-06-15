@@ -26,8 +26,8 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
-import ru.rzn.gmyasoedov.serverapi.model.MavenId;
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenId;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,7 +93,7 @@ public class GMavenModuleBuilderHelper {
     public void setupBuildScript(final Project project, final Sdk sdk, final VirtualFile buildScriptFile) {
         Properties templateProperties = getTemplateProperties(buildScriptFile, sdk);
         PsiFile[] psiFiles = myParentProject != null
-                ? new PsiFile[]{getPsiFile(project, MavenUtils.getVFile(myParentProject.getFile()))}
+                ? new PsiFile[]{getPsiFile(project, MavenUtils.getVFile(myParentProject.getFilePath()))}
                 : PsiFile.EMPTY_ARRAY;
         WriteCommandAction
                 .writeCommandAction(project, psiFiles)
@@ -115,7 +115,7 @@ public class GMavenModuleBuilderHelper {
         updateProjectPom(project, buildScriptFile);
 
         if (myParentProject != null) {
-            VirtualFile parentBuildFile = MavenUtils.getVFile(myParentProject.getFile());
+            VirtualFile parentBuildFile = MavenUtils.getVFile(myParentProject.getFilePath());
             if (!parentBuildFile.isValid()) return;
             PsiFile psiFile = PsiManager.getInstance(project).findFile(parentBuildFile);
             if (!(psiFile instanceof XmlFile)) {
@@ -168,8 +168,8 @@ public class GMavenModuleBuilderHelper {
         List<VirtualFile> pomFiles = new ArrayList<>(2);
         pomFiles.add(pom);
 
-        if (!FileUtil.namesEqual(GMavenConstants.POM_XML, myParentProject.getFile().getName())) {
-            pomFiles.add(MavenUtils.getVFile(myParentProject.getFile()));
+        if (!myParentProject.getFilePath().toLowerCase().endsWith(GMavenConstants.POM_XML)) {
+            pomFiles.add(MavenUtils.getVFile(myParentProject.getFilePath()));
         }
 
         unblockAndSaveDocuments(project, pomFiles.toArray(VirtualFile.EMPTY_ARRAY));
@@ -215,7 +215,7 @@ public class GMavenModuleBuilderHelper {
                 properties.remove("HAS_VERSION");
             }
 
-            VirtualFile parentBuildFile = MavenUtils.getVFile(myParentProject.getFile());
+            VirtualFile parentBuildFile = MavenUtils.getVFile(myParentProject.getFilePath());
             VirtualFile modulePath = file.getParent();
             VirtualFile parentModulePath = parentBuildFile.getParent();
 

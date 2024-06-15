@@ -5,12 +5,14 @@ import org.apache.maven.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenArtifact;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenArtifactNode;
 import ru.rzn.gmyasoedov.serverapi.model.DependencyTreeNode;
-import ru.rzn.gmyasoedov.serverapi.model.MavenArtifact;
-import ru.rzn.gmyasoedov.serverapi.model.MavenArtifactNode;
 import ru.rzn.gmyasoedov.serverapi.model.MavenArtifactState;
 
 import java.util.*;
+
+import static ru.rzn.gmyasoedov.serverapi.GServerUtils.getFilePath;
 
 public class DependencyTreeNodeConverter {
 
@@ -52,7 +54,7 @@ public class DependencyTreeNodeConverter {
             DependencyTreeNode newNode = new DependencyTreeNode(parent, convertToNode(mavenArtifact),
                     state, winnerArtifact, each.getDependency().getScope(), Collections.<DependencyTreeNode>emptyList()
             );
-            newNode.setDependencies(convert(newNode, each.getChildren(), convertedArtifactMap));
+            newNode.dependencies = convert(newNode, each.getChildren(), convertedArtifactMap);
             result.add(newNode);
         }
         return result;
@@ -82,26 +84,30 @@ public class DependencyTreeNodeConverter {
     }
 
     public static MavenArtifactNode convertToNode(Artifact artifact) {
-        return new MavenArtifactNode(artifact.getGroupId(),
-                artifact.getArtifactId(),
-                artifact.getBaseVersion() != null ? artifact.getBaseVersion() : artifact.getVersion(),
-                artifact.getType(),
-                artifact.getClassifier(),
-                artifact.getScope(),
-                artifact.isOptional(),
-                artifact.getFile(),
-                artifact.isResolved());
+        MavenArtifactNode result = new MavenArtifactNode();
+        result.setGroupId(artifact.getGroupId());
+        result.setArtifactId(artifact.getArtifactId());
+        result.setVersion(artifact.getBaseVersion() != null ? artifact.getBaseVersion() : artifact.getVersion());
+        result.setType(artifact.getType());
+        result.setClassifier(artifact.getClassifier());
+        result.setScope(artifact.getScope());
+        result.setOptional(artifact.isOptional());
+        result.setFilePath(getFilePath(artifact.getFile()));
+        result.setResolved(artifact.isResolved());
+        return result;
     }
 
     private static MavenArtifactNode convertToNode(MavenArtifact artifact) {
-        return new MavenArtifactNode(artifact.getGroupId(),
-                artifact.getArtifactId(),
-                artifact.getVersion(),
-                artifact.getType(),
-                artifact.getClassifier(),
-                artifact.getScope(),
-                artifact.isOptional(),
-                artifact.getFile(),
-                artifact.isResolved());
+        MavenArtifactNode result = new MavenArtifactNode();
+        result.setGroupId(artifact.getGroupId());
+        result.setArtifactId(artifact.getArtifactId());
+        result.setVersion(artifact.getVersion());
+        result.setType(artifact.getType());
+        result.setClassifier(artifact.getClassifier());
+        result.setScope(artifact.getScope());
+        result.setOptional(artifact.isOptional());
+        result.setFilePath(artifact.getFilePath());
+        result.setResolved(artifact.isResolved());
+        return result;
     }
 }

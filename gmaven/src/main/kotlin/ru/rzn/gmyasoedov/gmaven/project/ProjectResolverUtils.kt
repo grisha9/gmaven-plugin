@@ -21,10 +21,8 @@ import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject
-import ru.rzn.gmyasoedov.serverapi.model.MavenRemoteRepository
-import ru.rzn.gmyasoedov.serverapi.model.MavenSettings
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.*
+import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import java.nio.file.Path
 import kotlin.io.path.Path
 
@@ -99,6 +97,10 @@ fun getContentRootPath(paths: List<String>, type: ExternalSystemSourceType): Lis
         .toList()
 }
 
+fun getContentRootPathResource(paths: List<MavenResource>, type: ExternalSystemSourceType): List<MavenContentRoot> {
+    return getContentRootPath(paths.mapNotNull { it.directory }, type)
+}
+
 fun populateTasks(
     moduleDataNode: DataNode<ModuleData>, mavenProject: MavenProject,
     context: MavenProjectResolver.ProjectResolverContext
@@ -116,7 +118,8 @@ fun populateTasks(
         for (mojo in pluginDescriptor.mojos) {
             moduleDataNode.createChild(
                 PluginData.KEY, PluginData(
-                    SYSTEM_ID, mojo.displayName, mavenProject.basedir, plugin.displayString, pluginDescriptor.goalPrefix
+                    SYSTEM_ID, mojo.displayName, mavenProject.basedir,
+                    GServerUtils.getMavenId(plugin), pluginDescriptor.goalPrefix
                 )
             )
         }
