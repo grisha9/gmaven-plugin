@@ -12,9 +12,9 @@ import ru.rzn.gmyasoedov.event.handler.converter.MavenProjectContainerConverter;
 import ru.rzn.gmyasoedov.event.handler.converter.MavenProjectWithDependencyConverter;
 import ru.rzn.gmyasoedov.event.handler.converter.MavenSettingsConverter;
 import ru.rzn.gmyasoedov.gmaven.server.result.ResultHolder;
-import ru.rzn.gmyasoedov.serverapi.model.BuildErrors;
-import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer;
-import ru.rzn.gmyasoedov.serverapi.model.MavenResult;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.BuildErrors;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenMapResult;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProjectContainer;
 
 import javax.inject.Named;
 
@@ -57,12 +57,12 @@ public class GMavenEventSpy extends AbstractEventSpy {
 
     private void setResult() {
         BuildErrors buildErrors = MavenErrorConverter.convert(resultHolder.executionResult);
-        ResultHolder.result = new MavenResult(
-                buildErrors.pluginNotResolved,
-                MavenSettingsConverter.convert(resultHolder),
-                getProjectContainer(),
-                buildErrors.exceptions
-        );
+        MavenMapResult result = new MavenMapResult();
+        result.pluginNotResolved = buildErrors.pluginNotResolved;
+        result.settings = MavenSettingsConverter.convert(resultHolder);
+        result.container = getProjectContainer();
+        result.exceptions = buildErrors.exceptions;
+        ResultHolder.result = result;
     }
 
     private static MavenProjectContainer getProjectContainer() {

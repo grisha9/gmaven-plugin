@@ -3,9 +3,9 @@ package ru.rzn.gmyasoedov.gmaven.server.impl;
 import com.intellij.openapi.util.text.StringUtilRt;
 import org.codehaus.plexus.classworlds.launcher.Launcher;
 import ru.rzn.gmyasoedov.gmaven.server.result.ResultHolder;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenMapResult;
 import ru.rzn.gmyasoedov.serverapi.GMavenServer;
 import ru.rzn.gmyasoedov.serverapi.GServerUtils;
-import ru.rzn.gmyasoedov.serverapi.model.MavenResult;
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest;
 
 import java.nio.file.Paths;
@@ -16,7 +16,7 @@ import java.util.List;
 public class GMavenServerImpl implements GMavenServer {
 
     @Override
-    public MavenResult getProjectModel(GetModelRequest request) throws RemoteException {
+    public MavenMapResult getProjectModel(GetModelRequest request) throws RemoteException {
         fillSystemProperties(request);
         try {
             Launcher.mainWithExitCode(getMvnArgs(request));

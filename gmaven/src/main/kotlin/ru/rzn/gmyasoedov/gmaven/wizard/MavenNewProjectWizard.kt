@@ -24,7 +24,7 @@ import com.intellij.ui.dsl.builder.bindSelected
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.GMAVEN
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
-import ru.rzn.gmyasoedov.serverapi.model.MavenId
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.SimpleMavenId
 import java.nio.file.Path
 
 class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
@@ -94,10 +94,10 @@ class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
         }
 
         private fun setupProjectFiles(buildFile: VirtualFile, project: Project) {
+            val mavenId = SimpleMavenId(groupId, artifactId, version)
             ApplicationManager.getApplication().invokeLater {
                 GMavenModuleBuilderHelper(
-                    MavenId(groupId, artifactId, version), parentData,
-                    parentData?.groupId == groupId, parentData?.version == version
+                    mavenId, parentData, parentData?.groupId == groupId, parentData?.version == version
                 ).setupBuildScript(project, sdk, buildFile)
 
                 if (context.isCreatingNewProject) {

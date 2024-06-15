@@ -1,28 +1,37 @@
 package ru.rzn.gmyasoedov.serverapi.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenArtifactNode;
 
 import java.io.Serializable;
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class DependencyTreeNode implements Serializable {
     @Nullable
-    private DependencyTreeNode parent;
-    private MavenArtifactNode artifact;
-    private MavenArtifactState state;
+    public DependencyTreeNode parent;
+    public MavenArtifactNode artifact;
+    public MavenArtifactState state;
     @Nullable
-    private MavenArtifactNode relatedArtifact;
+    public MavenArtifactNode relatedArtifact;
     @Nullable
-    private String originalScope;
-    private List<DependencyTreeNode> dependencies;
+    public String originalScope;
+    public List<DependencyTreeNode> dependencies;
+
+
+    public DependencyTreeNode(
+            @Nullable DependencyTreeNode parent,
+            MavenArtifactNode artifact,
+            MavenArtifactState state,
+            @Nullable MavenArtifactNode relatedArtifact,
+            @Nullable String originalScope,
+            List<DependencyTreeNode> dependencies) {
+        this.parent = parent;
+        this.artifact = artifact;
+        this.state = state;
+        this.relatedArtifact = relatedArtifact;
+        this.originalScope = originalScope;
+        this.dependencies = dependencies;
+    }
 
     @Override
     public boolean equals(Object o) {

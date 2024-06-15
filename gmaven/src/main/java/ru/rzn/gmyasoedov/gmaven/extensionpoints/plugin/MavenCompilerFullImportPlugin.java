@@ -4,8 +4,8 @@ import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData;
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenPlugin;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject;
 
 import java.nio.file.Path;
 import java.util.Map;

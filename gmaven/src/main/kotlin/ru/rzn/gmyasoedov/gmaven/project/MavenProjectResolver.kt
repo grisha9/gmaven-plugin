@@ -27,8 +27,9 @@ import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.util.toFeatureString
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
-import ru.rzn.gmyasoedov.serverapi.model.MavenResult
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenMapResult
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenPlugin
+import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import java.io.File
 import java.nio.file.Path
 import java.util.*
@@ -110,12 +111,12 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     }
 
     private fun getProjectDataNode(
-        projectPath: String, mavenResult: MavenResult, settings: MavenExecutionSettings
+        projectPath: String, mavenResult: MavenMapResult, settings: MavenExecutionSettings
     ): DataNode<ProjectData> {
-        val container = mavenResult.projectContainer
+        val container = mavenResult.container
         val project = container.project
-        val projectName = project.displayName
-        val absolutePath = project.file.parent
+        val projectName = GServerUtils.getDisplayName(project)
+        val absolutePath = project.basedir
         val projectData = ProjectData(GMavenConstants.SYSTEM_ID, projectName, absolutePath, projectPath)
         projectData.version = project.version
         projectData.group = project.groupId
@@ -163,7 +164,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val settings: MavenExecutionSettings,
         val rootProjectPath: String,
         val ideaProjectPath: String,
-        val mavenResult: MavenResult,
+        val mavenResult: MavenMapResult,
         val projectLanguageLevel: LanguageLevel,
         var aspectJCompilerData: MutableList<CompilerDataHolder> = ArrayList(0),
         val contextElementMap: MutableMap<String, Element> = HashMap(),

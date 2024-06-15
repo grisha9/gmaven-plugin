@@ -7,8 +7,8 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin.par
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.util.toFeatureString
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenPlugin
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject
 
 class KotlinMavenPlugin : MavenFullImportPlugin {
     override fun getGroupId() = "org.jetbrains.kotlin"

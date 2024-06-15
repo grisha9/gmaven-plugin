@@ -7,8 +7,7 @@ import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.plugins.MavenPluginDescription;
-import ru.rzn.gmyasoedov.serverapi.model.MavenId;
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenPlugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +45,7 @@ public final class MavenArtifactUtil {
     public static final String CLASSIFIER = "classifier";
     public static final String MAVEN_PLUGIN_DESCRIPTOR = "META-INF/maven/plugin.xml";
 
-    private static final Map<MavenId, MavenPluginDescription> PLUGIN_DESCRIPTOR_CACHE = new ConcurrentHashMap<>();
+    private static final Map<MavenPlugin, MavenPluginDescription> PLUGIN_DESCRIPTOR_CACHE = new ConcurrentHashMap<>();
 
     public static void clearPluginDescriptorCache() {
         if (!PLUGIN_DESCRIPTOR_CACHE.isEmpty()) {

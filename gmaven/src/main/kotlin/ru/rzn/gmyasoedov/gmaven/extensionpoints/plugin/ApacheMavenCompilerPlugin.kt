@@ -7,7 +7,7 @@ import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerDat
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
-import ru.rzn.gmyasoedov.serverapi.model.*
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.*
 import java.nio.file.Path
 
 class ApacheMavenCompilerPlugin : MavenCompilerFullImportPlugin {

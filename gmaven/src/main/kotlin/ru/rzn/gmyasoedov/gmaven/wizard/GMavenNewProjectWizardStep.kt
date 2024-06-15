@@ -25,8 +25,8 @@ import com.intellij.ui.layout.ValidationInfoBuilder
 import icons.OpenapiIcons
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject
-import java.io.File
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject
+import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import javax.swing.Icon
 
 abstract class GMavenNewProjectWizardStep<ParentStep>(parent: ParentStep) :
@@ -63,14 +63,15 @@ abstract class GMavenNewProjectWizardStep<ParentStep>(parent: ParentStep) :
             .toList()
     }
 
-    private fun toMavenProject(it: ModuleData): MavenProject =
-        MavenProject.builder()
-            .groupId(it.group!!)
-            .artifactId(it.moduleName)
-            .version(it.version!!)
-            .file(File(it.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) as String))
-            .basedir(it.linkedExternalProjectPath)
-            .build()
+    private fun toMavenProject(it: ModuleData): MavenProject {
+        val result = MavenProject()
+        result.groupId = it.group!!
+        result.artifactId = it.moduleName
+        result.version = it.version!!
+        result.filePath = it.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
+        result.basedir = it.linkedExternalProjectPath
+        return result;
+    }
 
 
     override fun ValidationInfoBuilder.validateGroupId(): ValidationInfo? {
@@ -96,7 +97,7 @@ abstract class GMavenNewProjectWizardStep<ParentStep>(parent: ParentStep) :
     class MavenDataView(override val data: MavenProject) : DataView<MavenProject>() {
         override val location: String = data.basedir
         override val icon: Icon = OpenapiIcons.RepositoryLibraryLogo
-        override val presentationName: String = data.displayName
+        override val presentationName: String = GServerUtils.getDisplayName(data)
         override val groupId: String = data.groupId
         override val version: String = data.version
 

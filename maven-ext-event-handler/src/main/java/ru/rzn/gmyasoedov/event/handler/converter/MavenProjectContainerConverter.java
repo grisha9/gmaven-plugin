@@ -5,8 +5,8 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.Os;
 import org.codehaus.plexus.util.StringUtils;
 import ru.rzn.gmyasoedov.event.handler.EventSpyResultHolder;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProjectContainer;
 import ru.rzn.gmyasoedov.serverapi.GMavenServer;
-import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class MavenProjectContainerConverter {
                                       Map<File, MavenProject> projectByDirectoryMap,
                                       EventSpyResultHolder resultHolder,
                                       boolean readOnly) {
-        ru.rzn.gmyasoedov.serverapi.model.MavenProject project = rootContainer.getProject();
+        ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject project = rootContainer.getProject();
         for (String module : project.getModulesDir()) {
             if (StringUtils.isEmpty(module)) continue;
 

@@ -4,10 +4,10 @@ import com.intellij.pom.java.LanguageLevel
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.ApacheMavenCompilerPlugin.Companion.getElement
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject
-import ru.rzn.gmyasoedov.serverapi.model.PluginBody
-import ru.rzn.gmyasoedov.serverapi.model.PluginExecution
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenPlugin
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.PluginBody
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.PluginExecution
 import java.nio.file.Path
 
 class CodehausAspectjMavenPlugin : MavenCompilerFullImportPlugin {

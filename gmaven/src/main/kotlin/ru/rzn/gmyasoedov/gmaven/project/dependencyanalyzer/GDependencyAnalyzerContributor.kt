@@ -80,7 +80,8 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
         val dependencyTreeFromMap = dependencyTreeByProject.get(artifactGA)
         if (dependencyTreeFromMap != null) return dependencyTreeFromMap
         val dependencyTreeProjects = getDependencyTree(gServerRequest, artifactGA)
-        dependencyTreeProjects.forEach { dependencyTreeByProject[it.groupId + ":" + it.artifactId] = it.dependencyTree }
+        //todo!!!
+        //dependencyTreeProjects.forEach { dependencyTreeByProject[it.groupId + ":" + it.artifactId] = it.dependencyTree }
         return dependencyTreeByProject[artifactGA] ?: emptyList()
     }
 
@@ -165,8 +166,8 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
             return daModule
         }
         val daArtifact = DAArtifact(artifact.groupId, artifact.artifactId, artifact.version)
-        if (artifact.file != null) {
-            daArtifact.putUserData(BUILD_FILE, artifact.file.absolutePath.replace(".jar", ".pom"))
+        if (artifact.filePath != null) {
+            daArtifact.putUserData(BUILD_FILE, artifact.filePath.replace(".jar", ".pom"))
         }
         return daArtifact
     }

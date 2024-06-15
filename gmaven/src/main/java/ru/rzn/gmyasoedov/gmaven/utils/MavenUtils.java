@@ -44,8 +44,8 @@ import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData;
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
-import ru.rzn.gmyasoedov.serverapi.model.MavenId;
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenId;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,6 +76,13 @@ public class MavenUtils {
     public static VirtualFile getVFile(File file) {
         VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByIoFile(file);
         if (virtualFile == null) throw new RuntimeException("Virtual file not found " + file);
+        return virtualFile;
+    }
+
+    @NotNull
+    public static VirtualFile getVFile(String filePath) {
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+        if (virtualFile == null) throw new RuntimeException("Virtual file not found " + filePath);
         return virtualFile;
     }
 
