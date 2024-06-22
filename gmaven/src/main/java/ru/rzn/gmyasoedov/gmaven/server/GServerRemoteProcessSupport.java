@@ -34,8 +34,12 @@ public class GServerRemoteProcessSupport extends RemoteProcessSupport<Object, GM
         this.isImport = isImport;
         this.request = request;
         this.workingDirectory = getWorkingDirectory(request);
+        this.jvmConfigOptions = getJvmConfigOptions(this.workingDirectory);
+    }
+
+    public static List<String> getJvmConfigOptions(Path workingDirectory) {
         String jvmConfig = getJvmConfig(workingDirectory);
-        this.jvmConfigOptions = StringUtil.isEmpty(jvmConfig)
+        return StringUtil.isEmpty(jvmConfig)
                 ? Collections.emptyList() : ParametersListUtil.parse(jvmConfig, true, true);
     }
 

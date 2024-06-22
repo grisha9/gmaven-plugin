@@ -179,9 +179,8 @@ private fun createLibrary(
     library.artifactId = artifact.artifactId
     library.setGroup(artifact.groupId)
     library.version = artifact.version
-    artifactFile ?: return library
 
-    val artifactAbsolutePath = artifactFile.absolutePath
+    val artifactAbsolutePath = artifactFile?.absolutePath ?: return library
 
     library.addPath(getLibraryPathType(artifact), artifactAbsolutePath)
     if (context.moduleDataByArtifactId.size < MIN_MODULES_COUNT_TO_CHECK_SOURCES || context.settings.isCheckSources) {
@@ -197,7 +196,9 @@ private fun createLibrary(
 }
 
 private fun getLibraryFile(artifact: MavenArtifact, classifierModuleNode: DataNode<out ModuleData>?): File? {
-    if (artifact.file != null || artifact.classifier == null || classifierModuleNode == null) return artifact.file
+    if (artifact.filePath != null || artifact.classifier == null || classifierModuleNode == null) {
+        return artifact.filePath?.let { File(it) }
+    }
     return try {
         val files = Path.of(classifierModuleNode.data.linkedExternalProjectPath).resolve("target").toFile()
             .listFiles()?.filter { it.isFile } ?: emptyList()

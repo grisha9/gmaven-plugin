@@ -18,6 +18,7 @@ import com.intellij.openapi.util.text.StringUtilRt;
 import com.intellij.util.PathUtil;
 import com.intellij.util.net.NetUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
@@ -184,7 +185,8 @@ public class MavenServerCmdState extends CommandLineState {
     }
 
 
-    private Integer getDebugPort() {
+    @Nullable
+    public static Integer getDebugPort() {
         if (Registry.is("gmaven.server.debug")) {
             try {
                 return NetUtils.findAvailableSocketPort();
