@@ -24,7 +24,7 @@ class GMavenAutoImportAware : ExternalSystemAutoImportAware {
         val changedPath = Path.of(changedFileOrDirPath)
         if (changedPath.isDirectory()) return null
         val fileSimpleName = changedPath.fileName.toString()
-        if (!MavenUtils.isPomFileName(fileSimpleName) && !MavenUtils.isPotentialPomFile(fileSimpleName)) return null
+        if (!MavenUtils.isSimplePomFile(fileSimpleName) && !MavenUtils.isPotentialPomFile(fileSimpleName)) return null
         if (isInsideCompileOutput(changedFileOrDirPath, project)) return null
 
         val systemSettings = MavenSettings.getInstance(project)

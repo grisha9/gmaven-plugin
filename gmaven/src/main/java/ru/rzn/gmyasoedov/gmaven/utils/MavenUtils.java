@@ -56,6 +56,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static com.intellij.openapi.util.io.JarUtil.getJarAttribute;
 import static com.intellij.openapi.util.io.JarUtil.loadProperties;
@@ -107,10 +108,15 @@ public class MavenUtils {
         VfsUtil.saveText(file, template.getTemplateText());
     }
 
-    public static boolean isPomFileName(String fileName) {
+    public static boolean isSimplePomFile(String fileName) {
         return fileName.equals(GMavenConstants.POM_XML) ||
                 fileName.endsWith(".pom") || fileName.startsWith("pom.") ||
                 fileName.equals(GMavenConstants.SUPER_POM_XML);
+    }
+
+    public static boolean isSimplePomFile(@Nullable VirtualFile file) {
+        if (file == null) return false;
+        return isSimplePomFile(file.getName());
     }
 
     public static boolean isPotentialPomFile(String nameOrPath) {
@@ -134,15 +140,20 @@ public class MavenUtils {
         if (file == null) return false;
 
         String name = file.getName();
-        if (isPomFileName(name)) return true;
+        if (isSimplePomFile(name)) return true;
         return isPotentialPomFile(name);
     }
 
-    public static boolean isSimplePomFile(@Nullable VirtualFile file) {
+    public static boolean isProjectFile(@Nullable VirtualFile file) {
         if (file == null) return false;
 
-        String name = file.getName();
-        return isPomFileName(name);
+        if (file.isDirectory()) {
+            return Stream.of(file.getChildren()).anyMatch(MavenUtils::isSimplePomFile);
+        } else {
+            String name = file.getName();
+            if (isSimplePomFile(name)) return true;
+            return isPotentialPomFile(name);
+        }
     }
 
     public static void showError(Project project, @NlsContexts.NotificationTitle String title, Throwable e) {
@@ -430,6 +441,6 @@ public class MavenUtils {
             return true;
         }
 
-        return MavenUtils.isPomFileName(file.getName());
+        return MavenUtils.isSimplePomFile(file.getName());
     }
 }

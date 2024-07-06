@@ -23,7 +23,7 @@ class ImportProjectFromBuildFIleAction : ExternalSystemAction() {
         val project = e.getData(CommonDataKeys.PROJECT) ?: return false
         val filePath = virtualFile.toNioPathOrNull()?.toString()  ?: return false
         if (CachedModuleDataService.getDataHolder(project).isConfigPath(filePath)) return false
-        return MavenUtils.isPomFileName(virtualFile.name) || MavenUtils.isPotentialPomFile(virtualFile.name)
+        return MavenUtils.isSimplePomFile(virtualFile.name) || MavenUtils.isPotentialPomFile(virtualFile.name)
     }
 
     override fun actionPerformed(e: AnActionEvent) {

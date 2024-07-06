@@ -21,7 +21,7 @@ class GMavenProjectImportProvider : AbstractExternalProjectImportProvider(
     }
 
     override fun canImportFromFile(file: VirtualFile): Boolean {
-        return MavenUtils.isPomFileName(file.name) || MavenUtils.isPotentialPomFile(file.name)
+        return MavenUtils.isSimplePomFile(file) || MavenUtils.isPotentialPomFile(file.name)
     }
 
     override fun getFileSample(): String {

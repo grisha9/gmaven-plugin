@@ -7,6 +7,7 @@ import com.intellij.openapi.externalSystem.settings.ExternalSystemSettingsListen
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.isFile
 import com.intellij.projectImport.ProjectOpenProcessor
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
@@ -20,7 +21,7 @@ class UnlinkedProjectAware : ExternalSystemUnlinkedProjectAware {
     override val systemId = SYSTEM_ID
 
     override fun isBuildFile(project: Project, buildFile: VirtualFile): Boolean {
-        return MavenUtils.isPomFileName(buildFile.name) || MavenUtils.isPotentialPomFile(buildFile.name)
+        return buildFile.isFile && MavenUtils.isSimplePomFile(buildFile)
     }
 
     override fun isLinkedProject(project: Project, externalProjectPath: String): Boolean {
