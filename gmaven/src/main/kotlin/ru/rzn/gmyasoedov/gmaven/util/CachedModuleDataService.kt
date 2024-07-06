@@ -5,9 +5,9 @@ import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.project.LibraryData
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
-import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsDataStorage
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
@@ -31,7 +31,7 @@ object CachedModuleDataService {
                 CachedValueProvider.Result
                     .create(
                         getCacheDataHolder(project),
-                        ExternalProjectsDataStorage.getInstance(project), modificationTracker
+                        ProjectRootManager.getInstance(project), modificationTracker
                     )
             }
             lastResult.set(cachedValue)
@@ -46,7 +46,7 @@ object CachedModuleDataService {
             CachedValueProvider.Result
                 .create(
                     getCachedLibrary(project),
-                    ExternalProjectsDataStorage.getInstance(project), modificationTracker
+                    ProjectRootManager.getInstance(project), modificationTracker
                 )
         }
     }

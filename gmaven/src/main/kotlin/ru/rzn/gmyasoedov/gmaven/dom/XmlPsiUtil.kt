@@ -1,8 +1,8 @@
 package ru.rzn.gmyasoedov.gmaven.dom
 
 import com.intellij.lang.xml.XMLLanguage
-import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsDataStorage
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.readText
 import com.intellij.psi.PsiElement
@@ -99,7 +99,7 @@ object XmlPsiUtil {
             CachedValueProvider.Result
                 .create(
                     getDependencyManagementLibrary(xmlFile),
-                    ExternalProjectsDataStorage.getInstance(xmlFile.project)
+                    ProjectRootManager.getInstance(xmlFile.project)
                 )
         }
     }
