@@ -16,7 +16,7 @@ class UnlinkedProjectAware : ExternalSystemUnlinkedProjectAware {
     override val systemId = SYSTEM_ID
 
     override fun isBuildFile(project: Project, buildFile: VirtualFile): Boolean {
-        return MavenUtils.isPomFileName(buildFile.name) || MavenUtils.isPotentialPomFile(buildFile.name)
+        return MavenUtils.isPomFileName(buildFile.name)
     }
 
     override fun isLinkedProject(project: Project, externalProjectPath: String): Boolean {
