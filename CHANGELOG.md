@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [233.28.1] - 2024-06-22
+## [233.29] - 2024-06-22
 ### Fixed
 - IDEA suggests GMaven import, even though project is GMaven already ([issue](https://github.com/grisha9/gmaven-plugin/issues/14))
 
