@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [232.29] - 2024-07-06
+### Fixed
+- IDEA suggests GMaven import, even though project is GMaven already ([issue](https://github.com/grisha9/gmaven-plugin/issues/14))
+
 ## [232.28] - 2024-05-27
 ### Added
 - Button for run multiple tasks ([issue](https://github.com/grisha9/gmaven-plugin/issues/13))
