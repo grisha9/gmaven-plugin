@@ -13,6 +13,7 @@
 
     <change-notes>
         <![CDATA[
+        Fixed: https://github.com/grisha9/gmaven-plugin/issues/15 <br>
         *Note: experimental version for 213 IDEA required enabled option "New project wizard" for creation new project and modules.
         For enabled it: double pressing the shift key -> input "experimental features..." -> enable "New project wizard"
     ]]>
