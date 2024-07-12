@@ -26,6 +26,7 @@ import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.util.toFeatureString
+import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
 import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import java.io.File
@@ -124,7 +125,11 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val sdkName: String = settings.jdkName!! //todo
         val projectSdkData = ProjectSdkData(sdkName)
         projectDataNode.createChild(ProjectSdkData.KEY, projectSdkData)
-        val languageLevel = LanguageLevel.parse(sdkName)
+        var languageLevel = LanguageLevel.parse(sdkName)
+        if (languageLevel == null) {
+            languageLevel = LanguageLevel.HIGHEST
+            MavenLog.LOG.warn("No language level for $sdkName use $languageLevel")
+        }
         val javaProjectData = JavaProjectData(
             GMavenConstants.SYSTEM_ID, project.outputDirectory, languageLevel,
             languageLevel!!.toFeatureString()
