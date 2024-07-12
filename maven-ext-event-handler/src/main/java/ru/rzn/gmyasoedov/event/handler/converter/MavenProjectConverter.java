@@ -32,13 +32,7 @@ public class MavenProjectConverter {
             convertedArtifactMap.put(artifact, mavenArtifact);
         }
         if (readOnly) {
-            Map<String, org.apache.maven.project.MavenProject> references = mavenProject.getProjectReferences();
-            if (references != null) {
-                for (org.apache.maven.project.MavenProject each : references.values()) {
-                    MavenArtifact mavenArtifact = MavenArtifactConverter.convert(each);
-                    artifacts.add(mavenArtifact);
-                }
-            }
+            addReferencedProjects(mavenProject, artifacts, 0);
         }
         List<DependencyTreeNode> dependencyTreeNodes = DependencyTreeNodeConverter
                 .convert(dependencyResultMap.get(mavenProject.getArtifactId()), convertedArtifactMap);
@@ -74,6 +68,20 @@ public class MavenProjectConverter {
                 .generatedPath(getGeneratedPath(mavenProject))
                 .testGeneratedPath(getGeneratedTestPath(mavenProject))
                 .build();
+    }
+
+    private static void addReferencedProjects(
+            org.apache.maven.project.MavenProject mavenProject, List<MavenArtifact> artifacts, int depth
+    ) {
+        if (depth > 2) return;
+        Map<String, org.apache.maven.project.MavenProject> references = mavenProject.getProjectReferences();
+        if (references != null) {
+            for (org.apache.maven.project.MavenProject each : references.values()) {
+                MavenArtifact mavenArtifact = MavenArtifactConverter.convert(each);
+                artifacts.add(mavenArtifact);
+               // addReferencedProjects(each, artifacts, depth + 1);
+            }
+        }
     }
 
     private static List<String> getExcludedPath(org.apache.maven.project.MavenProject project) {
