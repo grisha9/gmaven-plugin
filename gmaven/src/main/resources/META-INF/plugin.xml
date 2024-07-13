@@ -15,7 +15,7 @@
         <![CDATA[
         <h3>Fixed</h3>
         <ul>
-            <li>IDEA suggests GMaven import, even though project is GMaven already (<a href="https://github.com/grisha9/gmaven-plugin/issues/14" target="_blank" rel="nofollow">Issue</a>)</li>
+            <li>Support test-jar type for module dependency (<a href="https://github.com/grisha9/gmaven-plugin/issues/15" target="_blank" rel="nofollow">Issue</a>)</li>
         </ul>
     ]]>
     </change-notes>
