@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [232.30] - 2024-07-13
+### Fixed
+- Support test-jar type for module dependency ([issue](https://github.com/grisha9/gmaven-plugin/issues/15))
+
 ## [232.29] - 2024-07-06
 ### Fixed
 - IDEA suggests GMaven import, even though project is GMaven already ([issue](https://github.com/grisha9/gmaven-plugin/issues/14))
