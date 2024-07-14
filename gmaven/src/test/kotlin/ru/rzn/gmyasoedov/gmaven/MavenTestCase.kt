@@ -1,8 +1,5 @@
 package ru.rzn.gmyasoedov.gmaven
 
-import com.intellij.ide.DataManager
-import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.application.*
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.module.Module
@@ -348,19 +345,6 @@ abstract class MavenTestCase : UsefulTestCase() {
 
     protected fun <E : Throwable?> runWriteAction(runnable: ThrowableRunnable<E>) {
         WriteCommandAction.writeCommandAction(myProject).run(runnable)
-    }
-
-    protected fun createTestDataContext(pomFile: VirtualFile): DataContext {
-        val defaultContext = DataManager.getInstance().dataContext
-        return DataContext { dataId: String? ->
-            if (CommonDataKeys.PROJECT.`is`(dataId)) {
-                return@DataContext myProject
-            }
-            if (CommonDataKeys.VIRTUAL_FILE_ARRAY.`is`(dataId)) {
-                return@DataContext arrayOf<VirtualFile>(pomFile)
-            }
-            defaultContext.getData(dataId!!)
-        }
     }
 
     protected val MAVEN_COMPILER_PROPERTIES: String = """

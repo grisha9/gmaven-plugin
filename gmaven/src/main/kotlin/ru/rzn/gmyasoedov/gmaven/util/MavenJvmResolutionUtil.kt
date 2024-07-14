@@ -1,5 +1,4 @@
 @file:JvmName("MavenJvmResolutionUtil")
-@file:ApiStatus.Internal
 package ru.rzn.gmyasoedov.gmaven.util
 
 import com.intellij.openapi.application.runReadAction
@@ -10,7 +9,6 @@ import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.roots.ui.configuration.SdkLookupProvider
 import com.intellij.openapi.roots.ui.configuration.SdkLookupProvider.Id
-import org.jetbrains.annotations.ApiStatus
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import java.nio.file.Path
