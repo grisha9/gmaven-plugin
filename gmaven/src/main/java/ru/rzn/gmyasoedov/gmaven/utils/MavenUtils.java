@@ -111,7 +111,7 @@ public class MavenUtils {
     public static boolean isSimplePomFile(String fileName) {
         return fileName.equals(GMavenConstants.POM_XML) ||
                 fileName.endsWith(".pom") || fileName.startsWith("pom.") ||
-                fileName.equals(GMavenConstants.SUPER_POM_XML);
+                (fileName.startsWith(GMavenConstants.SUPER_POM_PREFIX) && fileName.endsWith(".xml"));
     }
 
     public static boolean isSimplePomFile(@Nullable VirtualFile file) {

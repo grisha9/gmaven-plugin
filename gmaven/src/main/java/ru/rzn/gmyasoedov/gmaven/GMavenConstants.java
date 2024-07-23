@@ -22,7 +22,7 @@ public final class GMavenConstants {
     @NlsSafe
     public static final String GMAVEN = "GMaven";
     public static final String POM_XML = "pom.xml";
-    public static final String SUPER_POM_XML = "pom-4.0.0.xml";
+    public static final String SUPER_POM_PREFIX = "pom-4.";
     public static final String PROFILES_XML = "profiles.xml";
 
     public static final String SCOPE_COMPILE = "compile";
