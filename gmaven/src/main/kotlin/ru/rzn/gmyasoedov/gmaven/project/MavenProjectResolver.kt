@@ -1,8 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven.project
 
 import com.intellij.execution.process.OSProcessHandler
-import com.intellij.execution.process.ProcessEvent
-import com.intellij.execution.process.ProcessListener
 import com.intellij.externalSystem.JavaProjectData
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.externalSystem.importing.ProjectResolverPolicy
@@ -17,7 +15,6 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUt
 import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
 import com.intellij.openapi.projectRoots.Sdk
-import com.intellij.openapi.util.Key
 import com.intellij.pom.java.LanguageLevel
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
@@ -25,6 +22,7 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
 import ru.rzn.gmyasoedov.gmaven.project.policy.ReadProjectResolverPolicy
+import ru.rzn.gmyasoedov.gmaven.project.process.GOSProcessHandler
 import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
@@ -43,10 +41,10 @@ import kotlin.io.path.absolutePathString
 
 class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSettings> {
 
-    private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, GServerRemoteProcessSupport>()
+    private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, Any>()
 
     override fun cancelTask(id: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
-        cancellationMap[id]?.stopAll()
+        cancelTask(id)
         return true
     }
 
@@ -68,43 +66,9 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val mavenHome = getMavenHome(settings.distributionSettings)
         val buildPath = Path.of(settings.executionWorkspace.projectBuildFile ?: projectPath)
         val request = getServerRequest(id, buildPath, mavenHome, sdk, listener, settings, resolverPolicy)
-        val support = MavenTaskProcessSupport(request)
-        val commandLine = support.getCommandLine()
-      /*  val handler = CapturingProcessHandler(commandLine)
-        val runProcess = handler.runProcess()
-       *//* while (!runProcess.isExitCodeSet) {
 
-        }*//*
-        val stderrLines = runProcess.getStdoutLines(true)
-        stderrLines.forEach { request.listener?.onTaskOutput(request.taskId, it + System.lineSeparator(), true) }
-*/
-        val osProcessHandler = OSProcessHandler(commandLine)
-        osProcessHandler.addProcessListener(object : ProcessListener {
-            override fun startNotified(event: ProcessEvent) {
-                super.startNotified(event)
-            }
-
-            override fun processTerminated(event: ProcessEvent) {
-                super.processTerminated(event)
-            }
-
-            override fun processWillTerminate(event: ProcessEvent, willBeDestroyed: Boolean) {
-                super.processWillTerminate(event, willBeDestroyed)
-            }
-
-            override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
-                super.onTextAvailable(event, outputType)
-                if (request.listener != null) {
-                    request.listener.onTaskOutput(request.taskId, event.text, true)
-                }
-            }
-
-            override fun processNotStarted() {
-                super.processNotStarted()
-            }
-        })
-        osProcessHandler.startNotify()
-        osProcessHandler.waitFor()
+        val processHandler = GOSProcessHandler(request) { cancellationMap[id] = it }
+        processHandler.startAndWait()
         if (true) {
             throw RuntimeException()
         }
@@ -202,6 +166,13 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
 
     private fun getSdk(it: String) = if (ApplicationManager.getApplication().isUnitTestMode)
         ExternalSystemJdkUtil.getJdk(null, USE_INTERNAL_JAVA) else ExternalSystemJdkUtil.getJdk(null, it)
+
+    private fun cancelTask(id: ExternalSystemTaskId) {
+        when(val remoteProcess = cancellationMap[id]) {
+            is GServerRemoteProcessSupport -> remoteProcess.stopAll()
+            is OSProcessHandler -> remoteProcess.destroyProcess()
+        }
+    }
 
     class ProjectResolverContext(
         val projectNode: DataNode<ProjectData>,

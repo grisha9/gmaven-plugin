@@ -156,16 +156,6 @@ public class MavenServerCmdState extends CommandLineState {
         }
     }
 
-    private static void configureSslRelatedOptions(Map<String, String> defs) {
-        for (Map.Entry<Object, Object> each : System.getProperties().entrySet()) {
-            Object key = each.getKey();
-            Object value = each.getValue();
-            if (key instanceof String && value instanceof String && ((String) key).startsWith("javax.net.ssl")) {
-                defs.put((String) key, (String) value);
-            }
-        }
-    }
-
     public static void setupMavenOpts(@NotNull SimpleJavaParameters params) {
         String mavenOpts = System.getenv("MAVEN_OPTS");
         Map<String, String> mavenOptsMap;
@@ -184,6 +174,15 @@ public class MavenServerCmdState extends CommandLineState {
         }
     }
 
+    private static void configureSslRelatedOptions(Map<String, String> defs) {
+        for (Map.Entry<Object, Object> each : System.getProperties().entrySet()) {
+            Object key = each.getKey();
+            Object value = each.getValue();
+            if (key instanceof String && value instanceof String && ((String) key).startsWith("javax.net.ssl")) {
+                defs.put((String) key, (String) value);
+            }
+        }
+    }
 
     @Nullable
     public static Integer getDebugPort() {

@@ -1,36 +1,32 @@
 package ru.rzn.gmyasoedov.gmaven.project
 
 import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.openapi.util.registry.Registry
+import com.intellij.util.execution.ParametersListUtil
+import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
-import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.MavenServerCmdState
-import ru.rzn.gmyasoedov.serverapi.GMavenServer
 import java.nio.file.Path
+import kotlin.io.path.absolutePathString
 
 
 class MavenTaskProcessSupport(private val request: GServerRequest, private val isImport: Boolean = true) {
     private val workingDirectory = getWorkingDirectory(request)
-    private val jvmConfigOptions = GServerRemoteProcessSupport.getJvmConfigOptions(workingDirectory)
 //QualityToolProcessHandler
     fun getCommandLine(): GeneralCommandLine {
         val commandLine = GeneralCommandLine()
         setupDebugParam(commandLine)
         setupGmavenPluginsProperty(commandLine)
-     //   processVmOptions(commandLine)
-        commandLine.exePath = "/home/Grigoriy.Myasoedov/.sdkman/candidates/maven/3.9.1/bin/mvn"
-        commandLine.exePath = "/home/Grigoriy.Myasoedov/.sdkman/candidates/mvnd/1.0-m8-m39/bin/mvnd.sh"
-        commandLine.addParameter("clean")
-        commandLine.addParameter("package")
+        setupMavenOpts(commandLine)
+        commandLine.exePath = request.mavenPath.resolve("bin").resolve("mvn").absolutePathString()
+        commandLine.addParameter("ru.rzn.gmyasoedov:maven-model-reader-plugin:1.0-SNAPSHOT:resolve")
         commandLine.workDirectory = workingDirectory.toFile()
         commandLine.isRedirectErrorStream = true
 
         commandLine.addParameter("-f")
-        commandLine.addParameter("/home/Grigoriy.Myasoedov/jb/single-pom")
-        commandLine.addParameter("-DskipTests")
+        commandLine.addParameter(workingDirectory.absolutePathString())
         commandLine.environment["JAVA_HOME"] = request.settings.javaHome
-        //commandLine.environment["-DskipTests"] = "true"
+        commandLine.addParameter("-DresultAsTree=true")
         return commandLine
     }
 
@@ -43,23 +39,30 @@ class MavenTaskProcessSupport(private val request: GServerRequest, private val i
     private fun setupGmavenPluginsProperty(params: GeneralCommandLine) {
         val extensionList = MavenFullImportPlugin.EP_NAME.extensionList
         val pluginsForImport: MutableList<String> = ArrayList(extensionList.size)
+        val pluginsForResolve: MutableList<String> = ArrayList(extensionList.size)
         for (plugin in extensionList) {
             pluginsForImport.add(plugin.key)
+            if ((plugin as? MavenCompilerFullImportPlugin)?.resolvePlugin() == true) {
+                pluginsForResolve.add(plugin.getArtifactId())
+            }
         }
 
         if (pluginsForImport.isNotEmpty()) {
-            params.environment[GMavenServer.GMAVEN_PLUGINS] = pluginsForImport.joinToString(",")
+            params.addParameter("-DprocessingPluginGAIds=${createListParameter(pluginsForImport)}")
+            params.addParameter("-DresolvedPluginGAIds=${createListParameter(pluginsForResolve)}")
         }
     }
 
-    private fun processVmOptions(params: GeneralCommandLine) {
-        val vmOptions: MutableList<String> = ArrayList(this.jvmConfigOptions)
-        vmOptions.addAll(request.settings.jvmArguments)
-        for (param in vmOptions) {
-            if (isImport && Registry.`is`("gmaven.vm.remove.javaagent") && param.startsWith("-javaagent")) {
-                continue
-            }
-            params.addParameter(param)
+    private fun createListParameter(pluginsForImport: MutableList<String>) =
+        ParametersListUtil.escape(pluginsForImport.joinToString(","))
+
+    private fun setupMavenOpts(commandLine: GeneralCommandLine) {
+        var mavenOpts = System.getenv("MAVEN_OPTS") ?: ""
+        if (request.settings.jvmArguments.isNotEmpty()) {
+            mavenOpts += ParametersListUtil.join(request.settings.jvmArguments)
+        }
+        if (mavenOpts.isNotBlank()) {
+            commandLine.environment["MAVEN_OPTS"] = mavenOpts
         }
     }
 
