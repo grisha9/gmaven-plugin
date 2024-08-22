@@ -13,8 +13,8 @@ import com.intellij.openapi.util.registry.Registry
 import org.jetbrains.annotations.VisibleForTesting
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
+import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.getMavenHome
-import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.runTasks
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
@@ -27,7 +27,7 @@ import kotlin.io.path.Path
 import kotlin.io.path.notExists
 
 class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
-    private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, GServerRemoteProcessSupport>()
+    private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, Any>()
 
     override fun executeTasks(
         id: ExternalSystemTaskId,
@@ -74,7 +74,7 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
     }
 
     override fun cancelTask(id: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
-        cancellationMap[id]?.stopAll()
+        MavenProjectResolver.cancelTask(id, cancellationMap)
         return true
     }
 

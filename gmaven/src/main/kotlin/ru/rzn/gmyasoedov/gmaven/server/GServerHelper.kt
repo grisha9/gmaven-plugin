@@ -26,7 +26,7 @@ import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest
 import java.nio.file.Files
 
-fun firstRun(gServerRequest: GServerRequest): MavenMapResult {
+private fun firstRun(gServerRequest: GServerRequest): MavenMapResult {
     val request = GServerRequest(
         gServerRequest.taskId,
         gServerRequest.projectPath,

@@ -1,4 +1,4 @@
-package ru.rzn.gmyasoedov.gmaven.project
+package ru.rzn.gmyasoedov.gmaven.project.process
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.util.SystemInfo
@@ -7,32 +7,39 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPl
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.MavenServerCmdState
+import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlin.io.path.name
 
 
-class MavenTaskProcessSupport(private val request: GServerRequest, private val isImport: Boolean = true) {
-    private val workingDirectory = getWorkingDirectory(request)
+class BaseMavenCommandLine(private val request: GServerRequest, private val isImport: Boolean = true) {
+    val workingDirectory = getWorkingDirectory(request)
 
     //QualityToolProcessHandler
     fun getCommandLine(): GeneralCommandLine {
         val commandLine = GeneralCommandLine()
+        commandLine.environment["JAVA_HOME"] = request.settings.javaHome
         setupDebugParam(commandLine)
         setupGmavenPluginsProperty(commandLine)
         setupMavenOpts(commandLine)
-        commandLine.exePath = getExeMavenPath()
+        setupProjectPath(commandLine, request)
 
+        commandLine.exePath = getExeMavenPath()
         commandLine.workDirectory = workingDirectory.toFile()
         commandLine.isRedirectErrorStream = true
 
-        /*commandLine.addParameter("ru.rzn.gmyasoedov:maven-model-reader-plugin:1.0-SNAPSHOT:resolve")
-        commandLine.addParameter("-f")
-        commandLine.addParameter(workingDirectory.absolutePathString())*/
-        commandLine.addParameter("-DresultAsTree=true")
-        commandLine.environment["JAVA_HOME"] = request.settings.javaHome
         return commandLine
+    }
+
+    private fun setupProjectPath(commandLine: GeneralCommandLine, request: GServerRequest) {
+        val projectPath = request.projectPath
+        val directory = Files.isDirectory(projectPath)
+        val projectDirectory = if (directory) projectPath else projectPath.parent
+
+        commandLine.addParameter("-f")
+        commandLine.addParameter(projectDirectory.absolutePathString())
     }
 
     private fun getExeMavenPath(): String {
@@ -66,6 +73,7 @@ class MavenTaskProcessSupport(private val request: GServerRequest, private val i
 
     private fun setupGmavenPluginsProperty(params: GeneralCommandLine) {
         if (!isImport) return
+        params.addParameter("-DresultAsTree=true")
         val extensionList = MavenFullImportPlugin.EP_NAME.extensionList
         val pluginsForImport: MutableList<String> = ArrayList(extensionList.size)
         val pluginsForResolve: MutableList<String> = ArrayList(extensionList.size)

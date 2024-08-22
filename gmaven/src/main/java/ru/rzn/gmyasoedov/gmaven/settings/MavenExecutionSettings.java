@@ -36,6 +36,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private boolean useMvndForTasks = false;
     private boolean showPluginNodes = true;
     private boolean showAllPhase = false;
+    private boolean isSkipTests = false;
     @NotNull
     private ProjectSettingsControlBuilder.OutputLevelType outputLevel = DEFAULT;
     @NotNull
@@ -182,6 +183,14 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     public void setCheckSources(boolean checkSources) {
         this.checkSources = checkSources;
+    }
+
+    public boolean isSkipTests() {
+        return isSkipTests;
+    }
+
+    public void setSkipTests(boolean skipTests) {
+        isSkipTests = skipTests;
     }
 
     @Override
