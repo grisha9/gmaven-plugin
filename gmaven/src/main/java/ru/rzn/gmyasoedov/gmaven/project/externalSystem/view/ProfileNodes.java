@@ -16,7 +16,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-@Order(ExternalSystemNode.BUILTIN_TASKS_DATA_NODE_ORDER - 2)
+import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.BUILTIN_TASKS_DATA_NODE_ORDER;
+
+@Order(BUILTIN_TASKS_DATA_NODE_ORDER - 2)
 public class ProfileNodes extends ExternalSystemNode<AbstractExternalEntityData> {
 
     private final List<ProfileNode> profiles;

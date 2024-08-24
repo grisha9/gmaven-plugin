@@ -140,7 +140,7 @@ private fun setupBaseParamsFromSettings(request: GServerRequest, commandLine: Ge
 
 private fun setupImportParamsFromSettings(request: GServerRequest, commandLine: GeneralCommandLine) {
     setupBaseParamsFromSettings(request, commandLine)
-    request.settings.argumentsImport.forEach { commandLine.addParameter(it) }
+    request.settings.argumentsImport?.forEach { commandLine.addParameter(it) }
     val importTaskName = "ru.rzn.gmyasoedov:maven-model-reader-plugin:$MAVEN_MODEL_READER_PLUGIN_VERSION:" +
             (if (request.readOnly) "read" else "resolve")
     commandLine.addParameter(importTaskName)

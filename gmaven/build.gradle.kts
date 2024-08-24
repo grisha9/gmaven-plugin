@@ -1,20 +1,39 @@
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.8.22"
-    id("org.jetbrains.intellij") version "1.17.1"
+    id("org.jetbrains.intellij.platform") version "2.0.1"
+    id("org.jetbrains.intellij.platform.migration") version "2.0.1"
     id("org.jetbrains.changelog") version "2.1.0"
 }
 
 group = "ru.rzn.gmyasoedov"
 version = providers.gradleProperty("pluginVersion").get()
 
-repositories {
+/*repositories {
     mavenCentral()
     maven("https://www.jetbrains.com/intellij-repository/releases")
     maven("https://cache-redirector.jetbrains.com/intellij-dependencies")
+}*/
+repositories {
+    mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 dependencies {
+    intellijPlatform {
+        intellijIdeaCommunity(providers.gradleProperty("platformVersion").get())
+        instrumentationTools()
+
+        bundledPlugin("com.intellij.java")
+        bundledPlugin("com.intellij.properties")
+        bundledPlugin("org.intellij.groovy")
+        bundledPlugin("org.jetbrains.kotlin")
+        bundledPlugin("org.jetbrains.plugins.terminal")
+        bundledPlugin("com.jetbrains.sh")
+    }
+
     implementation(project(":server-api"))
     runtimeOnly(project(":server"))
     runtimeOnly(project(":maven-ext-event-handler"))
@@ -23,7 +42,7 @@ dependencies {
 
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
-intellij {
+/*intellij {
     version.set(providers.gradleProperty("platformVersion").get())
     type.set("IC") // Target IDE Platform
     plugins.set(listOf(
@@ -34,7 +53,7 @@ intellij {
         "org.jetbrains.plugins.terminal",
         "com.jetbrains.sh",
     ))
-}
+}*/
 
 changelog {
     headerParserRegex.set("""(\d+\.\d+(.\d+)?)""".toRegex())

@@ -12,7 +12,6 @@ import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.sh.run.ShConfigurationType
 import com.intellij.sh.run.ShRunConfiguration
-import com.intellij.util.io.isDirectory
 import ru.rzn.gmyasoedov.gmaven.server.getSubTaskArgs
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
@@ -23,7 +22,7 @@ object MvndTaskManager {
 
     @Throws(IllegalStateException::class, ExecutionException::class)
     fun executeTasks(settings: MavenExecutionSettings, buildPath: Path, tasks: List<String>) {
-        val projectDirectory = if (buildPath.isDirectory()) buildPath else buildPath.parent
+        val projectDirectory = if (buildPath.toFile().isDirectory()) buildPath else buildPath.parent
         val parametersList = getParametersList(buildPath, settings, tasks)
         val project = getProject(settings)
 

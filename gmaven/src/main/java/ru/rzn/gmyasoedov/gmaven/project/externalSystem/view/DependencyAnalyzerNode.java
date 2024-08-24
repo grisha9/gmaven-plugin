@@ -8,7 +8,9 @@ import com.intellij.openapi.externalSystem.view.ExternalSystemNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@Order(ExternalSystemNode.BUILTIN_DEPENDENCIES_DATA_NODE_ORDER)
+import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.BUILTIN_DEPENDENCIES_DATA_NODE_ORDER;
+
+@Order(BUILTIN_DEPENDENCIES_DATA_NODE_ORDER)
 public class DependencyAnalyzerNode extends ExternalSystemNode<Object> {
 
     @SuppressWarnings("unchecked")

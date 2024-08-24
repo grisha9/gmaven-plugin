@@ -52,6 +52,9 @@ public final class GMavenConstants {
     @NonNls
     public static final ProjectSystemId SYSTEM_ID = new ProjectSystemId(GMAVEN.toUpperCase(), GMAVEN);
 
+    public static final int BUILTIN_TASKS_DATA_NODE_ORDER = 10;
+    public static final int BUILTIN_DEPENDENCIES_DATA_NODE_ORDER = 20;
+
     private GMavenConstants() {
     }
 
