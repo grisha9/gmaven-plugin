@@ -12,6 +12,7 @@ import java.util.Set;
 import static com.intellij.openapi.util.registry.Registry.stringValue;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNullElse;
+import static ru.rzn.gmyasoedov.serverapi.GMavenServer.MAVEN_MODEL_READER_PLUGIN_VERSION;
 
 public final class GMavenConstants {
     public static final String BUNDLED_MAVEN_VERSION = "3.9.6";
@@ -38,7 +39,8 @@ public final class GMavenConstants {
     public static final String MODULE_PROP_HAS_DEPENDENCIES = "hasDependencies";
     public static final String APECTJ_COMPILER_LIB = "org.aspectj:aspectjtools";
 
-    @NotNull @NonNls
+    @NotNull
+    @NonNls
     public static final String SOURCE_SET_MODULE_TYPE_KEY = "sourceSet";
     public static final String IDEA_PSI_EDIT_TOKEN = "IntellijIdeaRulezzz";
     public static final List<String> BASIC_PHASES =
@@ -47,6 +49,9 @@ public final class GMavenConstants {
     public static final String TASK_RESOLVE_PLUGINS = "dependency:resolve-plugins";
     public static final String TASK_DOWNLOAD_SOURCE = "dependency:sources";
     public static final String TASK_EFFECTIVE_POM = "help:effective-pom";
+    public static final String TASK_DEPENDENCY_TREE = "ru.rzn.gmyasoedov:maven-model-reader-plugin:"
+            + MAVEN_MODEL_READER_PLUGIN_VERSION + ":tree";
+    public static final String DEPENDENCY_TREE_EVENT_SPY_CLASS = "ru.rzn.gmyasoedov.dependency.graph.DependencySpyConstants";
 
     @NotNull
     @NonNls

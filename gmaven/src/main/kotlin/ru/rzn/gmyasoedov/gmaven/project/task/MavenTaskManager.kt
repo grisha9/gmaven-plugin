@@ -12,11 +12,13 @@ import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager
 import com.intellij.openapi.util.registry.Registry
 import org.jetbrains.annotations.VisibleForTesting
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants.TASK_DEPENDENCY_TREE
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.getMavenHome
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.runTasks
+import ru.rzn.gmyasoedov.gmaven.server.runTasks2
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
@@ -58,6 +60,10 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         val mavenHome = getMavenHome(settings.distributionSettings)
         try {
             val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
+            if (taskNames.size == 1 && taskNames.first() == TASK_DEPENDENCY_TREE) {
+                runTasks2(request, tasks) { cancellationMap[id] = it }
+                return
+            }
             runTasks(request, tasks) { cancellationMap[id] = it }
         } finally {
             cancellationMap.remove(id)

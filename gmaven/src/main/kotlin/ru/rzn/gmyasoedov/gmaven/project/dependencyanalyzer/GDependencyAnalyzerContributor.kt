@@ -1,34 +1,46 @@
 package ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.intellij.execution.executors.DefaultRunExecutor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.externalSystem.dependency.analyzer.*
 import com.intellij.openapi.externalSystem.model.ExternalProjectInfo
 import com.intellij.openapi.externalSystem.model.ProjectKeys
+import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExecutionSettings
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskType
-import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
+import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.service.notification.ExternalSystemProgressNotificationManager
 import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
+import com.intellij.openapi.externalSystem.task.TaskCallback
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.externalSystem.util.ExternalSystemBundle
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.NlsSafe
+import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.util.text.StringUtil
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
-import ru.rzn.gmyasoedov.gmaven.MavenManager
-import ru.rzn.gmyasoedov.gmaven.project.getMavenHome
-import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
-import ru.rzn.gmyasoedov.gmaven.server.getDependencyTree
-import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
+import com.intellij.util.PathUtil
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants.*
+import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
+import ru.rzn.gmyasoedov.gmaven.server.getResultFilePath
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
+import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
+import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
-import ru.rzn.gmyasoedov.serverapi.model.DependencyTreeNode
-import ru.rzn.gmyasoedov.serverapi.model.MavenArtifactState
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenArtifactState
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.tree.DependencyTreeNode
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.tree.MavenProjectDependencyTree
+import ru.rzn.gmyasoedov.serverapi.GMavenServer.GMAVEN_RESPONSE_TREE_FILE
+import java.io.FileReader
+import java.io.IOException
+import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 
@@ -56,45 +68,88 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
     }
 
     override fun getDependencyScopes(externalProject: DependencyAnalyzerProject) = listOf(
-        scope(GMavenConstants.SCOPE_COMPILE),
-        scope(GMavenConstants.SCOPE_PROVIDED),
-        scope(GMavenConstants.SCOPE_RUNTIME),
-        scope(GMavenConstants.SCOPE_SYSTEM),
-        scope(GMavenConstants.SCOPE_IMPORT),
-        scope(GMavenConstants.SCOPE_TEST)
+        scope(SCOPE_COMPILE),
+        scope(SCOPE_PROVIDED),
+        scope(SCOPE_RUNTIME),
+        scope(SCOPE_SYSTEM),
+        scope(SCOPE_IMPORT),
+        scope(SCOPE_TEST)
     )
 
     override fun getDependencies(externalProject: DependencyAnalyzerProject): List<DependencyAnalyzerDependency> {
         val artifactGA = externalProject.getUserData(ARTIFACT_ID)!!
         val moduleData = getModuleMap().get(artifactGA)?.second
         val projectPath = moduleData?.linkedExternalProjectPath ?: return emptyList()
-        if (moduleData.getProperty(GMavenConstants.MODULE_PROP_HAS_DEPENDENCIES) == null) return emptyList()
+        if (moduleData.getProperty(MODULE_PROP_HAS_DEPENDENCIES) == null) return emptyList()
         val mavenSettings = MavenSettings.getInstance(project)
         val projectSettings = mavenSettings.getLinkedProjectSettings(projectPath) ?: return emptyList()
-        val gServerRequest = toProjectRequest(mavenSettings, projectSettings) ?: return emptyList()
-        val dependencyTree = getDependencyTreeNodes(artifactGA, gServerRequest)
+        val dependencyTree = getDependencyTreeNodes(artifactGA, projectSettings.externalProjectPath)
         return createDependencyList(dependencyTree, moduleData, externalProject)
     }
 
-    private fun getDependencyTreeNodes(artifactGA: String, gServerRequest: GServerRequest): List<DependencyTreeNode> {
-        val dependencyTreeFromMap = dependencyTreeByProject.get(artifactGA)
+    private fun getDependencyTreeNodes(artifactGA: String, externalProjectPath: String): List<DependencyTreeNode> {
+        val dependencyTreeFromMap = dependencyTreeByProject[artifactGA]
         if (dependencyTreeFromMap != null) return dependencyTreeFromMap
-        val dependencyTreeProjects = getDependencyTree(gServerRequest, artifactGA)
+
+        val mavenExtClassesJarPathString: String
+        try {
+            mavenExtClassesJarPathString = PathUtil.getJarPathForClass(Class.forName(DEPENDENCY_TREE_EVENT_SPY_CLASS))
+        } catch (e: ClassNotFoundException) {
+            throw RuntimeException(e)
+        }
+
+        val settings = ExternalSystemTaskExecutionSettings()
+        val env = HashMap<String, String>(settings.env)
+        env["maven.ext.class.path"] = mavenExtClassesJarPathString
+        env["aether.conflictResolver.verbose"] = "true"
+        env["aether.dependencyManager.verbose"] = "true"
+        if (!Registry.`is`("gmaven.process.tree.fallback")) {
+            settings.scriptParameters = "-pl $artifactGA -am"
+        }
+        settings.executionName = GBundle.message("gmaven.action.dependency.tree.sources")
+        settings.externalProjectPath = externalProjectPath
+        settings.taskNames = listOf(TASK_DEPENDENCY_TREE)
+        settings.env = env
+        settings.externalSystemIdString = SYSTEM_ID.id
+
+        ExternalSystemUtil.runTask(
+            settings, DefaultRunExecutor.EXECUTOR_ID, project, SYSTEM_ID,
+            object : TaskCallback {
+                override fun onSuccess() {
+                    try {
+                        val resultFilePath = getResultFilePath(Path.of(externalProjectPath), GMAVEN_RESPONSE_TREE_FILE)
+                        val result: List<MavenProjectDependencyTree> = getDependencyTreeResult(resultFilePath)
+                        FileUtil.delete(resultFilePath.toFile())
+                        result.forEach { dependencyTreeByProject[it.groupId + ":" + it.artifactId] = it.dependencies }
+                    } catch (e: IOException) {
+                        MavenLog.LOG.warn(e)
+                        val title = GBundle.message("gmaven.action.notifications.dependency.tree.failed.title")
+                        GMavenNotification.errorExternalSystemNotification(title, e.localizedMessage, project)
+                    }
+                }
+
+                override fun onFailure() {
+                    val title = GBundle.message("gmaven.action.notifications.dependency.tree.failed.title")
+                    val message = GBundle.message("gmaven.action.notifications.dependency.tree.failed.content")
+                    GMavenNotification.errorExternalSystemNotification(title, message, project)
+                }
+            }, ProgressExecutionMode.NO_PROGRESS_SYNC, true
+        )
+
+        //val dependencyTreeProjects = getDependencyTree(gServerRequest, artifactGA)
         //todo!!!
-        //dependencyTreeProjects.forEach { dependencyTreeByProject[it.groupId + ":" + it.artifactId] = it.dependencyTree }
+
         return dependencyTreeByProject[artifactGA] ?: emptyList()
     }
 
-    private fun toProjectRequest(mavenSettings: MavenSettings, projectSettings: MavenProjectSettings): GServerRequest? {
-        val executionSettings = MavenManager.getExecutionSettings(
-            project, projectSettings.externalProjectPath, mavenSettings, projectSettings
-        )
-        val id = ExternalSystemTaskId.create(SYSTEM_ID, ExternalSystemTaskType.EXECUTE_TASK, project)
-        val mavenHome = getMavenHome(executionSettings.distributionSettings)
-        val sdk = executionSettings.jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) } ?: return null
-        val buildPath =
-            Path.of(executionSettings.executionWorkspace.projectBuildFile ?: projectSettings.externalProjectPath)
-        return GServerRequest(id, buildPath, mavenHome, sdk, executionSettings)
+    private fun getDependencyTreeResult(resultFilePath: Path): List<MavenProjectDependencyTree> {
+        return FileReader(resultFilePath.toFile(), StandardCharsets.UTF_8).use {
+            val typeOfT = TypeToken.getParameterized(
+                MutableList::class.java,
+                MavenProjectDependencyTree::class.java
+            ).type
+            Gson().fromJson(it, typeOfT)
+        }
     }
 
     private fun getModuleMap(): Map<String, Pair<DAProject, ModuleData>> {
@@ -129,8 +184,8 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
     ): List<DependencyAnalyzerDependency> {
         val root = DAModule(externalProject.title)
         root.putUserData(MODULE_DATA, moduleData)
-        root.putUserData(BUILD_FILE, moduleData.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE))
-        val rootDependency = DADependency(root, scope(GMavenConstants.SCOPE_COMPILE), null, emptyList())
+        root.putUserData(BUILD_FILE, moduleData.getProperty(MODULE_PROP_BUILD_FILE))
+        val rootDependency = DADependency(root, scope(SCOPE_COMPILE), null, emptyList())
         val result = mutableListOf<DependencyAnalyzerDependency>()
         collectDependency(treeNodeList, rootDependency, result)
         return result
@@ -145,7 +200,7 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
             val dependencyData = getDependencyData(mavenArtifactNode)
             val dependency = DADependency(
                 dependencyData,
-                scope(mavenArtifactNode.originalScope ?: GMavenConstants.SCOPE_COMPILE),
+                scope(mavenArtifactNode.originalScope ?: SCOPE_COMPILE),
                 parentDependency,
                 getStatus(mavenArtifactNode, dependencyData)
             )
@@ -160,7 +215,7 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
         val artifact = mavenArtifactNode.artifact
         val moduleInfo = getModuleMap().get(artifact.groupId + ":" + artifact.artifactId)
         if (moduleInfo != null) {
-            val buildFile = moduleInfo.second.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
+            val buildFile = moduleInfo.second.getProperty(MODULE_PROP_BUILD_FILE)
             val daModule = DAModule(artifact.artifactId)
             daModule.putUserData(BUILD_FILE, buildFile)
             return daModule

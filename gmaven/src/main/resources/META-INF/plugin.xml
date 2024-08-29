@@ -146,7 +146,12 @@
                      description="Not change IDEA settings in: 'File | Settings | Build, Execution, Deployment | Compiler | Java Compiler'"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
-
+        <registryKey key="gmaven.server.new" defaultValue="true"
+                     description="New integration with maven reader plugin via file"/>
+        <registryKey key="gmaven.process.jsonPrettyPrinting" defaultValue="false"
+                     description="Maven model reader plugin - set json pretty printing format"/>
+        <registryKey key="gmaven.process.tree.fallback" defaultValue="false"
+                     description="Maven dependency tree for whole project - take extra time but more stable"/>
         <notificationGroup id="GMaven" displayType="BALLOON"/>
 
         <fileTypeOverrider implementation="ru.rzn.gmyasoedov.gmaven.dom.PomFileTypeOverrider" order="first"/>

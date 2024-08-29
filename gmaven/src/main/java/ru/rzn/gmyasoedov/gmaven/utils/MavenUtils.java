@@ -44,6 +44,7 @@ import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData;
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings;
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenId;
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject;
 
@@ -449,5 +450,16 @@ public class MavenUtils {
         }
 
         return MavenUtils.isSimplePomFile(file.getName());
+    }
+
+    @NotNull
+    public static Path getWorkingDirectory(MavenProjectSettings settings) {
+        if (settings.getProjectBuildFile() == null) return Path.of(settings.getExternalProjectPath());
+        Path buildFilePath = Path.of(settings.getProjectBuildFile());
+        if (buildFilePath.toFile().isDirectory()) {
+            return buildFilePath;
+        } else {
+            return buildFilePath.getParent();
+        }
     }
 }

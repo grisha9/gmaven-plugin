@@ -19,7 +19,6 @@ public class MavenProjectConverter {
                                        Map<String, List<DependencyNode>> dependencyResultMap,
                                        boolean readOnly) {
         if (dependencyResultMap == null) {
-            dependencyResultMap = Collections.emptyMap();
         }
 
         List<MavenPluginWrapper> pluginWrappers = new ArrayList<>(mavenProject.getBuildPlugins().size());

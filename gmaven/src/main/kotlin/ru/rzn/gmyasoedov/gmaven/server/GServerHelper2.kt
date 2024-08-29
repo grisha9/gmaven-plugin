@@ -167,11 +167,11 @@ private fun runMavenImportInner(processSupport: GOSProcessHandler, workingDirect
     }
 }
 
-fun getResultFilePath(workingDirectory: Path): Path {
-    return if (workingDirectory.resolve("target").resolve(GMavenServer.GMAVEN_RESPONSE_FILE).exists()) {
-        workingDirectory.resolve("target").resolve(GMavenServer.GMAVEN_RESPONSE_FILE)
-    } else if (workingDirectory.resolve(GMavenServer.GMAVEN_RESPONSE_FILE).exists()) {
-        workingDirectory.resolve(GMavenServer.GMAVEN_RESPONSE_FILE)
+fun getResultFilePath(workingDirectory: Path, fileName: String = GMavenServer.GMAVEN_RESPONSE_POM_FILE): Path {
+    return if (workingDirectory.resolve("target").resolve(fileName).exists()) {
+        workingDirectory.resolve("target").resolve(fileName)
+    } else if (workingDirectory.resolve(fileName).exists()) {
+        workingDirectory.resolve(fileName)
     } else {
         throw RuntimeException("Result file not found. See maven log")
     }

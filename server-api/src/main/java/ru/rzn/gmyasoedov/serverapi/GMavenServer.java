@@ -19,7 +19,8 @@ public interface GMavenServer extends Remote {
     String RESOLVE_TASK = "ru.rzn.gmyasoedov:model-reader:" + RESOLVE_TASK_VERSION + ":resolve";
     String READ_TASK = "ru.rzn.gmyasoedov:model-reader:" + RESOLVE_TASK_VERSION + ":read";
     String GMAVEN_DEPENDENCY_TREE = "gmaven.event.dependency.tree";
-    String GMAVEN_RESPONSE_FILE = ".gmaven.pom.json";
+    String GMAVEN_RESPONSE_POM_FILE = ".gmaven.pom.json";
+    String GMAVEN_RESPONSE_TREE_FILE = ".gmaven.tree.json";
 
     MavenMapResult getProjectModel(GetModelRequest request) throws RemoteException;
 }

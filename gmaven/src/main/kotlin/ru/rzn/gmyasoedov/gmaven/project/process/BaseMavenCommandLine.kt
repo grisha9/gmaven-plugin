@@ -2,6 +2,7 @@ package ru.rzn.gmyasoedov.gmaven.project.process
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.util.SystemInfo
+import com.intellij.openapi.util.registry.Registry
 import com.intellij.util.execution.ParametersListUtil
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
@@ -66,7 +67,11 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
     }
 
     private fun setupDebugParam(commandLine: GeneralCommandLine) {
+        if (Registry.`is`("gmaven.process.jsonPrettyPrinting")) {
+            commandLine.addParameter("-DjsonPrettyPrinting=true")
+        }
         val debugPort = MavenServerCmdState.getDebugPort() ?: return
+        commandLine.addParameter("-DjsonPrettyPrinting=true")
         commandLine.addParameter("-Xdebug")
         commandLine.addParameter("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=*:$debugPort")
     }
