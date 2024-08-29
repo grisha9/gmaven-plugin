@@ -173,7 +173,7 @@ fun getResultFilePath(workingDirectory: Path, fileName: String = GMavenServer.GM
     } else if (workingDirectory.resolve(fileName).exists()) {
         workingDirectory.resolve(fileName)
     } else {
-        throw RuntimeException("Result file not found. See maven log")
+        throw RuntimeException("Result file not found ${fileName}. See maven log.")
     }
 }
 

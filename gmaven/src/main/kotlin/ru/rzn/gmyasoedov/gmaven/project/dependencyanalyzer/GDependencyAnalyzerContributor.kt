@@ -3,6 +3,7 @@ package ru.rzn.gmyasoedov.gmaven.project.dependencyanalyzer
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.intellij.execution.executors.DefaultRunExecutor
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.externalSystem.dependency.analyzer.*
 import com.intellij.openapi.externalSystem.model.ExternalProjectInfo
@@ -27,6 +28,7 @@ import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.util.PathUtil
+import com.intellij.util.execution.ParametersListUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.*
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.server.getResultFilePath
@@ -39,7 +41,6 @@ import ru.rzn.gmyasoedov.maven.plugin.reader.model.tree.DependencyTreeNode
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.tree.MavenProjectDependencyTree
 import ru.rzn.gmyasoedov.serverapi.GMavenServer.GMAVEN_RESPONSE_TREE_FILE
 import java.io.FileReader
-import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
@@ -99,17 +100,15 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
         }
 
         val settings = ExternalSystemTaskExecutionSettings()
-        val env = HashMap<String, String>(settings.env)
-        env["maven.ext.class.path"] = mavenExtClassesJarPathString
-        env["aether.conflictResolver.verbose"] = "true"
-        env["aether.dependencyManager.verbose"] = "true"
+        settings.scriptParameters = "-Dmaven.ext.class.path=${ParametersListUtil.escape(mavenExtClassesJarPathString)}"
+        settings.scriptParameters += " -Daether.conflictResolver.verbose=true"
+        settings.scriptParameters += " -Daether.dependencyManager.verbose=true"
         if (!Registry.`is`("gmaven.process.tree.fallback")) {
-            settings.scriptParameters = "-pl $artifactGA -am"
+            settings.scriptParameters += " -pl $artifactGA -am"
         }
         settings.executionName = GBundle.message("gmaven.action.dependency.tree.sources")
         settings.externalProjectPath = externalProjectPath
         settings.taskNames = listOf(TASK_DEPENDENCY_TREE)
-        settings.env = env
         settings.externalSystemIdString = SYSTEM_ID.id
 
         ExternalSystemUtil.runTask(
@@ -121,23 +120,20 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
                         val result: List<MavenProjectDependencyTree> = getDependencyTreeResult(resultFilePath)
                         FileUtil.delete(resultFilePath.toFile())
                         result.forEach { dependencyTreeByProject[it.groupId + ":" + it.artifactId] = it.dependencies }
-                    } catch (e: IOException) {
+                    } catch (e: Exception) {
                         MavenLog.LOG.warn(e)
-                        val title = GBundle.message("gmaven.action.notifications.dependency.tree.failed.title")
-                        GMavenNotification.errorExternalSystemNotification(title, e.localizedMessage, project)
+                        val message = GBundle.message("gmaven.action.notifications.dependency.tree.failed.content")
+                        val finalMessage = e.localizedMessage + System.lineSeparator() + "<br/> $message"
+                        GMavenNotification.createNotificationDA(finalMessage, NotificationType.ERROR)
                     }
                 }
 
                 override fun onFailure() {
-                    val title = GBundle.message("gmaven.action.notifications.dependency.tree.failed.title")
                     val message = GBundle.message("gmaven.action.notifications.dependency.tree.failed.content")
-                    GMavenNotification.errorExternalSystemNotification(title, message, project)
+                    GMavenNotification.createNotificationDA(message, NotificationType.ERROR)
                 }
             }, ProgressExecutionMode.NO_PROGRESS_SYNC, true
         )
-
-        //val dependencyTreeProjects = getDependencyTree(gServerRequest, artifactGA)
-        //todo!!!
 
         return dependencyTreeByProject[artifactGA] ?: emptyList()
     }
