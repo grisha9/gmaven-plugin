@@ -1,3 +1,5 @@
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.8.22"
@@ -7,13 +9,8 @@ plugins {
 }
 
 group = "ru.rzn.gmyasoedov"
-version = providers.gradleProperty("pluginVersion").get()
+version = providers.gradleProperty("pluginVersion")
 
-/*repositories {
-    mavenCentral()
-    maven("https://www.jetbrains.com/intellij-repository/releases")
-    maven("https://cache-redirector.jetbrains.com/intellij-dependencies")
-}*/
 repositories {
     mavenCentral()
     intellijPlatform {
@@ -23,7 +20,7 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdeaCommunity(providers.gradleProperty("platformVersion").get())
+        intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
         instrumentationTools()
 
         bundledPlugin("com.intellij.java")
@@ -32,6 +29,12 @@ dependencies {
         bundledPlugin("org.jetbrains.kotlin")
         bundledPlugin("org.jetbrains.plugins.terminal")
         bundledPlugin("com.jetbrains.sh")
+
+        testImplementation("junit:junit:4.12")
+        testFramework(TestFrameworkType.Platform)
+        testFramework(TestFrameworkType.Plugin.Java)
+
+        zipSigner()
     }
 
     implementation(project(":server-api"))
@@ -40,39 +43,17 @@ dependencies {
     runtimeOnly(fileTree("libs") { include("*.jar") })
 }
 
-// Configure Gradle IntelliJ Plugin
-// Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
-/*intellij {
-    version.set(providers.gradleProperty("platformVersion").get())
-    type.set("IC") // Target IDE Platform
-    plugins.set(listOf(
-        "java",
-        "properties",
-        "org.intellij.groovy",
-        "org.jetbrains.kotlin",
-        "org.jetbrains.plugins.terminal",
-        "com.jetbrains.sh",
-    ))
-}*/
+intellijPlatform {
 
-changelog {
-    headerParserRegex.set("""(\d+\.\d+(.\d+)?)""".toRegex())
-    path.set(file("../CHANGELOG.md").canonicalPath)
-}
+    pluginConfiguration {
+        id = "ru.rzn.gmyasoedov.gmaven"
+        name = "gmaven"
+        version = providers.gradleProperty("pluginVersion")
 
-tasks {
-    // Set the JVM compatibility versions
-    withType<JavaCompile> {
-        sourceCompatibility = "17"
-        targetCompatibility = "17"
-    }
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
-    }
-
-    patchPluginXml {
-        sinceBuild.set(providers.gradleProperty("pluginSinceBuild").get())
-        untilBuild.set(providers.gradleProperty("pluginUntilBuild").get())
+        ideaVersion {
+            sinceBuild = providers.gradleProperty("pluginSinceBuild")
+            untilBuild = providers.gradleProperty("pluginUntilBuild")
+        }
 
         val changelog = project.changelog
         changeNotes.set(providers.gradleProperty("pluginVersion").map { pluginVersion ->
@@ -87,14 +68,30 @@ tasks {
         })
     }
 
-    signPlugin {
+    signing {
         certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
         privateKey.set(System.getenv("PRIVATE_KEY"))
         password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
     }
 
-    publishPlugin {
+    publishing {
         token.set(System.getenv("PUBLISH_TOKEN"))
+    }
+
+    changelog {
+        headerParserRegex.set("""(\d+\.\d+(.\d+)?)""".toRegex())
+        path.set(file("../CHANGELOG.md").canonicalPath)
+    }
+}
+
+tasks {
+    // Set the JVM compatibility versions
+    withType<JavaCompile> {
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
+    }
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions.jvmTarget = "17"
     }
 }
 
