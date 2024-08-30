@@ -66,13 +66,17 @@ public final class MavenArtifactUtil {
         if (description != null && useCache) {
             return description;
         }
-        Path path = getArtifactNioPath(localRepository, plugin.getGroupId(),
-                plugin.getArtifactId(), plugin.getVersion(), "jar");
-        MavenPluginDescription pluginDescriptor = getPluginDescriptor(path, loadDependencies);
-        if (pluginDescriptor != null) {
-            PLUGIN_DESCRIPTOR_CACHE.putIfAbsent(plugin, pluginDescriptor);
+        try {
+            Path path = getArtifactNioPath(localRepository, plugin.getGroupId(),
+                    plugin.getArtifactId(), plugin.getVersion(), "jar");
+            MavenPluginDescription pluginDescriptor = getPluginDescriptor(path, loadDependencies);
+            if (pluginDescriptor != null) {
+                PLUGIN_DESCRIPTOR_CACHE.putIfAbsent(plugin, pluginDescriptor);
+            }
+            return pluginDescriptor;
+        } catch (Exception e) {
+            return null;
         }
-        return pluginDescriptor;
     }
 
     @NotNull
