@@ -49,8 +49,9 @@ public final class MavenPlugin implements MavenId, Serializable {
     @Override
     public String toString() {
         return "MavenPlugin{" +
-                ", groupId='" + groupId + '\'' +
-                ", artifactId='" + artifactId + '\'' +
+                "groupId=" + groupId + '\'' +
+                ", artifactId=" + artifactId + '\'' +
+                ", version=" + version + '\'' +
                 ", body=" + body +
                 '}';
     }

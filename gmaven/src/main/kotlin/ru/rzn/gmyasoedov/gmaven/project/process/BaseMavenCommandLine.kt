@@ -79,13 +79,16 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
     private fun setupGmavenPluginsProperty(params: GeneralCommandLine) {
         if (!isImport) return
         params.addParameter("-DresultAsTree=true")
+        if (!request.settings.isShowPluginNodes) {
+            params.addParameter("-DallPluginsInfo=false")
+        }
         val extensionList = MavenFullImportPlugin.EP_NAME.extensionList
         val pluginsForImport: MutableList<String> = ArrayList(extensionList.size)
         val pluginsForResolve: MutableList<String> = ArrayList(extensionList.size)
         for (plugin in extensionList) {
             pluginsForImport.add(plugin.key)
             if ((plugin as? MavenCompilerFullImportPlugin)?.resolvePlugin() == true) {
-                pluginsForResolve.add(plugin.getArtifactId())
+                pluginsForResolve.add(plugin.key)
             }
         }
 
