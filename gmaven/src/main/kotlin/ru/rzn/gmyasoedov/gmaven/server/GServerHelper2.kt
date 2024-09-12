@@ -5,6 +5,7 @@ package ru.rzn.gmyasoedov.gmaven.server
 import com.google.gson.Gson
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.util.PathUtil
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
@@ -14,16 +15,12 @@ import ru.rzn.gmyasoedov.gmaven.project.process.GOSProcessHandler
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotUpdateType
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
-import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenException
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenMapResult
-import ru.rzn.gmyasoedov.serverapi.GMavenServer
 import ru.rzn.gmyasoedov.serverapi.GMavenServer.MAVEN_MODEL_READER_PLUGIN_VERSION
 import ru.rzn.gmyasoedov.serverapi.GServerUtils
-import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest
 import java.io.FileReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
-import kotlin.io.path.exists
 
 fun getProjectModel2(
     request: GServerRequest,
@@ -31,18 +28,19 @@ fun getProjectModel2(
 ): MavenMapResult {
     val baseMavenCommandLine = BaseMavenCommandLine(request)
     val commandLine = baseMavenCommandLine.getCommandLine()
-    val workingDirectory = baseMavenCommandLine.workingDirectory
+    val resultFilePath = baseMavenCommandLine.resultFilePath
     setupImportParamsFromSettings(request, commandLine)
 
     printDebugCommandLine(request, commandLine)
     val processHandler = GOSProcessHandler(request, commandLine, processConsumer)
-    val mavenResult = runMavenImport(processHandler, workingDirectory)
-    if (mavenResult.pluginNotResolved) {
+    val mavenResult = runMavenImport(processHandler, resultFilePath)
+    if (mavenResult.pluginNotResolved || forceInstallPlugin(processHandler)) {
         firstRun(request)
         printDebugCommandLine(request, commandLine)
         val processHandler2 = GOSProcessHandler(request, commandLine, processConsumer)
-        return runMavenImport(processHandler2, workingDirectory)
+        return runMavenImport(processHandler2, resultFilePath)
     }
+    if (Registry.`is`("gmaven.process.remove.result.file")) FileUtil.delete(resultFilePath)
     return mavenResult
 }
 
@@ -81,7 +79,7 @@ private fun firstRun(request: GServerRequest) {
         val commandLine = BaseMavenCommandLine(request, false).getCommandLine()
         commandLine.addParameter("-N")
         commandLine.addParameter("install:install-file")
-        val clazz = Class.forName("ru.rzn.gmyasoedov.maven.plugin.reader.GAbstractMojo")
+        val clazz = Class.forName("ru.rzn.gmyasoedov.maven.plugin.reader.util.ObjectUtils")
         commandLine.addParameter("-Dfile=" + PathUtil.getJarPathForClass(clazz))
         commandLine.addParameter("-DgroupId=ru.rzn.gmyasoedov")
         commandLine.addParameter("-DartifactId=maven-model-reader-plugin")
@@ -147,17 +145,16 @@ private fun setupImportParamsFromSettings(request: GServerRequest, commandLine: 
 }
 
 private fun runMavenImport(
-    processSupport: GOSProcessHandler, workingDirectory: Path,
+    processSupport: GOSProcessHandler, resultFilePath: Path,
 ): MavenMapResult {
-    val mavenResult = runMavenImportInner(processSupport, workingDirectory)
+    val mavenResult = runMavenImportInner(processSupport, resultFilePath)
     processExceptions(mavenResult.exceptions)
     return mavenResult
 }
 
-private fun runMavenImportInner(processSupport: GOSProcessHandler, workingDirectory: Path): MavenMapResult {
+private fun runMavenImportInner(processSupport: GOSProcessHandler, resultFilePath: Path): MavenMapResult {
     return try {
         processSupport.startAndWait()
-        val resultFilePath = getResultFilePath(workingDirectory)
         return FileReader(resultFilePath.toFile(), StandardCharsets.UTF_8).use {
             Gson().fromJson(it, MavenMapResult::class.java)
         }
@@ -167,19 +164,9 @@ private fun runMavenImportInner(processSupport: GOSProcessHandler, workingDirect
     }
 }
 
-fun getResultFilePath(workingDirectory: Path, fileName: String = GMavenServer.GMAVEN_RESPONSE_POM_FILE): Path {
-    return if (workingDirectory.resolve("target").resolve(fileName).exists()) {
-        workingDirectory.resolve("target").resolve(fileName)
-    } else if (workingDirectory.resolve(fileName).exists()) {
-        workingDirectory.resolve(fileName)
-    } else {
-        throw RuntimeException("Result file not found ${fileName}. See maven log.")
-    }
-}
-
-private fun processExceptions(exceptions: MutableList<MavenException>) {
+private fun processExceptions(exceptions: List<String>) {
     if (exceptions.isEmpty()) return
-    val errorString = exceptions.joinToString(System.lineSeparator()) { it.message }
+    val errorString = exceptions.joinToString(System.lineSeparator())
 
     if (Registry.`is`("gmaven.show.full.log")) {
         val fixId = ShowFullLogCallback.ID
@@ -189,12 +176,5 @@ private fun processExceptions(exceptions: MutableList<MavenException>) {
     throw ExternalSystemException(errorString)
 }
 
-//for tasks
-private fun setSubtaskArgs(modelRequest: GetModelRequest) {
-    if (modelRequest.projectList.isNotEmpty()) {
-        val subTaskArgs = getSubTaskArgs()
-        if (subTaskArgs.isNotEmpty()) {
-            modelRequest.subTaskArguments = subTaskArgs
-        }
-    }
-}
+private fun forceInstallPlugin(processHandler: GOSProcessHandler) =
+    processHandler.exitCode != 0 && Registry.`is`("gmaven.process.install.plugin")

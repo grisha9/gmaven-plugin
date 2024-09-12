@@ -38,7 +38,9 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.xml.XmlFile;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.PathUtil;
 import com.intellij.util.SystemProperties;
+import com.intellij.util.execution.ParametersListUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
@@ -62,6 +64,7 @@ import java.util.stream.Stream;
 import static com.intellij.openapi.util.io.JarUtil.getJarAttribute;
 import static com.intellij.openapi.util.io.JarUtil.loadProperties;
 import static com.intellij.openapi.util.text.StringUtil.*;
+import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.DEPENDENCY_TREE_EVENT_SPY_CLASS;
 import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.M2;
 
 public class MavenUtils {
@@ -461,5 +464,16 @@ public class MavenUtils {
         } else {
             return buildFilePath.getParent();
         }
+    }
+
+    public static String getGMavenExtClassPath() {
+        String mavenExtClassesJarPath;
+        try {
+            mavenExtClassesJarPath = PathUtil.getJarPathForClass(Class.forName(DEPENDENCY_TREE_EVENT_SPY_CLASS));
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        return "-Dmaven.ext.class.path=" + ParametersListUtil.escape(mavenExtClassesJarPath);
     }
 }

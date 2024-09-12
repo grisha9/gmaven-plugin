@@ -2,7 +2,6 @@ package ru.rzn.gmyasoedov.serverapi;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenException;
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenId;
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenMapResult;
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject;
@@ -16,19 +15,13 @@ import static ru.rzn.gmyasoedov.serverapi.GMavenServer.SERVER_ERROR_MESSAGE;
 public abstract class GServerUtils {
     @NotNull
     public static MavenMapResult toResult(@NotNull Exception e) {
-        MavenException exception = new MavenException();
-        exception.setMessage(e.getMessage());
-        List<MavenException> exceptions = Collections.singletonList(exception);
-        return toMapResult(false, exceptions);
+        return toMapResult(false, Collections.singletonList(e.getMessage()));
     }
 
     @NotNull
     public static MavenMapResult toResult(@Nullable MavenMapResult result) {
         if (result != null) return result;
-        MavenException exception = new MavenException();
-        exception.setMessage(SERVER_ERROR_MESSAGE);
-        List<MavenException> exceptions = Collections.singletonList(exception);
-        return toMapResult(false, exceptions);
+        return toMapResult(false, Collections.singletonList(SERVER_ERROR_MESSAGE));
     }
 
     @NotNull
@@ -45,7 +38,7 @@ public abstract class GServerUtils {
         return file != null ? file.getAbsolutePath() : null;
     }
 
-    private static MavenMapResult toMapResult(boolean pluginNotResolved, List<MavenException> exceptions) {
+    private static MavenMapResult toMapResult(boolean pluginNotResolved, List<String> exceptions) {
         MavenMapResult result = new MavenMapResult();
         result.pluginNotResolved = pluginNotResolved;
         result.exceptions = exceptions;

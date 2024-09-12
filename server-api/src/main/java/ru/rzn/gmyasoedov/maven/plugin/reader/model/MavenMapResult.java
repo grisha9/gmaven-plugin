@@ -9,5 +9,5 @@ public class MavenMapResult implements Serializable {
     public  boolean pluginNotResolved;
     public  MavenSettings settings;
     public  MavenProjectContainer container;
-    public  List<MavenException> exceptions = Collections.emptyList();
+    public  List<String> exceptions = Collections.emptyList();
 }

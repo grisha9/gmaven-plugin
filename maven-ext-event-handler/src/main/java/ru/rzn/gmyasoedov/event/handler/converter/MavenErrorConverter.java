@@ -9,7 +9,10 @@ import org.apache.maven.project.ProjectBuildingResult;
 import org.codehaus.plexus.util.ExceptionUtils;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.transfer.ArtifactTransferException;
-import ru.rzn.gmyasoedov.maven.plugin.reader.model.*;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.BuildErrors;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenId;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.ObjectUtils;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.SimpleMavenId;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,13 +24,13 @@ public class MavenErrorConverter {
         List<Throwable> exceptions = result.getExceptions();
         if (exceptions == null || exceptions.isEmpty()) {
             BuildErrors buildErrors = new BuildErrors();
-            buildErrors.setExceptions(Collections.<MavenException>emptyList());
+            buildErrors.setExceptions(Collections.<String>emptyList());
             buildErrors.setPluginNotResolved(false);
             return buildErrors;
         }
 
         boolean pluginNotResolved = false;
-        List<MavenException> mavenExceptions = new ArrayList<>(exceptions.size());
+        List<String> mavenExceptions = new ArrayList<>(exceptions.size());
         for (Throwable each : exceptions) {
             Throwable rootCause = getRootError(each);
             if (each instanceof PluginResolutionException) {
@@ -37,15 +40,15 @@ public class MavenErrorConverter {
                         && "model-reader".equalsIgnoreCase(plugin.getArtifactId())) {
                     pluginNotResolved = true;
                 } else if (plugin != null) {
-                    mavenExceptions.add(toMavenException(e.getMessage(), toMavenId(plugin), null));
+                    mavenExceptions.add(getMavenException(e.getMessage()));
                 }
             } else if (rootCause instanceof ArtifactTransferException) {
                 Artifact artifact = ((ArtifactTransferException) rootCause).getArtifact();
                 String message = rootCause.getMessage() != null ? rootCause.getMessage() : each.getMessage();
-                mavenExceptions.add(toMavenException(message, toMavenId(artifact), null));
+                mavenExceptions.add(getMavenException(message));
             } else if (each instanceof ArtifactTransferException) {
                 Artifact artifact = ((ArtifactTransferException) each).getArtifact();
-                mavenExceptions.add(toMavenException(each.getMessage(), toMavenId(artifact), null));
+                mavenExceptions.add(getMavenException(each.getMessage()));
             } else if (each instanceof ProjectBuildingException) {
                 List<ProjectBuildingResult> results = ((ProjectBuildingException) each).getResults();
                 for (ProjectBuildingResult buildingResult : results) {
@@ -56,7 +59,7 @@ public class MavenErrorConverter {
             } else {
                 String rootMessage = rootCause != null ? rootCause.getMessage() : null;
                 String message = rootMessage != null ? rootMessage : each.getMessage();
-                mavenExceptions.add(toMavenException(message, null, null));
+                mavenExceptions.add(getMavenException(message));
             }
         }
         BuildErrors buildErrors = new BuildErrors();
@@ -65,22 +68,19 @@ public class MavenErrorConverter {
         return buildErrors;
     }
 
-    private static MavenException toMavenException(ModelProblem problem) {
+    private static String toMavenException(ModelProblem problem) {
         String message = problem.getMessage();
         String source = problem.getSource();
         int lineNumber = problem.getLineNumber();
         int columnNumber = problem.getColumnNumber();
         String messageWithCoordinate = String.format("%s:%s:%s", source, lineNumber, columnNumber);
         message = message.replace(source, messageWithCoordinate);
-        return toMavenException(message, null, source);
+        return getMavenException(message.replace("\"", ""));
     }
 
-    private static MavenException toMavenException(String message, ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenId mavenId, String path) {
-        MavenException result = new MavenException();
-        result.setMessage(message);
-        result.setMavenId(mavenId);
-        result.setProjectFilePath(path);
-        return result;
+    private static String getMavenException(String message) {
+        if (message == null) return "Unknown error. See Maven log";
+        return message.replace("\"", "");
     }
 
     private static MavenId toMavenId(Plugin plugin) {

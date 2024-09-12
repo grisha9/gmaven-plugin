@@ -202,9 +202,9 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
 
     companion object {
         fun cancelTask(id: ExternalSystemTaskId, cancellationMap: ConcurrentHashMap<ExternalSystemTaskId, Any>) {
-            when (val remoteProcess = cancellationMap[id]) {
-                is GServerRemoteProcessSupport -> remoteProcess.stopAll()
-                is OSProcessHandler -> remoteProcess.destroyProcess()
+            when (val remove = cancellationMap.remove(id)) {
+                is GServerRemoteProcessSupport -> remove.stopAll()
+                is OSProcessHandler -> remove.destroyProcess()
             }
         }
     }

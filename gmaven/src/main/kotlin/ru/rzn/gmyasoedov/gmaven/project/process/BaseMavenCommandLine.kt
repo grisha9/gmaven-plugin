@@ -8,7 +8,8 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPl
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.MavenServerCmdState
-import java.nio.file.Files
+import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
+import ru.rzn.gmyasoedov.serverapi.GMavenServer
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
@@ -16,7 +17,8 @@ import kotlin.io.path.name
 
 
 class BaseMavenCommandLine(private val request: GServerRequest, private val isImport: Boolean = true) {
-    val workingDirectory = getWorkingDirectory(request)
+    private val workingDirectory = getWorkingDirectory(request)
+    val resultFilePath: Path = detectResultFilePath()
 
     //QualityToolProcessHandler
     fun getCommandLine(): GeneralCommandLine {
@@ -35,12 +37,8 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
     }
 
     private fun setupProjectPath(commandLine: GeneralCommandLine, request: GServerRequest) {
-        val projectPath = request.projectPath
-        val directory = Files.isDirectory(projectPath)
-        val projectDirectory = if (directory) projectPath else projectPath.parent
-
         commandLine.addParameter("-f")
-        commandLine.addParameter(projectDirectory.absolutePathString())
+        commandLine.addParameter(request.projectPath.absolutePathString())
     }
 
     private fun getExeMavenPath(): String {
@@ -78,7 +76,9 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
 
     private fun setupGmavenPluginsProperty(params: GeneralCommandLine) {
         if (!isImport) return
+        params.addParameter(MavenUtils.getGMavenExtClassPath())
         params.addParameter("-DresultAsTree=true")
+        params.addParameter("-DresultFilePath=" + resultFilePath.absolutePathString())
         if (!request.settings.isShowPluginNodes) {
             params.addParameter("-DallPluginsInfo=false")
         }
@@ -113,5 +113,13 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
 
     private fun getWorkingDirectory(request: GServerRequest): Path {
         return if (request.projectPath.toFile().isDirectory) request.projectPath else request.projectPath.parent
+    }
+
+    private fun detectResultFilePath(): Path {
+        val targetPath = workingDirectory.resolve("target")
+        if (targetPath.toFile().exists()) {
+            return targetPath.resolve(GMavenServer.GMAVEN_RESPONSE_POM_FILE)
+        }
+        return workingDirectory.resolve(GMavenServer.GMAVEN_RESPONSE_POM_FILE)
     }
 }

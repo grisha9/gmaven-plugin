@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "ru.rzn.gmyasoedov"
-version = providers.gradleProperty("pluginVersion")
+version = providers.gradleProperty("pluginVersion").get()
 
 repositories {
     mavenCentral()
@@ -48,7 +48,7 @@ intellijPlatform {
     pluginConfiguration {
         id = "ru.rzn.gmyasoedov.gmaven"
         name = "gmaven"
-        version = providers.gradleProperty("pluginVersion")
+        version = providers.gradleProperty("pluginVersion").get()
 
         ideaVersion {
             sinceBuild = providers.gradleProperty("pluginSinceBuild")

@@ -49,9 +49,10 @@ public final class GMavenConstants {
     public static final String TASK_RESOLVE_PLUGINS = "dependency:resolve-plugins";
     public static final String TASK_DOWNLOAD_SOURCE = "dependency:sources";
     public static final String TASK_EFFECTIVE_POM = "help:effective-pom";
-    public static final String TASK_DEPENDENCY_TREE = "ru.rzn.gmyasoedov:maven-model-reader-plugin:"
+    public static final String PLUGIN_BASE_NAME = "ru.rzn.gmyasoedov:maven-model-reader-plugin:";
+    public static final String TASK_DEPENDENCY_TREE = PLUGIN_BASE_NAME
             + MAVEN_MODEL_READER_PLUGIN_VERSION + ":tree";
-    public static final String DEPENDENCY_TREE_EVENT_SPY_CLASS = "ru.rzn.gmyasoedov.dependency.graph.DependencySpyConstants";
+    public static final String DEPENDENCY_TREE_EVENT_SPY_CLASS = "ru.rzn.gmyasoedov.evemt.spy.GMavenEventSpyConstants";
 
     @NotNull
     @NonNls

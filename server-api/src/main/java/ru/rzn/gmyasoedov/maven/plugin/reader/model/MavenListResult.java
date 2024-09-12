@@ -8,5 +8,5 @@ public class MavenListResult implements Serializable {
     public boolean pluginNotResolved;
     public MavenSettings settings;
     public List<MavenProject> mavenProjects = Collections.emptyList();
-    public List<MavenException> exceptions = Collections.emptyList();
+    public List<String> exceptions = Collections.emptyList();
 }

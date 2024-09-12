@@ -27,11 +27,8 @@ import com.intellij.openapi.util.NlsSafe
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.util.text.StringUtil
-import com.intellij.util.PathUtil
-import com.intellij.util.execution.ParametersListUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.*
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
-import ru.rzn.gmyasoedov.gmaven.server.getResultFilePath
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
@@ -39,11 +36,13 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenArtifactState
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.tree.DependencyTreeNode
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.tree.MavenProjectDependencyTree
-import ru.rzn.gmyasoedov.serverapi.GMavenServer.GMAVEN_RESPONSE_TREE_FILE
+import ru.rzn.gmyasoedov.serverapi.GMavenServer
 import java.io.FileReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.io.path.Path
+import kotlin.io.path.absolutePathString
 
 class GDependencyAnalyzerContributor(private val project: Project) : DependencyAnalyzerContributor {
     @Volatile
@@ -79,7 +78,7 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
 
     override fun getDependencies(externalProject: DependencyAnalyzerProject): List<DependencyAnalyzerDependency> {
         val artifactGA = externalProject.getUserData(ARTIFACT_ID)!!
-        val moduleData = getModuleMap().get(artifactGA)?.second
+        val moduleData = getModuleMap()[artifactGA]?.second
         val projectPath = moduleData?.linkedExternalProjectPath ?: return emptyList()
         if (moduleData.getProperty(MODULE_PROP_HAS_DEPENDENCIES) == null) return emptyList()
         val mavenSettings = MavenSettings.getInstance(project)
@@ -92,17 +91,12 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
         val dependencyTreeFromMap = dependencyTreeByProject[artifactGA]
         if (dependencyTreeFromMap != null) return dependencyTreeFromMap
 
-        val mavenExtClassesJarPathString: String
-        try {
-            mavenExtClassesJarPathString = PathUtil.getJarPathForClass(Class.forName(DEPENDENCY_TREE_EVENT_SPY_CLASS))
-        } catch (e: ClassNotFoundException) {
-            throw RuntimeException(e)
-        }
-
+        val resultPath = Path(externalProjectPath).resolve(GMavenServer.GMAVEN_DEPENDENCY_TREE)
         val settings = ExternalSystemTaskExecutionSettings()
-        settings.scriptParameters = "-Dmaven.ext.class.path=${ParametersListUtil.escape(mavenExtClassesJarPathString)}"
+        settings.scriptParameters = MavenUtils.getGMavenExtClassPath()
         settings.scriptParameters += " -Daether.conflictResolver.verbose=true"
         settings.scriptParameters += " -Daether.dependencyManager.verbose=true"
+        settings.scriptParameters += " -DresultFilePath=${resultPath.absolutePathString()}"
         if (!Registry.`is`("gmaven.process.tree.fallback")) {
             settings.scriptParameters += " -pl $artifactGA -am"
         }
@@ -116,9 +110,8 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
             object : TaskCallback {
                 override fun onSuccess() {
                     try {
-                        val resultFilePath = getResultFilePath(Path.of(externalProjectPath), GMAVEN_RESPONSE_TREE_FILE)
-                        val result: List<MavenProjectDependencyTree> = getDependencyTreeResult(resultFilePath)
-                        FileUtil.delete(resultFilePath.toFile())
+                        val result: List<MavenProjectDependencyTree> = getDependencyTreeResult(resultPath)
+                        FileUtil.delete(resultPath.toFile())
                         result.forEach { dependencyTreeByProject[it.groupId + ":" + it.artifactId] = it.dependencies }
                     } catch (e: Exception) {
                         MavenLog.LOG.warn(e)
@@ -149,7 +142,8 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
     }
 
     private fun getModuleMap(): Map<String, Pair<DAProject, ModuleData>> {
-        if (moduleMapByProject != null) return moduleMapByProject!!
+        val moduleMapByProjectLocal = moduleMapByProject
+        if (moduleMapByProjectLocal != null) return moduleMapByProjectLocal
         return fillModulesInfoCache()
     }
 

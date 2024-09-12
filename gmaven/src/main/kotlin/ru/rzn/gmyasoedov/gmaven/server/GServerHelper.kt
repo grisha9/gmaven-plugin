@@ -18,7 +18,6 @@ import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotU
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
 import ru.rzn.gmyasoedov.gmaven.util.IndicatorUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
-import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenException
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenMapResult
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.GMavenServer
@@ -184,9 +183,9 @@ private fun runMavenTaskInner(
     }
 }
 
-private fun processExceptions(exceptions: MutableList<MavenException>) {
+private fun processExceptions(exceptions: MutableList<String>) {
     if (exceptions.isEmpty()) return
-    val errorString = exceptions.joinToString(System.lineSeparator()) { it.message }
+    val errorString = exceptions.joinToString(System.lineSeparator())
 
     if (Registry.`is`("gmaven.show.full.log")) {
         val fixId = ShowFullLogCallback.ID

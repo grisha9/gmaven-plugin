@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public class BuildErrors implements Serializable {
     public boolean pluginNotResolved;
-    public List<MavenException> exceptions = Collections.emptyList();
+    public List<String> exceptions = Collections.emptyList();
 
     public boolean isPluginNotResolved() {
         return pluginNotResolved;
@@ -17,11 +17,11 @@ public class BuildErrors implements Serializable {
         this.pluginNotResolved = pluginNotResolved;
     }
 
-    public List<MavenException> getExceptions() {
+    public List<String> getExceptions() {
         return exceptions;
     }
 
-    public void setExceptions(List<MavenException> exceptions) {
+    public void setExceptions(List<String> exceptions) {
         this.exceptions = exceptions;
     }
 
