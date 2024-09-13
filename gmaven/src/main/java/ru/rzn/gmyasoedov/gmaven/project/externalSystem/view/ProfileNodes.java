@@ -1,12 +1,12 @@
 package ru.rzn.gmyasoedov.gmaven.project.externalSystem.view;
 
+import com.intellij.icons.AllIcons;
 import com.intellij.ide.projectView.PresentationData;
 import com.intellij.openapi.externalSystem.model.DataNode;
 import com.intellij.openapi.externalSystem.model.project.AbstractExternalEntityData;
 import com.intellij.openapi.externalSystem.util.Order;
 import com.intellij.openapi.externalSystem.view.ExternalProjectsView;
 import com.intellij.openapi.externalSystem.view.ExternalSystemNode;
-import icons.GMavenIcons;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,7 +38,7 @@ public class ProfileNodes extends ExternalSystemNode<AbstractExternalEntityData>
     @Override
     protected void update(@NotNull PresentationData presentation) {
         super.update(presentation);
-        presentation.setIcon(GMavenIcons.ProfilesClosed);
+        presentation.setIcon(AllIcons.Nodes.ConfigFolder);
     }
 
     @Override

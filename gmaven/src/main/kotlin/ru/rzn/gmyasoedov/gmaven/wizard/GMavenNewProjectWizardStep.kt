@@ -22,7 +22,7 @@ import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
 import com.intellij.ui.dsl.builder.Panel
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.layout.ValidationInfoBuilder
-import icons.OpenapiIcons
+import icons.GMavenIcons
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject
@@ -96,7 +96,7 @@ abstract class GMavenNewProjectWizardStep<ParentStep>(parent: ParentStep) :
 
     class MavenDataView(override val data: MavenProject) : DataView<MavenProject>() {
         override val location: String = data.basedir
-        override val icon: Icon = OpenapiIcons.RepositoryLibraryLogo
+        override val icon: Icon = GMavenIcons.MavenProject
         override val presentationName: String = GServerUtils.getDisplayName(data)
         override val groupId: String = data.groupId
         override val version: String = data.version

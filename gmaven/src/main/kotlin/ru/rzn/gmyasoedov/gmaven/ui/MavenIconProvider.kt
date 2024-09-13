@@ -6,7 +6,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.toNioPathOrNull
 import icons.GMavenIcons
-import icons.OpenapiIcons
 import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
 import javax.swing.Icon
 
@@ -16,7 +15,7 @@ class MavenIconProvider : DumbAware, FileIconProvider {
         project ?: return null
         val path = file.toNioPathOrNull()?.toString() ?: return null
         val dataHolder = CachedModuleDataService.getDataHolder(project)
-        if (dataHolder.activeConfigPaths.contains(path)) return OpenapiIcons.RepositoryLibraryLogo
+        if (dataHolder.activeConfigPaths.contains(path)) return GMavenIcons.MavenProject
         if (dataHolder.ignoredConfigPaths.contains(path)) return GMavenIcons.MavenIgnored
         return null
     }

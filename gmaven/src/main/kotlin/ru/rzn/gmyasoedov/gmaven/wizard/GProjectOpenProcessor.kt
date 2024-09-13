@@ -5,7 +5,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.platform.ide.progress.ModalTaskOwner
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
 import com.intellij.projectImport.ProjectOpenProcessor
-import icons.OpenapiIcons
+import icons.GMavenIcons
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 
 internal class GProjectOpenProcessor : ProjectOpenProcessor() {
@@ -25,7 +25,7 @@ internal class GProjectOpenProcessor : ProjectOpenProcessor() {
 
     override val name = GMavenConstants.GMAVEN
 
-    override val icon = OpenapiIcons.RepositoryLibraryLogo
+    override val icon = GMavenIcons.MavenProject
 
     override fun canImportProjectAfterwards(): Boolean = true
 
