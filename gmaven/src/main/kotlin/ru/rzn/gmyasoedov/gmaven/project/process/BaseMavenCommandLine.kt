@@ -66,10 +66,10 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
 
     private fun setupDebugParam(commandLine: GeneralCommandLine) {
         if (Registry.`is`("gmaven.process.jsonPrettyPrinting")) {
-            commandLine.addParameter("-DjsonPrettyPrinting=true")
+            commandLine.parametersList.addProperty("jsonPrettyPrinting", "true")
         }
         val debugPort = MavenServerCmdState.getDebugPort() ?: return
-        commandLine.addParameter("-DjsonPrettyPrinting=true")
+        commandLine.parametersList.addProperty("jsonPrettyPrinting", "true")
         commandLine.addParameter("-Xdebug")
         commandLine.addParameter("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=*:$debugPort")
     }
@@ -77,10 +77,10 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
     private fun setupGmavenPluginsProperty(params: GeneralCommandLine) {
         if (!isImport) return
         params.addParameter(MavenUtils.getGMavenExtClassPath())
-        params.addParameter("-DresultAsTree=true")
-        params.addParameter("-DresultFilePath=" + resultFilePath.absolutePathString())
+        params.parametersList.addProperty("resultAsTree", "true")
+        params.parametersList.addProperty("resultFilePath", resultFilePath.absolutePathString())
         if (!request.settings.isShowPluginNodes) {
-            params.addParameter("-DallPluginsInfo=false")
+            params.parametersList.addProperty("allPluginsInfo", "false")
         }
         val extensionList = MavenFullImportPlugin.EP_NAME.extensionList
         val pluginsForImport: MutableList<String> = ArrayList(extensionList.size)

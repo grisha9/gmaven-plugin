@@ -21,6 +21,7 @@ import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import java.io.FileReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
+import kotlin.io.path.name
 
 fun getProjectModel2(
     request: GServerRequest,
@@ -40,7 +41,8 @@ fun getProjectModel2(
         val processHandler2 = GOSProcessHandler(request, commandLine, processConsumer)
         return runMavenImport(processHandler2, resultFilePath)
     }
-    if (Registry.`is`("gmaven.process.remove.result.file")) FileUtil.delete(resultFilePath)
+    if (!resultFilePath.parent.name.equals("target", true)) FileUtil.delete(resultFilePath)
+    //if (Registry.`is`("gmaven.process.remove.result.file")) FileUtil.delete(resultFilePath)
     return mavenResult
 }
 
