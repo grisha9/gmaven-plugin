@@ -27,6 +27,7 @@ import com.intellij.openapi.util.NlsSafe
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.util.execution.ParametersListUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.*
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
@@ -96,7 +97,7 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
         settings.scriptParameters = MavenUtils.getGMavenExtClassPath()
         settings.scriptParameters += " -Daether.conflictResolver.verbose=true"
         settings.scriptParameters += " -Daether.dependencyManager.verbose=true"
-        settings.scriptParameters += " -DresultFilePath=${resultPath.absolutePathString()}"
+        settings.scriptParameters += " -DresultFilePath=${ParametersListUtil.escape(resultPath.absolutePathString())}"
         if (!Registry.`is`("gmaven.process.tree.fallback")) {
             settings.scriptParameters += " -pl $artifactGA -am"
         }
