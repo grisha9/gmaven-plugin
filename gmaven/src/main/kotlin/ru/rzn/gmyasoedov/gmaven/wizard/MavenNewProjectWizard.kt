@@ -105,8 +105,10 @@ class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
                         .findExtensionOrFail(GProjectOpenProcessor::class.java)
                     openProcessor.importProjectAfterwards(project, buildFile)
                 } else {
-                    val projectSettings = MavenSettings.getInstance(project)
-                        .getLinkedProjectSettings(parentStep.path)
+                    val mavenSettings = MavenSettings.getInstance(project)
+                    val parentCanonicalPath = parentStep.path
+                    val projectSettings = mavenSettings.getLinkedProjectSettings(parentCanonicalPath)
+                        ?: mavenSettings.getLinkedProjectSettings(Path.of(parentCanonicalPath).toString())
                         ?: throw ExternalSystemException("settings not found " + parentStep.path)
                     ExternalProjectsManagerImpl.getInstance(project).runWhenInitialized {
                         ExternalSystemUtil.refreshProject(
