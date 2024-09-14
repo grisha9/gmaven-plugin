@@ -21,10 +21,8 @@ import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject
-import ru.rzn.gmyasoedov.serverapi.model.MavenRemoteRepository
-import ru.rzn.gmyasoedov.serverapi.model.MavenSettings
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.*
+import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import java.nio.file.Path
 import kotlin.io.path.Path
 
@@ -40,8 +38,6 @@ fun getMavenHome(distributionSettings: DistributionSettings): Path {
 }
 
 fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.ProjectResolverContext): PluginsData {
-    val annotationProcessorPaths = ArrayList<String>(1)
-
     var compilerPlugin: MavenPlugin? = null
     var compilerData: CompilerData? = null
     var kotlinPluginData: KotlinMavenPluginData? = null
@@ -51,7 +47,6 @@ fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.Pro
         val pluginExtension = context.pluginExtensionMap[MavenUtils.toGAString(plugin)] ?: continue
         if (pluginExtension is MavenCompilerFullImportPlugin) {
             val compilerDataPlugin = getCompilerData(localRepoPath, pluginExtension, mavenProject, plugin, context)
-            annotationProcessorPaths += compilerDataPlugin?.annotationProcessorPaths ?: emptyList()
             if (isPriorityCompiler(compilerPlugin, plugin, context)) {
                 compilerPlugin = plugin
                 compilerData = compilerDataPlugin
@@ -60,7 +55,7 @@ fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.Pro
             kotlinPluginData = pluginExtension.getCompilerData(mavenProject, plugin, context)
         }
     }
-    compilerData = applyAnnotationProcessorsPath(compilerData, annotationProcessorPaths)
+
     addedMavenAspectJPluginInfo(compilerPlugin, compilerData, context)
     return PluginsData(
         compilerPlugin,
@@ -102,6 +97,10 @@ fun getContentRootPath(paths: List<String>, type: ExternalSystemSourceType): Lis
         .toList()
 }
 
+fun getContentRootPathResource(paths: List<MavenResource>, type: ExternalSystemSourceType): List<MavenContentRoot> {
+    return getContentRootPath(paths.mapNotNull { it.directory }, type)
+}
+
 fun populateTasks(
     moduleDataNode: DataNode<ModuleData>, mavenProject: MavenProject,
     context: MavenProjectResolver.ProjectResolverContext
@@ -119,7 +118,8 @@ fun populateTasks(
         for (mojo in pluginDescriptor.mojos) {
             moduleDataNode.createChild(
                 PluginData.KEY, PluginData(
-                    SYSTEM_ID, mojo.displayName, mavenProject.basedir, plugin.displayString, pluginDescriptor.goalPrefix
+                    SYSTEM_ID, mojo.displayName, mavenProject.basedir,
+                    GServerUtils.getMavenId(plugin), pluginDescriptor.goalPrefix
                 )
             )
         }
@@ -148,7 +148,7 @@ fun populateAnnotationProcessorData(
     moduleDataNode: DataNode<ModuleData>,
     compilerData: CompilerData
 ) {
-    val annotationProcessorPaths = compilerData.annotationProcessorPaths
+    val annotationProcessorPaths = project.annotationProcessorPaths
     val data = CompilerPluginData
         .create(annotationProcessorPaths, compilerData.arguments, project.buildDirectory, project.basedir)
     data.buildGeneratedAnnotationDirectory = project.generatedPath
@@ -158,19 +158,6 @@ fun populateAnnotationProcessorData(
 
 fun getDefaultModuleTypeId(): String {
     return ModuleTypeManager.getInstance().defaultModuleType.id
-}
-
-private fun applyAnnotationProcessorsPath(
-    compilerData: CompilerData?, annotationProcessorPaths: List<String>
-): CompilerData? {
-    compilerData ?: return null
-    if (annotationProcessorPaths.isEmpty()) return compilerData
-    if (compilerData.annotationProcessorPaths == annotationProcessorPaths) return compilerData
-    return CompilerData(
-        compilerData.sourceLevel, compilerData.targetLevel,
-        compilerData.testSourceLevel, compilerData.testTargetLevel,
-        annotationProcessorPaths, compilerData.arguments, compilerData.pluginSpecificArguments
-    )
 }
 
 private fun addedMavenAspectJPluginInfo(

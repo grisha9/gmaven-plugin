@@ -8,10 +8,10 @@ import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerDat
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData.Companion.ASPECTJ_COMPILER_ID
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject
-import ru.rzn.gmyasoedov.serverapi.model.PluginBody
-import ru.rzn.gmyasoedov.serverapi.model.PluginExecution
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenPlugin
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.PluginBody
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.PluginExecution
 import java.nio.file.Path
 
 
@@ -59,7 +59,7 @@ class DevAspectjMavenPlugin : MavenCompilerFullImportPlugin {
         val args = collectAjcCompilerArgs(configurationElement)
         return CompilerData(
             compilerProp.source, compilerProp.target, compilerProp.source, compilerProp.target,
-            emptyList(), args.first, args.second
+            args.first, args.second
         )
     }
 

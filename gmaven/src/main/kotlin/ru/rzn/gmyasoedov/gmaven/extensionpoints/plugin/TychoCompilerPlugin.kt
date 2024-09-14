@@ -2,8 +2,8 @@ package ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin
 
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenPlugin
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject
 import java.nio.file.Path
 
 class TychoCompilerPlugin : MavenCompilerFullImportPlugin {

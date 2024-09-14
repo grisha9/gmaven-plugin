@@ -19,7 +19,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-@Order(ExternalSystemNode.BUILTIN_TASKS_DATA_NODE_ORDER)
+import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.BUILTIN_TASKS_DATA_NODE_ORDER;
+
+@Order(BUILTIN_TASKS_DATA_NODE_ORDER)
 public class MavenTasksNode extends TasksNode {
 
     private final MultiMap<String, TaskNode> myTasksMap = MultiMap.createLinked();

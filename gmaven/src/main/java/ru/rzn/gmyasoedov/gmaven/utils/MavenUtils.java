@@ -38,14 +38,17 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.xml.XmlFile;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.PathUtil;
 import com.intellij.util.SystemProperties;
+import com.intellij.util.execution.ParametersListUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData;
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings;
-import ru.rzn.gmyasoedov.serverapi.model.MavenId;
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
+import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenId;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,6 +64,7 @@ import java.util.stream.Stream;
 import static com.intellij.openapi.util.io.JarUtil.getJarAttribute;
 import static com.intellij.openapi.util.io.JarUtil.loadProperties;
 import static com.intellij.openapi.util.text.StringUtil.*;
+import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.DEPENDENCY_TREE_EVENT_SPY_CLASS;
 import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.M2;
 
 public class MavenUtils {
@@ -76,6 +80,13 @@ public class MavenUtils {
     public static VirtualFile getVFile(File file) {
         VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByIoFile(file);
         if (virtualFile == null) throw new RuntimeException("Virtual file not found " + file);
+        return virtualFile;
+    }
+
+    @NotNull
+    public static VirtualFile getVFile(String filePath) {
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+        if (virtualFile == null) throw new RuntimeException("Virtual file not found " + filePath);
         return virtualFile;
     }
 
@@ -442,5 +453,27 @@ public class MavenUtils {
         }
 
         return MavenUtils.isSimplePomFile(file.getName());
+    }
+
+    @NotNull
+    public static Path getWorkingDirectory(MavenProjectSettings settings) {
+        if (settings.getProjectBuildFile() == null) return Path.of(settings.getExternalProjectPath());
+        Path buildFilePath = Path.of(settings.getProjectBuildFile());
+        if (buildFilePath.toFile().isDirectory()) {
+            return buildFilePath;
+        } else {
+            return buildFilePath.getParent();
+        }
+    }
+
+    public static String getGMavenExtClassPath() {
+        String mavenExtClassesJarPath;
+        try {
+            mavenExtClassesJarPath = PathUtil.getJarPathForClass(Class.forName(DEPENDENCY_TREE_EVENT_SPY_CLASS));
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        return "-Dmaven.ext.class.path=" + ParametersListUtil.escape(mavenExtClassesJarPath);
     }
 }

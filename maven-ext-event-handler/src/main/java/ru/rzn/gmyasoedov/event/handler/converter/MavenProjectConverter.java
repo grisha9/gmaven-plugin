@@ -4,11 +4,14 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.Resource;
 import org.eclipse.aether.graph.DependencyNode;
-import ru.rzn.gmyasoedov.serverapi.model.*;
+import ru.rzn.gmyasoedov.event.handler.model.MavenPluginWrapper;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.*;
 
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.*;
+
+import static ru.rzn.gmyasoedov.serverapi.GServerUtils.getFilePath;
 
 public class MavenProjectConverter {
 
@@ -16,13 +19,17 @@ public class MavenProjectConverter {
                                        Map<String, List<DependencyNode>> dependencyResultMap,
                                        boolean readOnly) {
         if (dependencyResultMap == null) {
-            dependencyResultMap = Collections.emptyMap();
         }
 
-        List<MavenPlugin> plugins = new ArrayList<>(mavenProject.getBuildPlugins().size());
-        for (Plugin plugin : mavenProject.getBuildPlugins()) {
-            plugins.add(MavenPluginConverter.convert(plugin, mavenProject));
+        List<MavenPluginWrapper> pluginWrappers = new ArrayList<>(mavenProject.getBuildPlugins().size());
+        for (Plugin each : mavenProject.getBuildPlugins()) {
+            pluginWrappers.add(MavenPluginConverter.convert(each, mavenProject));
         }
+        List<MavenPlugin> plugins = new ArrayList<>(pluginWrappers.size());
+        for (MavenPluginWrapper each : pluginWrappers) {
+            plugins.add(MavenPluginConverter.convert(each, mavenProject));
+        }
+
         List<MavenArtifact> artifacts = new ArrayList<>(mavenProject.getArtifacts().size());
 
         Map<Artifact, MavenArtifact> convertedArtifactMap = new HashMap<>(mavenProject.getArtifacts().size());
@@ -34,40 +41,39 @@ public class MavenProjectConverter {
         if (readOnly) {
             addReferencedProjects(mavenProject, artifacts, 0);
         }
-        List<DependencyTreeNode> dependencyTreeNodes = DependencyTreeNodeConverter
-                .convert(dependencyResultMap.get(mavenProject.getArtifactId()), convertedArtifactMap);
+
         List<String> modulesDir = convertModules(mavenProject.getBasedir(), mavenProject.getModules());
 
-        return MavenProject.builder()
-                .groupId(mavenProject.getGroupId())
-                .artifactId(mavenProject.getArtifactId())
-                .version(mavenProject.getVersion())
-                .packaging(mavenProject.getPackaging())
-                .name(mavenProject.getName())
-                .basedir(mavenProject.getBasedir().getAbsolutePath())
-                .file(mavenProject.getFile())
-                .parentFile(mavenProject.getParentFile())
-                .modulesDir(modulesDir)
-                .plugins(plugins)
-                .dependencyTree(dependencyTreeNodes)
-                .sourceRoots(mavenProject.getCompileSourceRoots())
-                .testSourceRoots(mavenProject.getTestCompileSourceRoots())
-                .resourceRoots(convertResource(mavenProject.getResources()))
-                .testResourceRoots(convertResource(mavenProject.getTestResources()))
-                .buildDirectory(mavenProject.getBuild().getDirectory())
-                .outputDirectory(mavenProject.getBuild().getOutputDirectory())
-                .testOutputDirectory(mavenProject.getBuild().getTestOutputDirectory())
-                .resolvedArtifacts(artifacts)
-                .parentArtifact(mavenProject.getParent() != null
-                        ? MavenArtifactConverter.convert(mavenProject.getParent()) : null)
-                .properties(getProperties(mavenProject))
-                .remoteRepositories(Collections.<MavenRemoteRepository>emptyList())
-                //.remoteRepositories(RemoteRepositoryConverter.convert(mavenProject.getRemoteArtifactRepositories()))
+        MavenProject result = new MavenProject();
+        result.setGroupId(mavenProject.getGroupId());
+        result.setArtifactId(mavenProject.getArtifactId());
+        result.setVersion(mavenProject.getVersion());
+        result.setPackaging(mavenProject.getPackaging());
+        result.setName(mavenProject.getName());
+        result.setBasedir(mavenProject.getBasedir().getAbsolutePath());
+        result.setFilePath(getFilePath(mavenProject.getFile()));
+        result.setParentFilePath(getFilePath(mavenProject.getParentFile()));
+        result.setModulesDir(modulesDir);
+        result.setPlugins(plugins);
+        result.setSourceRoots(mavenProject.getCompileSourceRoots());
+        result.setTestSourceRoots(mavenProject.getTestCompileSourceRoots());
+        result.setResourceRoots(convertResource(mavenProject.getResources()));
+        result.setTestResourceRoots(convertResource(mavenProject.getTestResources()));
+        result.setBuildDirectory(mavenProject.getBuild().getDirectory());
+        result.setOutputDirectory(mavenProject.getBuild().getOutputDirectory());
+        result.setTestOutputDirectory(mavenProject.getBuild().getTestOutputDirectory());
+        result.setResolvedArtifacts(artifacts);
+        result.setParentArtifact(mavenProject.getParent() != null
+                ? MavenArtifactConverter.convert(mavenProject.getParent()) : null);
+        result.setProperties(getProperties(mavenProject));
+        result.setRemoteRepositories(Collections.<MavenRemoteRepository>emptyList());
+        //.remoteRepositories(RemoteRepositoryConverter.convert(mavenProject.getRemoteArtifactRepositories()))
 
-                .excludedPaths(getExcludedPath(mavenProject))
-                .generatedPath(getGeneratedPath(mavenProject))
-                .testGeneratedPath(getGeneratedTestPath(mavenProject))
-                .build();
+        result.setExcludedPaths(getExcludedPath(mavenProject));
+        result.setGeneratedPath(getGeneratedPath(mavenProject));
+        result.setTestGeneratedPath(getGeneratedTestPath(mavenProject));
+        result.setAnnotationProcessorPaths(getAnnotationProcessors(pluginWrappers));
+        return result;
     }
 
     private static void addReferencedProjects(
@@ -128,20 +134,23 @@ public class MavenProjectConverter {
         return result;
     }
 
-    private static List<String> convertResource(List<Resource> resources) {
+    private static List<MavenResource> convertResource(List<Resource> resources) {
         if (resources == null || resources.isEmpty()) return Collections.emptyList();
-        ArrayList<String> result = new ArrayList<>(resources.size());
+        ArrayList<MavenResource> result = new ArrayList<>(resources.size());
         for (Resource item : resources) {
-            result.add(item.getDirectory());
+            MavenResource resource = new MavenResource();
+            resource.setDirectory(item.getDirectory());
+            result.add(resource);
         }
         return result;
     }
 
-    private static List<MavenArtifact> convertMavenArtifact(Set<Artifact> artifacts) {
-        if (artifacts == null || artifacts.isEmpty()) return Collections.emptyList();
-        ArrayList<MavenArtifact> result = new ArrayList<>(artifacts.size());
-        for (Artifact item : artifacts) {
-            result.add(MavenArtifactConverter.convert(item));
+    private static List<String> getAnnotationProcessors(List<MavenPluginWrapper> plugins) {
+        ArrayList<String> result = new ArrayList<>(1);
+        for (MavenPluginWrapper plugin : plugins) {
+            if (plugin.getBody() != null) {
+                result.addAll(plugin.getBody().getAnnotationProcessorPaths());
+            }
         }
         return result;
     }

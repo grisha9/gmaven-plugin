@@ -16,9 +16,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.BUILTIN_TASKS_DATA_NODE_ORDER;
 import static ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID;
 
-@Order(ExternalSystemNode.BUILTIN_TASKS_DATA_NODE_ORDER - 1)
+@Order(BUILTIN_TASKS_DATA_NODE_ORDER - 1)
 public class LifecycleNodes extends ExternalSystemNode<Object> {
 
   private final List<TaskNode> tasks;

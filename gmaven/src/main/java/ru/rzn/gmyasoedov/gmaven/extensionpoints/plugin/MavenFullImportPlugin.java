@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenJDOMUtil;
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject;
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;

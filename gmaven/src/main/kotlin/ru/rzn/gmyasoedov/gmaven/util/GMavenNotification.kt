@@ -10,7 +10,6 @@ import com.intellij.openapi.externalSystem.service.notification.NotificationCate
 import com.intellij.openapi.externalSystem.service.notification.NotificationData
 import com.intellij.openapi.externalSystem.service.notification.NotificationSource
 import com.intellij.openapi.project.Project
-import org.jetbrains.annotations.Nls
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
 
@@ -41,7 +40,7 @@ object GMavenNotification {
     }
 
     fun errorExternalSystemNotification(
-        title: @Nls String, message: @Nls String, project: Project
+        title: String, message: String, project: Project
     ) {
         val notification = NotificationData(title, message, ERROR, NotificationSource.TASK_EXECUTION)
         notification.isBalloonNotification = true

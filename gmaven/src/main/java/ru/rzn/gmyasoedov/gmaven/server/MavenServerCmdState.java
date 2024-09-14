@@ -18,6 +18,7 @@ import com.intellij.openapi.util.text.StringUtilRt;
 import com.intellij.util.PathUtil;
 import com.intellij.util.net.NetUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin;
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
@@ -155,16 +156,6 @@ public class MavenServerCmdState extends CommandLineState {
         }
     }
 
-    private static void configureSslRelatedOptions(Map<String, String> defs) {
-        for (Map.Entry<Object, Object> each : System.getProperties().entrySet()) {
-            Object key = each.getKey();
-            Object value = each.getValue();
-            if (key instanceof String && value instanceof String && ((String) key).startsWith("javax.net.ssl")) {
-                defs.put((String) key, (String) value);
-            }
-        }
-    }
-
     public static void setupMavenOpts(@NotNull SimpleJavaParameters params) {
         String mavenOpts = System.getenv("MAVEN_OPTS");
         Map<String, String> mavenOptsMap;
@@ -183,8 +174,18 @@ public class MavenServerCmdState extends CommandLineState {
         }
     }
 
+    private static void configureSslRelatedOptions(Map<String, String> defs) {
+        for (Map.Entry<Object, Object> each : System.getProperties().entrySet()) {
+            Object key = each.getKey();
+            Object value = each.getValue();
+            if (key instanceof String && value instanceof String && ((String) key).startsWith("javax.net.ssl")) {
+                defs.put((String) key, (String) value);
+            }
+        }
+    }
 
-    private Integer getDebugPort() {
+    @Nullable
+    public static Integer getDebugPort() {
         if (Registry.is("gmaven.server.debug")) {
             try {
                 return NetUtils.findAvailableSocketPort();

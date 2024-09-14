@@ -24,7 +24,6 @@ class ToolbarDependencyAnalyzerAction : DependencyAnalyzerAction() {
     }
 }
 
-//todo not used?
 class ViewDependencyAnalyzerAction : AbstractDependencyAnalyzerAction<ExternalSystemNode<*>>() {
 
     override fun getSystemId(e: AnActionEvent) = GMavenConstants.SYSTEM_ID

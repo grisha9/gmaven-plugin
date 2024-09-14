@@ -16,7 +16,6 @@ import com.intellij.openapi.roots.LibraryOrderEntry
 import com.intellij.openapi.util.ActionCallback
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiFile
-import org.jetbrains.annotations.Nls
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.TASK_DOWNLOAD_SOURCE
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
@@ -127,7 +126,7 @@ internal class DownloadSourceAction(
     }
 
     private fun errorNotification(
-        message: @Nls String,
+        message: String,
         project: Project
     ) {
         val title = GBundle.message("gmaven.action.notifications.sources.download.failed.title")

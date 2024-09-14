@@ -24,8 +24,9 @@ public final class GBundle extends DynamicBundle {
     }
 
     @NotNull
-    public static Supplier<@Nls String> messagePointer(@NotNull @PropertyKey(resourceBundle = BUNDLE) String key,
-                                                       Object @NotNull ... params) {
+    public static Supplier<String> messagePointer(
+            @NotNull @PropertyKey(resourceBundle = BUNDLE) String key, Object @NotNull ... params
+    ) {
         return INSTANCE.getLazyMessage(key, params);
     }
 }

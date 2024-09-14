@@ -13,7 +13,6 @@ public class CompilerData {
     private final LanguageLevel targetLevel;
     private final LanguageLevel testSourceLevel;
     private final LanguageLevel testTargetLevel;
-    private final Collection<String> annotationProcessorPaths;
     private final Collection<String> arguments;
     private final Collection<String> pluginSpecificArguments;
 
@@ -21,14 +20,12 @@ public class CompilerData {
                         @NotNull LanguageLevel targetLevel,
                         @NotNull LanguageLevel testSourceLevel,
                         @NotNull LanguageLevel testTargetLevel,
-                        @NotNull Collection<String> annotationProcessorPaths,
                         @NotNull Collection<String> arguments,
                         @NotNull Collection<String> pluginSpecificArguments) {
         this.sourceLevel = Objects.requireNonNull(sourceLevel);
         this.targetLevel = Objects.requireNonNull(targetLevel);
         this.testSourceLevel = Objects.requireNonNull(testSourceLevel);
         this.testTargetLevel = Objects.requireNonNull(testTargetLevel);
-        this.annotationProcessorPaths = Objects.requireNonNull(annotationProcessorPaths);
         this.arguments = Objects.requireNonNull(arguments);
         this.pluginSpecificArguments = Objects.requireNonNull(pluginSpecificArguments);
     }
@@ -37,23 +34,14 @@ public class CompilerData {
                         @NotNull LanguageLevel targetLevel,
                         @NotNull LanguageLevel testSourceLevel,
                         @NotNull LanguageLevel testTargetLevel,
-                        @NotNull Collection<String> annotationProcessorPaths,
                         @NotNull Collection<String> arguments) {
-        this(sourceLevel, targetLevel, testSourceLevel, testTargetLevel,
-                annotationProcessorPaths, arguments, emptyList());
+        this(sourceLevel, targetLevel, testSourceLevel, testTargetLevel,arguments, emptyList());
     }
 
     public CompilerData(@NotNull LanguageLevel defaultLevel,
-                        @NotNull Collection<String> annotationProcessorPaths,
-                        @NotNull Collection<String> arguments) {
-        this(defaultLevel, defaultLevel, defaultLevel, defaultLevel, annotationProcessorPaths, arguments, emptyList());
-    }
-
-    public CompilerData(@NotNull LanguageLevel defaultLevel,
-                        @NotNull Collection<String> annotationProcessorPaths,
                         @NotNull Collection<String> arguments,
                         @NotNull Collection<String> pluginSpecificArguments) {
-        this(defaultLevel, defaultLevel, defaultLevel, defaultLevel, annotationProcessorPaths, arguments, pluginSpecificArguments);
+        this(defaultLevel, defaultLevel, defaultLevel, defaultLevel, arguments, pluginSpecificArguments);
     }
 
     @NotNull
@@ -77,11 +65,6 @@ public class CompilerData {
     }
 
     @NotNull
-    public Collection<String> getAnnotationProcessorPaths() {
-        return annotationProcessorPaths;
-    }
-
-    @NotNull
     public Collection<String> getArguments() {
         return arguments;
     }
@@ -101,8 +84,6 @@ public class CompilerData {
         if (targetLevel != that.targetLevel) return false;
         if (testSourceLevel != that.testSourceLevel) return false;
         if (testTargetLevel != that.testTargetLevel) return false;
-        if (!Objects.equals(annotationProcessorPaths, that.annotationProcessorPaths))
-            return false;
         return Objects.equals(arguments, that.arguments);
     }
 
@@ -112,7 +93,6 @@ public class CompilerData {
         result = 31 * result + (targetLevel != null ? targetLevel.hashCode() : 0);
         result = 31 * result + (testSourceLevel != null ? testSourceLevel.hashCode() : 0);
         result = 31 * result + (testTargetLevel != null ? testTargetLevel.hashCode() : 0);
-        result = 31 * result + (annotationProcessorPaths != null ? annotationProcessorPaths.hashCode() : 0);
         result = 31 * result + (arguments != null ? arguments.hashCode() : 0);
         return result;
     }

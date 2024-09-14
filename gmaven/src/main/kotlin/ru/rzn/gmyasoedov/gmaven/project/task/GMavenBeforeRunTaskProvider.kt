@@ -6,15 +6,15 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemBefor
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
-import icons.OpenapiIcons
+import icons.GMavenIcons
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 
 class GMavenBeforeRunTaskProvider(project: Project) : ExternalSystemBeforeRunTaskProvider(SYSTEM_ID, project, ID),
     DumbAware {
 
-    override fun getIcon() = OpenapiIcons.RepositoryLibraryLogo
+    override fun getIcon() = GMavenIcons.MavenProject
 
-    override fun getTaskIcon(task: ExternalSystemBeforeRunTask) = OpenapiIcons.RepositoryLibraryLogo
+    override fun getTaskIcon(task: ExternalSystemBeforeRunTask) = icon
 
     override fun createTask(runConfiguration: RunConfiguration) = ExternalSystemBeforeRunTask(ID, SYSTEM_ID)
 

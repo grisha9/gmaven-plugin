@@ -1,5 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven.project
 
+import com.intellij.execution.process.OSProcessHandler
 import com.intellij.externalSystem.JavaProjectData
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.externalSystem.importing.ProjectResolverPolicy
@@ -14,6 +15,7 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUt
 import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
 import com.intellij.openapi.projectRoots.Sdk
+import com.intellij.openapi.util.registry.Registry
 import com.intellij.pom.java.LanguageLevel
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
@@ -24,11 +26,13 @@ import ru.rzn.gmyasoedov.gmaven.project.policy.ReadProjectResolverPolicy
 import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
+import ru.rzn.gmyasoedov.gmaven.server.getProjectModel2
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.util.toFeatureString
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
-import ru.rzn.gmyasoedov.serverapi.model.MavenPlugin
-import ru.rzn.gmyasoedov.serverapi.model.MavenResult
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenMapResult
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenPlugin
+import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import java.io.File
 import java.nio.file.Path
 import java.util.*
@@ -38,10 +42,10 @@ import kotlin.io.path.absolutePathString
 
 class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSettings> {
 
-    private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, GServerRemoteProcessSupport>()
+    private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, Any>()
 
     override fun cancelTask(id: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
-        cancellationMap[id]?.stopAll()
+        cancelTask(id, cancellationMap)
         return true
     }
 
@@ -63,11 +67,22 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val mavenHome = getMavenHome(settings.distributionSettings)
         val buildPath = Path.of(settings.executionWorkspace.projectBuildFile ?: projectPath)
         val request = getServerRequest(id, buildPath, mavenHome, sdk, listener, settings, resolverPolicy)
+
         try {
-            val projectModel = getProjectModel(request) { cancellationMap[id] = it }
+            val projectModel = getProjectModel(request, id)
             return getProjectDataNode(projectPath, projectModel, settings)
         } finally {
             cancellationMap.remove(id)
+        }
+    }
+
+    private fun getProjectModel(
+        request: GServerRequest, id: ExternalSystemTaskId
+    ): MavenMapResult {
+        return if (Registry.`is`("gmaven.server.new")) {
+            getProjectModel2(request) { cancellationMap[id] = it }
+        } else {
+            getProjectModel(request) { cancellationMap[id] = it }
         }
     }
 
@@ -110,12 +125,12 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     }
 
     private fun getProjectDataNode(
-        projectPath: String, mavenResult: MavenResult, settings: MavenExecutionSettings
+        projectPath: String, mavenResult: MavenMapResult, settings: MavenExecutionSettings
     ): DataNode<ProjectData> {
-        val container = mavenResult.projectContainer
+        val container = mavenResult.container
         val project = container.project
-        val projectName = project.displayName
-        val absolutePath = project.file.parent
+        val projectName = GServerUtils.getDisplayName(project)
+        val absolutePath = project.basedir
         val projectData = ProjectData(GMavenConstants.SYSTEM_ID, projectName, absolutePath, projectPath)
         projectData.version = project.version
         projectData.group = project.groupId
@@ -163,7 +178,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val settings: MavenExecutionSettings,
         val rootProjectPath: String,
         val ideaProjectPath: String,
-        val mavenResult: MavenResult,
+        val mavenResult: MavenMapResult,
         val projectLanguageLevel: LanguageLevel,
         var aspectJCompilerData: MutableList<CompilerDataHolder> = ArrayList(0),
         val contextElementMap: MutableMap<String, Element> = HashMap(),
@@ -184,4 +199,13 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     )
 
     class CompilerDataHolder(val plugin: MavenPlugin, val compilerData: CompilerData)
+
+    companion object {
+        fun cancelTask(id: ExternalSystemTaskId, cancellationMap: ConcurrentHashMap<ExternalSystemTaskId, Any>) {
+            when (val remove = cancellationMap.remove(id)) {
+                is GServerRemoteProcessSupport -> remove.stopAll()
+                is OSProcessHandler -> remove.destroyProcess()
+            }
+        }
+    }
 }

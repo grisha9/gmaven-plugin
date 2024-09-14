@@ -18,15 +18,14 @@ import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotU
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
 import ru.rzn.gmyasoedov.gmaven.util.IndicatorUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenMapResult
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject
 import ru.rzn.gmyasoedov.serverapi.GMavenServer
 import ru.rzn.gmyasoedov.serverapi.GServerUtils
-import ru.rzn.gmyasoedov.serverapi.model.MavenException
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject
-import ru.rzn.gmyasoedov.serverapi.model.MavenResult
 import ru.rzn.gmyasoedov.serverapi.model.request.GetModelRequest
 import java.nio.file.Files
 
-fun firstRun(gServerRequest: GServerRequest): MavenResult {
+private fun firstRun(gServerRequest: GServerRequest): MavenMapResult {
     val request = GServerRequest(
         gServerRequest.taskId,
         gServerRequest.projectPath,
@@ -44,7 +43,7 @@ fun firstRun(gServerRequest: GServerRequest): MavenResult {
 fun getProjectModel(
     request: GServerRequest,
     processConsumer: ((process: GServerRemoteProcessSupport) -> Unit)? = null
-): MavenResult {
+): MavenMapResult {
     val modelRequest = getModelRequest(request)
     var processSupport = GServerRemoteProcessSupport(request)
     processConsumer?.let { it(processSupport) }
@@ -62,7 +61,7 @@ fun runTasks(
     request: GServerRequest,
     tasks: List<String>,
     processConsumer: ((process: GServerRemoteProcessSupport) -> Unit)? = null
-): MavenResult {
+): MavenMapResult {
     if (tasks.isEmpty()) {
         throw ExternalSystemException("tasks list is empty")
     }
@@ -102,7 +101,7 @@ fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<
             )
             GMavenNotification.createNotificationDA(message, NotificationType.WARNING)
         }
-        return mavenResult.projectContainer?.modules?.map { it.project } ?: emptyList()
+        return mavenResult.container?.modules?.map { it.project } ?: emptyList()
     } catch (e: Exception) {
         MavenLog.LOG.warn(e)
         GMavenNotification.createNotificationDA(e.localizedMessage, NotificationType.ERROR)
@@ -110,11 +109,11 @@ fun getDependencyTree(gServerRequest: GServerRequest, artifactGA: String): List<
     }
 }
 
-private fun couldNotFindSelectedProject(mavenResult: MavenResult): Boolean {
+private fun couldNotFindSelectedProject(mavenResult: MavenMapResult): Boolean {
     return mavenResult.exceptions?.isNotEmpty() ?: false
 }
 
-private fun tryInstallGMavenPlugin(request: GServerRequest, mavenResult: MavenResult) =
+private fun tryInstallGMavenPlugin(request: GServerRequest, mavenResult: MavenMapResult) =
     !request.installGMavenPlugin && mavenResult.pluginNotResolved
 
 private fun getModelRequest(request: GServerRequest): GetModelRequest {
@@ -157,7 +156,7 @@ private fun runMavenTask(
     modelRequest: GetModelRequest,
     indicator: ProgressIndicator = EmptyProgressIndicator(),
     taskInfo: Task.Backgroundable? = null
-): MavenResult {
+): MavenMapResult {
     val mavenResult = runMavenTaskInner(processSupport, modelRequest, indicator, taskInfo)
     processExceptions(mavenResult.exceptions)
     return mavenResult
@@ -168,7 +167,7 @@ private fun runMavenTaskInner(
     modelRequest: GetModelRequest,
     indicator: ProgressIndicator = EmptyProgressIndicator(),
     taskInfo: Task.Backgroundable? = null
-): MavenResult {
+): MavenMapResult {
     return try {
         val projectModel = processSupport.acquire(processSupport.id, "", indicator)
             .getProjectModel(modelRequest)
@@ -184,9 +183,9 @@ private fun runMavenTaskInner(
     }
 }
 
-private fun processExceptions(exceptions: MutableList<MavenException>) {
+private fun processExceptions(exceptions: MutableList<String>) {
     if (exceptions.isEmpty()) return
-    val errorString = exceptions.joinToString(System.lineSeparator()) { it.message }
+    val errorString = exceptions.joinToString(System.lineSeparator())
 
     if (Registry.`is`("gmaven.show.full.log")) {
         val fixId = ShowFullLogCallback.ID

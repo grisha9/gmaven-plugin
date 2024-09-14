@@ -217,6 +217,7 @@ public final class MavenManager
             result.setShowAllPhase(settings.isShowAllPhases());
             result.setUseMvndForTasks(projectSettings.getUseMvndForTasks());
             result.setCheckSources(settings.isCheckSourcesInLocalRepo());
+            result.setSkipTests(settings.isSkipTests());
             fillExecutionWorkSpace(project, projectSettings, projectPath, result.getExecutionWorkspace());
             if (projectSettings.getArguments() != null) {
                 result.withArguments(ParametersListUtil.parse(projectSettings.getArguments(), true, true));

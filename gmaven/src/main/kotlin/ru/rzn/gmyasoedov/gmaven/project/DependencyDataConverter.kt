@@ -12,9 +12,10 @@ import com.intellij.openapi.util.registry.Registry
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver.ProjectResolverContext
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
-import ru.rzn.gmyasoedov.serverapi.model.MavenArtifact
-import ru.rzn.gmyasoedov.serverapi.model.MavenProject
-import ru.rzn.gmyasoedov.serverapi.model.MavenProjectContainer
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenArtifact
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProject
+import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenProjectContainer
+import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -31,7 +32,7 @@ fun addDependencies(
 }
 
 private fun addDependencies(project: MavenProject, context: ProjectResolverContext) {
-    val moduleContextHolder = context.moduleDataByArtifactId[project.id]!!
+    val moduleContextHolder = context.moduleDataByArtifactId[GServerUtils.getMavenId(project)]!!
     val sourceSetModules = moduleContextHolder.perSourceSetModules
     if (sourceSetModules == null) {
         addDependencies(project, moduleContextHolder.moduleNode, context)
@@ -45,7 +46,7 @@ private fun addDependencies(
 ) {
     var hasLibrary = false
     for (artifact in project.resolvedArtifacts) {
-        val moduleContextHolder = context.moduleDataByArtifactId[artifact.id]
+        val moduleContextHolder = context.moduleDataByArtifactId[GServerUtils.getMavenId(artifact)]
         val moduleDataNodeByMavenArtifact = moduleContextHolder?.perSourceSetModules?.mainNode
             ?: moduleContextHolder?.moduleNode
         if (moduleDataNodeByMavenArtifact == null || isClassifierJar(artifact)) {
@@ -69,7 +70,7 @@ private fun addDependencies(
 ) {
     var hasLibrary = false
     for (artifact in project.resolvedArtifacts) {
-        val moduleContextHolder = context.moduleDataByArtifactId[artifact.id]
+        val moduleContextHolder = context.moduleDataByArtifactId[GServerUtils.getMavenId(artifact)]
         val moduleDataNodeByMavenArtifact = moduleContextHolder?.perSourceSetModules?.mainNode
             ?: moduleContextHolder?.moduleNode
         if (moduleDataNodeByMavenArtifact == null || isClassifierJar(artifact)) {
@@ -174,13 +175,12 @@ private fun createLibrary(
     artifact: MavenArtifact, classifierModuleNode: DataNode<out ModuleData>?, context: ProjectResolverContext
 ): LibraryData {
     val artifactFile = getLibraryFile(artifact, classifierModuleNode)
-    val library = LibraryData(GMavenConstants.SYSTEM_ID, artifact.id, artifactFile == null)
+    val library = LibraryData(GMavenConstants.SYSTEM_ID, GServerUtils.getMavenId(artifact), artifactFile == null)
     library.artifactId = artifact.artifactId
     library.setGroup(artifact.groupId)
     library.version = artifact.version
-    artifactFile ?: return library
 
-    val artifactAbsolutePath = artifactFile.absolutePath
+    val artifactAbsolutePath = artifactFile?.absolutePath ?: return library
 
     library.addPath(getLibraryPathType(artifact), artifactAbsolutePath)
     if (context.moduleDataByArtifactId.size < MIN_MODULES_COUNT_TO_CHECK_SOURCES || context.settings.isCheckSources) {
@@ -196,7 +196,9 @@ private fun createLibrary(
 }
 
 private fun getLibraryFile(artifact: MavenArtifact, classifierModuleNode: DataNode<out ModuleData>?): File? {
-    if (artifact.file != null || artifact.classifier == null || classifierModuleNode == null) return artifact.file
+    if (artifact.filePath != null || artifact.classifier == null || classifierModuleNode == null) {
+        return artifact.filePath?.let { File(it) }
+    }
     return try {
         val files = Path.of(classifierModuleNode.data.linkedExternalProjectPath).resolve("target").toFile()
             .listFiles()?.filter { it.isFile } ?: emptyList()
