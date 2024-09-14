@@ -112,13 +112,14 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
                 override fun onSuccess() {
                     try {
                         val result: List<MavenProjectDependencyTree> = getDependencyTreeResult(resultPath)
-                        FileUtil.delete(resultPath.toFile())
                         result.forEach { dependencyTreeByProject[it.groupId + ":" + it.artifactId] = it.dependencies }
                     } catch (e: Exception) {
                         MavenLog.LOG.warn(e)
                         val message = GBundle.message("gmaven.action.notifications.dependency.tree.failed.content")
                         val finalMessage = e.localizedMessage + System.lineSeparator() + "<br/> $message"
                         GMavenNotification.createNotificationDA(finalMessage, NotificationType.ERROR)
+                    } finally {
+                        FileUtil.delete(resultPath.toFile())
                     }
                 }
 

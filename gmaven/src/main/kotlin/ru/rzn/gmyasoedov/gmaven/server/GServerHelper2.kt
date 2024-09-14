@@ -41,8 +41,6 @@ fun getProjectModel2(
         val processHandler2 = GOSProcessHandler(request, commandLine, processConsumer)
         return runMavenImport(processHandler2, resultFilePath)
     }
-    if (!resultFilePath.parent.name.equals("target", true)) FileUtil.delete(resultFilePath)
-    //if (Registry.`is`("gmaven.process.remove.result.file")) FileUtil.delete(resultFilePath)
     return mavenResult
 }
 
@@ -163,6 +161,10 @@ private fun runMavenImportInner(processSupport: GOSProcessHandler, resultFilePat
     } catch (e: Exception) {
         MavenLog.LOG.warn(e)
         GServerUtils.toResult(e)
+    } finally {
+        if (Registry.`is`("gmaven.process.remove.result.file")) {
+            if (!resultFilePath.parent.name.equals("target", true)) FileUtil.delete(resultFilePath)
+        }
     }
 }
 
