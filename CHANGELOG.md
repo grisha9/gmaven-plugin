@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [242.1] - 2024-09-15
+### Added
+- Support IDEA 242.* version. Icons for new UI.
+- Rework Maven integration via [file](https://github.com/grisha9/gmaven-plugin/wiki/New-integration-with-Maven-model-reader-plugin-via-file.-Since-242.1-GMaven-version)
+
 ## [233.30] - 2024-07-13
 ### Fixed
 - Support test-jar type for module dependency ([issue](https://github.com/grisha9/gmaven-plugin/issues/15))
