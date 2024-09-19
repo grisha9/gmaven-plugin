@@ -23,6 +23,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.startup.StartupActivity;
 import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.util.registry.Registry;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.search.ExecutionSearchScopes;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -218,6 +219,7 @@ public final class MavenManager
             result.setUseMvndForTasks(projectSettings.getUseMvndForTasks());
             result.setCheckSources(settings.isCheckSourcesInLocalRepo());
             result.setSkipTests(settings.isSkipTests());
+            result.setReadonly(Registry.is("gmaven.import.readonly"));
             fillExecutionWorkSpace(project, projectSettings, projectPath, result.getExecutionWorkspace());
             if (projectSettings.getArguments() != null) {
                 result.withArguments(ParametersListUtil.parse(projectSettings.getArguments(), true, true));

@@ -1,16 +1,12 @@
 package ru.rzn.gmyasoedov.gmaven.project.action
 
 import com.intellij.icons.AllIcons
-import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.Presentation
-import com.intellij.openapi.actionSystem.ToggleAction
-import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys.EXTERNAL_SYSTEM_ID
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotUpdateType
 
-class UpdateSnapshotAction : ToggleAction() {
+class UpdateSnapshotAction : GMavenToggleAction() {
 
     override fun isSelected(e: AnActionEvent): Boolean {
         val project = e.project ?: return false
@@ -27,15 +23,6 @@ class UpdateSnapshotAction : ToggleAction() {
         val next = SnapshotUpdateType.values()[(ordinal + 1) % SnapshotUpdateType.values().size]
         MavenSettings.getInstance(project).linkedProjectsSettings.forEach { it.snapshotUpdateType = next }
         updateState(next, e.presentation)
-    }
-
-    override fun getActionUpdateThread(): ActionUpdateThread {
-        return ActionUpdateThread.EDT
-    }
-
-    override fun update(e: AnActionEvent) {
-        super.update(e)
-        e.presentation.isEnabledAndVisible = (e.getData(EXTERNAL_SYSTEM_ID) == GMavenConstants.SYSTEM_ID)
     }
 
     private fun updateState(type: SnapshotUpdateType, presentation: Presentation) {

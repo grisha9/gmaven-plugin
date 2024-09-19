@@ -50,6 +50,16 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
                 .use(ProgressExecutionMode.MODAL_SYNC)
         )
         if (Registry.`is`("external.system.auto.import.disabled")) return
+        if (Registry.`is`("gmaven.import.readonly")) {
+            runWhenInitialized(project) {
+                ExternalSystemUtil.refreshProject(
+                    externalProjectPath,
+                    ImportSpecBuilder(project, SYSTEM_ID)
+                        .callback(createFinalImportCallback(project, externalProjectPath))
+                )
+            }
+            return
+        }
 
         runWhenInitialized(project) {
             val importSpecBuilder = getImportSpecBuilder(project, externalProjectPath)

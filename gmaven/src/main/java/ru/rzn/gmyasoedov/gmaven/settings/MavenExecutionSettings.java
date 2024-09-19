@@ -37,6 +37,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private boolean showPluginNodes = true;
     private boolean showAllPhase = false;
     private boolean isSkipTests = false;
+    private boolean readonly = false;
     @NotNull
     private ProjectSettingsControlBuilder.OutputLevelType outputLevel = DEFAULT;
     @NotNull
@@ -191,6 +192,14 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     public void setSkipTests(boolean skipTests) {
         isSkipTests = skipTests;
+    }
+
+    public boolean isReadonly() {
+        return readonly;
+    }
+
+    public void setReadonly(boolean readonly) {
+        this.readonly = readonly;
     }
 
     @Override
