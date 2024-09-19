@@ -3,6 +3,9 @@ package ru.rzn.gmyasoedov.gmaven
 import com.intellij.externalSystem.JavaModuleData
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder
+import com.intellij.openapi.externalSystem.model.DataNode
+import com.intellij.openapi.externalSystem.model.ProjectKeys
+import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
@@ -64,6 +67,12 @@ abstract class MavenImportingTestCase : MavenTestCase() {
             ?.externalProjectStructure
             ?.let { ExternalSystemApiUtil.findAllRecursively(it, CompilerPluginData.KEY) }
             ?.map { it.data } ?: emptyList()
+    }
+
+    protected fun getModulesNode(): Collection<DataNode<ModuleData>> {
+        return ProjectDataManager.getInstance().getExternalProjectData(project, SYSTEM_ID, getExternalProjectPath())
+            ?.externalProjectStructure
+            ?.let { ExternalSystemApiUtil.findAllRecursively(it, ProjectKeys.MODULE) } ?: emptyList()
     }
 
     protected fun import(projectFile: VirtualFile) {

@@ -99,7 +99,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
             id, buildPath, mavenHome, sdk,
             listener = listener,
             settings = settings,
-            readOnly = resolverPolicy is ReadProjectResolverPolicy
+            readOnly = resolverPolicy is ReadProjectResolverPolicy || settings.isReadonly
         )
     }
 

@@ -4,6 +4,7 @@ package ru.rzn.gmyasoedov.gmaven.settings;
 import com.intellij.openapi.externalSystem.util.ExternalSystemSettingsControl;
 import com.intellij.openapi.externalSystem.util.ExternalSystemUiUtil;
 import com.intellij.openapi.externalSystem.util.PaintAwarePanel;
+import com.intellij.openapi.util.registry.Registry;
 import com.intellij.ui.components.JBCheckBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,6 +23,8 @@ public class SystemSettingsControlBuilder implements ExternalSystemSettingsContr
     private JBCheckBox skipTestsCheckBox;
     @Nullable
     private JBCheckBox checkSourcesCheckBox;
+    @Nullable
+    private JBCheckBox checkReadonlyCheckBox;
 
     public SystemSettingsControlBuilder(@NotNull MavenSettings initialSettings) {
         myInitialSettings = initialSettings;
@@ -33,9 +36,12 @@ public class SystemSettingsControlBuilder implements ExternalSystemSettingsContr
         skipTestsCheckBox = new JBCheckBox(GBundle.message("gmaven.settings.system.skip.tests"));
         checkSourcesCheckBox = new JBCheckBox(GBundle.message("gmaven.settings.system.check.sources"));
         checkSourcesCheckBox.setToolTipText(message("gmaven.settings.system.check.sources.tooltip"));
+        checkReadonlyCheckBox = new JBCheckBox(GBundle.message("gmaven.settings.system.readonly"));
+        checkReadonlyCheckBox.setToolTipText(message("gmaven.settings.system.readonly.tooltip"));
 
         canvas.add(offlineCheckBox, ExternalSystemUiUtil.getLabelConstraints(indentLevel));
         canvas.add(skipTestsCheckBox, ExternalSystemUiUtil.getLabelConstraints(indentLevel));
+        canvas.add(checkReadonlyCheckBox, ExternalSystemUiUtil.getLabelConstraints(indentLevel));
         canvas.add(checkSourcesCheckBox, ExternalSystemUiUtil.getFillLineConstraints(0));
     }
 
@@ -55,6 +61,9 @@ public class SystemSettingsControlBuilder implements ExternalSystemSettingsContr
         if (checkSourcesCheckBox != null) {
             checkSourcesCheckBox.setSelected(myInitialSettings.isCheckSourcesInLocalRepo());
         }
+        if (checkReadonlyCheckBox != null) {
+            checkReadonlyCheckBox.setSelected(Registry.is("gmaven.import.readonly"));
+        }
     }
 
     @Override
@@ -63,6 +72,9 @@ public class SystemSettingsControlBuilder implements ExternalSystemSettingsContr
             return true;
         }
         if (skipTestsCheckBox != null && skipTestsCheckBox.isSelected() != myInitialSettings.isSkipTests()) {
+            return true;
+        }
+        if (checkReadonlyCheckBox != null && checkReadonlyCheckBox.isSelected() != Registry.is("gmaven.import.readonly")) {
             return true;
         }
         if (checkSourcesCheckBox != null
@@ -82,6 +94,9 @@ public class SystemSettingsControlBuilder implements ExternalSystemSettingsContr
         }
         if (checkSourcesCheckBox != null) {
             settings.setCheckSourcesInLocalRepo(checkSourcesCheckBox.isSelected());
+        }
+        if (checkReadonlyCheckBox != null) {
+            Registry.get("gmaven.import.readonly").setValue(checkReadonlyCheckBox.isSelected());
         }
     }
 

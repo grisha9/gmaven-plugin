@@ -155,6 +155,7 @@
         <registryKey key="gmaven.process.install.plugin" defaultValue="false"
                      description="Install maven-model-reader-plugin on error"/>
         <registryKey key="gmaven.process.remove.result.file" defaultValue="true" description="Remove result json file"/>
+        <registryKey key="gmaven.import.readonly" defaultValue="false" description="Read only project import. Without download dependencies"/>
         <notificationGroup id="GMaven" displayType="BALLOON"/>
 
         <fileTypeOverrider implementation="ru.rzn.gmyasoedov.gmaven.dom.PomFileTypeOverrider" order="first"/>
@@ -196,6 +197,7 @@
                 class="ru.rzn.gmyasoedov.gmaven.project.action.ChangeProfileStateAction"/>
         <action id="GMaven.Toolbar.SkipTests" class="ru.rzn.gmyasoedov.gmaven.project.action.SkipTestsAction"/>
         <action id="GMaven.Toolbar.Offline" class="ru.rzn.gmyasoedov.gmaven.project.action.OfflineModeAction"/>
+        <action id="GMaven.Toolbar.ReadonlyAction" class="ru.rzn.gmyasoedov.gmaven.project.action.ReadonlyAction"/>
         <action id="GMaven.Toolbar.Snapshot" class="ru.rzn.gmyasoedov.gmaven.project.action.UpdateSnapshotAction"/>
         <action id="GMaven.Toolbar.RunTasksAction" class="ru.rzn.gmyasoedov.gmaven.project.action.RunTasksAction"/>
         <action id="GMaven.ExternalSystem.RefreshProjectWithPlugins" icon="AllIcons.Actions.Refresh"
@@ -223,6 +225,7 @@
             <reference id="GMaven.Toolbar.Offline"/>
             <reference id="GMaven.Toolbar.SkipTests"/>
             <reference id="GMaven.Toolbar.Snapshot"/>
+            <reference id="GMaven.Toolbar.ReadonlyAction"/>
             <separator/>
             <add-to-group group-id="ExternalSystemView.ActionsToolbar.CenterPanel" anchor="last"/>
         </group>
