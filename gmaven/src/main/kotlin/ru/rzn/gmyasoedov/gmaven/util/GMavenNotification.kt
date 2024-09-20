@@ -6,6 +6,7 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.externalSystem.service.notification.ExternalSystemNotificationManager
+import com.intellij.openapi.externalSystem.service.notification.NotificationCategory
 import com.intellij.openapi.externalSystem.service.notification.NotificationCategory.ERROR
 import com.intellij.openapi.externalSystem.service.notification.NotificationData
 import com.intellij.openapi.externalSystem.service.notification.NotificationSource
@@ -41,8 +42,12 @@ object GMavenNotification {
 
     fun errorExternalSystemNotification(
         title: String, message: String, project: Project
+    ) = externalSystemNotification(title, message, project, ERROR)
+
+    fun externalSystemNotification(
+        title: String, message: String, project: Project, category: NotificationCategory
     ) {
-        val notification = NotificationData(title, message, ERROR, NotificationSource.TASK_EXECUTION)
+        val notification = NotificationData(title, message, category, NotificationSource.TASK_EXECUTION)
         notification.isBalloonNotification = true
         ExternalSystemNotificationManager.getInstance(project)
             .showNotification(GMavenConstants.SYSTEM_ID, notification)
