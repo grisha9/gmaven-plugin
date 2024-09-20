@@ -33,11 +33,13 @@ import com.intellij.util.execution.ParametersListUtil;
 import icons.GMavenIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.rzn.gmyasoedov.gmaven.bundle.GBundle;
 import ru.rzn.gmyasoedov.gmaven.chooser.MavenPomFileChooserDescriptor;
 import ru.rzn.gmyasoedov.gmaven.project.GMavenAutoImportAware;
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver;
 import ru.rzn.gmyasoedov.gmaven.project.task.MavenTaskManager;
 import ru.rzn.gmyasoedov.gmaven.settings.*;
+import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification;
 
 import javax.swing.*;
 import java.io.File;
@@ -46,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_PROJECT_JDK;
+import static com.intellij.openapi.externalSystem.service.notification.NotificationCategory.INFO;
 import static ru.rzn.gmyasoedov.gmaven.util.ExecutionSettingsUtil.fillExecutionWorkSpace;
 import static ru.rzn.gmyasoedov.gmaven.util.ExecutionSettingsUtil.getDistributionSettings;
 
@@ -214,12 +217,16 @@ public final class MavenManager
             result.setSnapshotUpdateType(projectSettings.getSnapshotUpdateType());
             result.setThreadCount(projectSettings.getThreadCount());
             result.setOutputLevel(projectSettings.getOutputLevel());
-            result.setShowPluginNodes(projectSettings.getShowPluginNodes());
-            result.setShowAllPhase(settings.isShowAllPhases());
             result.setUseMvndForTasks(projectSettings.getUseMvndForTasks());
             result.setCheckSources(settings.isCheckSourcesInLocalRepo());
             result.setSkipTests(settings.isSkipTests());
+            result.setShowPluginNodes(!Registry.is("gmaven.import.readonly") && projectSettings.getShowPluginNodes());
             result.setReadonly(Registry.is("gmaven.import.readonly"));
+            if (result.isReadonly()) {
+                GMavenNotification.INSTANCE.externalSystemNotification(
+                        "", GBundle.message("gmaven.settings.system.readonly.info"), project, INFO
+                );
+            }
             fillExecutionWorkSpace(project, projectSettings, projectPath, result.getExecutionWorkspace());
             if (projectSettings.getArguments() != null) {
                 result.withArguments(ParametersListUtil.parse(projectSettings.getArguments(), true, true));
