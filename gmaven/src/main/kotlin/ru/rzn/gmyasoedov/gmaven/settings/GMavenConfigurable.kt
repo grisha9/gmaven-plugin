@@ -17,5 +17,6 @@ class GMavenConfigurable(project: Project) :
 
     override fun createSystemSettingsControl(settings: MavenSettings) = SystemSettingsControlBuilder(settings)
 
-    override fun createProjectSettingsControl(settings: MavenProjectSettings) = ProjectSettingsControlBuilder(settings)
+    //override fun createProjectSettingsControl(settings: MavenProjectSettings) = ProjectSettingsControlBuilder(settings)
+    override fun createProjectSettingsControl(settings: MavenProjectSettings) = ProjectSettingsControl(project, settings)
 }

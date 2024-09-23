@@ -515,7 +515,7 @@ public class ProjectSettingsControlBuilder extends AbstractExternalProjectSettin
         sdksModel.setProjectSdk(projectSdk);
     }
 
-    private static void deduplicateSdkNames(@NotNull ProjectSdksModel projectSdksModel) {
+    public static void deduplicateSdkNames(@NotNull ProjectSdksModel projectSdksModel) {
         Set<String> processedNames = new HashSet<>();
         Collection<Sdk> editableSdks = projectSdksModel.getProjectSdks().values();
         for (Sdk sdk : editableSdks) {
@@ -628,7 +628,7 @@ public class ProjectSettingsControlBuilder extends AbstractExternalProjectSettin
                 }
             }
             if (settings.getType() == DistributionType.WRAPPER) {
-                text = "Use Maven wrapper";
+                text = "Use Maven Wrapper";
             }
             return text;
         }
