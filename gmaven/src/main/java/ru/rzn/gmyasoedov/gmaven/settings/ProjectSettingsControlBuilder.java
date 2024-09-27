@@ -529,7 +529,7 @@ public class ProjectSettingsControlBuilder extends AbstractExternalProjectSettin
         }
     }
 
-    private static String getJdkName(@Nullable SdkListItem item) {
+    public static String getJdkName(@Nullable SdkListItem item) {
         if (item instanceof SdkListItem.ProjectSdkItem) {
             return USE_PROJECT_JDK;
         } else if (item instanceof SdkListItem.SdkItem) {

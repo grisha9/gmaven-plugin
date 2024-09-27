@@ -45,7 +45,7 @@ class ResetProfileStateToDefaultAction :
         val profileNodes = getProfileNodes(selectedNode) ?: return
         val stateService = ProjectProfilesStateService.getInstance(project)
         profileNodes.profiles.forEach {
-            stateService.state.mapping.remove(it.profileData.stateKey)
+            stateService.state.mapping.remove(it.data?.stateKey)
         }
         ExternalSystemUtil.scheduleExternalViewStructureUpdate(project, projectSystemId)
     }

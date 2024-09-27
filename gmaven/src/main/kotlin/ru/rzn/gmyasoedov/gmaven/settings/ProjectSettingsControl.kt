@@ -1,5 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven.settings
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
@@ -16,10 +17,14 @@ import com.intellij.openapi.roots.ui.configuration.SdkComboBox
 import com.intellij.openapi.roots.ui.configuration.SdkComboBoxModel
 import com.intellij.openapi.roots.ui.configuration.projectRoot.ProjectSdksModel
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.openapi.ui.TextFieldWithBrowseButton
+import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.openapi.ui.emptyText
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.ui.CollectionComboBoxModel
 import com.intellij.ui.dsl.builder.*
+import com.intellij.ui.layout.ValidationInfoBuilder
 import com.intellij.util.concurrency.AppExecutorUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
@@ -27,6 +32,7 @@ import ru.rzn.gmyasoedov.gmaven.project.wrapper.MvnDotProperties.getDistribution
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.*
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
+import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.Callable
 
@@ -34,20 +40,25 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
     AbstractExternalProjectSettingsControl<MavenProjectSettings>(project, currentSettings) {
 
     private lateinit var mainPanel: DialogPanel
+    private lateinit var disposable: Disposable
     private var jdkComboBox: SdkComboBox? = null
 
     private val propertyGraph = PropertyGraph()
+
     private val nonRecursiveBind = propertyGraph.property(false)
     private val useWholeProjectContextBind = propertyGraph.property(false)
     private val resolveModulePerSourceSetBind = propertyGraph.property(false)
     private val showPluginNodesBind = propertyGraph.property(false)
+
     private val updateSnapshotsModel = CollectionComboBoxModel(SnapshotUpdateType.values().toList())
     private val outputLevelModel = CollectionComboBoxModel(OutputLevelType.values().toList())
-    private val distributionTypeModel = CollectionComboBoxModel(mutableListOf<String>())
+
     private val threadCountBind = propertyGraph.property("")
     private val vmOptionsBind = propertyGraph.property("")
     private val additionalArgsBind = propertyGraph.property("")
     private val importArgsBind = propertyGraph.property("")
+
+    private val distributionTypeModel = CollectionComboBoxModel(mutableListOf<String>())
     private val mavenPathBind = propertyGraph.property("")
     private val mavenCustomPathBind = propertyGraph.property("")
 
@@ -58,6 +69,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
     override fun validate(settings: MavenProjectSettings) = true
 
     override fun fillExtraControls(content: PaintAwarePanel, indentLevel: Int) {
+        disposable = Disposer.newDisposable()
         mainPanel = panel {
             group {
                 row {
@@ -93,7 +105,6 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
                 row(message("gmaven.settings.project.snapshot.update")) {
                     comboBox(updateSnapshotsModel)
                         .align(AlignX.FILL)
-                        //.validationOnApply { validateModel() }
                         .resizableColumn()
                 }
 
@@ -167,6 +178,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
                         .bindText(mavenCustomPathBind)
                         .align(AlignX.FILL)
                         .resizableColumn()
+                        .validationOnApply { validationInfo(it) }
                         .applyToComponent {
                             toolTipText = message("gmaven.settings.project.maven.dialog.title")
                             emptyText.text = toolTipText
@@ -174,8 +186,25 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
                 }.visibleIf(mavenPathVisible.not())
             }
         }
+        mainPanel.registerValidators(disposable)
         content.add(mainPanel, ExternalSystemUiUtil.getFillLineConstraints(0).insets(0, 0, 0, 0))
     }
+
+    private fun validationInfo(component: TextFieldWithBrowseButton): ValidationInfo? {
+        val distributionSettings = distributionTypeMap[distributionTypeModel.selected] ?: return null
+        if (isCustomPathDistribution(distributionSettings.type)) {
+
+        }
+        //mvnd or custom mvn
+        return if (component.text.isEmpty()) {
+            ValidationInfoBuilder(component).error("cannot be empty")
+        } else {
+            null
+        }
+    }
+
+    private fun isCustomPathDistribution(distributionType: DistributionType) =
+        distributionType == DistributionType.CUSTOM || distributionType == DistributionType.MVND
 
     private fun changeMavenTypeListener() {
         val distributionSettings = distributionTypeMap[distributionTypeModel.selected] ?: return
@@ -196,6 +225,19 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
     }
 
     override fun resetExtraSettings(isDefaultModuleCreation: Boolean) {
+        nonRecursiveBind.set(currentSettings.nonRecursive)
+        useWholeProjectContextBind.set(currentSettings.useWholeProjectContext)
+        resolveModulePerSourceSetBind.set(currentSettings.resolveModulePerSourceSet)
+        showPluginNodesBind.set(currentSettings.showPluginNodes)
+
+        updateSnapshotsModel.selectedItem = currentSettings.snapshotUpdateType
+        outputLevelModel.selectedItem = currentSettings.outputLevel
+
+        threadCountBind.set(currentSettings.threadCount ?: "")
+        vmOptionsBind.set(currentSettings.vmOptions ?: "")
+        additionalArgsBind.set(currentSettings.arguments ?: "")
+        importArgsBind.set(currentSettings.argumentsImport ?: "")
+
         setSelectedJdk(jdkComboBox, currentSettings.jdkName)
         if (distributionTypeMap.isNotEmpty()) {
             setSelectedMavenType(currentSettings)
@@ -206,14 +248,67 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
                 })
                 .submit(AppExecutorUtil.getAppExecutorService())
         }
+
+        mavenCustomPathBind.set(currentSettings.distributionSettings.path?.toString() ?: "")
     }
 
     override fun isExtraSettingModified(): Boolean {
+        if (currentSettings.nonRecursive != nonRecursiveBind.get()) return true
+        if (currentSettings.useWholeProjectContext != useWholeProjectContextBind.get()) return true
+        if (currentSettings.resolveModulePerSourceSet != resolveModulePerSourceSetBind.get()) return true
+        if (currentSettings.showPluginNodes != showPluginNodesBind.get()) return true
+
+        if (currentSettings.snapshotUpdateType != updateSnapshotsModel.selected) return true
+        if (currentSettings.outputLevel != outputLevelModel.selected) return true
+
+        if (isNotEqualSettings(currentSettings.threadCount, threadCountBind.get())) return true
+        if (isNotEqualSettings(currentSettings.vmOptions, vmOptionsBind.get())) return true
+        if (isNotEqualSettings(currentSettings.arguments, additionalArgsBind.get())) return true
+        if (isNotEqualSettings(currentSettings.argumentsImport, importArgsBind.get())) return true
+
+        val jdkNameBindSetting = jdkComboBox?.let { getJdkName(it.selectedItem) } ?: ""
+        if (isNotEqualSettings(currentSettings.jdkName, jdkNameBindSetting)) return true
+
+        if (distributionTypeModel.selected == null || distributionTypeMap.isEmpty()) return false
+        val distributionSettings = distributionTypeMap[distributionTypeModel.selected] ?: return false
+        if (currentSettings.distributionSettings.type != distributionSettings.type) return true
+        if (isCustomPathDistribution(distributionSettings.type)) {
+            val distributionPath = currentSettings.distributionSettings.path?.toString()
+            if (isNotEqualSettings(distributionPath, mavenCustomPathBind.get())) return true
+        }
         return false
     }
 
     override fun applyExtraSettings(settings: MavenProjectSettings) {
+        settings.nonRecursive = nonRecursiveBind.get()
+        settings.useWholeProjectContext = useWholeProjectContextBind.get()
+        settings.resolveModulePerSourceSet = resolveModulePerSourceSetBind.get()
+        settings.showPluginNodes = showPluginNodesBind.get()
 
+        settings.snapshotUpdateType = updateSnapshotsModel.selected!!
+        settings.outputLevel = outputLevelModel.selected!!
+
+        settings.threadCount = threadCountBind.get()
+        settings.vmOptions = vmOptionsBind.get()
+        settings.arguments = additionalArgsBind.get()
+        settings.argumentsImport = importArgsBind.get()
+
+        settings.jdkName = jdkComboBox?.let { getJdkName(it.selectedItem) }
+        settings.distributionSettings = getDistributionSettings()
+    }
+
+    private fun getDistributionSettings(): DistributionSettings {
+        val distributionSettings = distributionTypeMap[distributionTypeModel.selected]
+        return if (isCustomPathDistribution(distributionSettings!!.type)) {
+            DistributionSettings(distributionSettings.type, Path.of(mavenCustomPathBind.get()), null)
+        } else {
+            distributionSettings
+        }
+    }
+
+    override fun disposeUIResources() {
+        super.disposeUIResources()
+        disposable.dispose()
     }
 
     private fun setSelectedJdk(jdkComboBox: SdkComboBox?, jdkName: String?) {
@@ -246,6 +341,10 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
                 return
             }
         }
+    }
+
+    private fun isNotEqualSettings(currentSetting: String?, bindSetting: String): Boolean {
+        return (currentSetting ?: "") != bindSetting
     }
 }
 

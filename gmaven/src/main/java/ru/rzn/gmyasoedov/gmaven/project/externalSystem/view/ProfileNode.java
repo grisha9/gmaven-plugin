@@ -13,17 +13,15 @@ import ru.rzn.gmyasoedov.gmaven.project.profile.ProfileState;
 import ru.rzn.gmyasoedov.gmaven.project.profile.ProjectProfilesStateService;
 
 public class ProfileNode extends ExternalSystemNode<ProfileData> {
-    private final ProfileData profileData;
 
     public ProfileNode(@NotNull ExternalProjectsView externalProjectsView, @NotNull DataNode<ProfileData> dataNode) {
         super(externalProjectsView, null, dataNode);
-        profileData = dataNode.getData();
     }
 
     @Override
     protected void update(@NotNull PresentationData presentation) {
         super.update(presentation);
-        String state = getState(profileData);
+        String state = getState(getData());
         if (ProfileData.SimpleProfile.ACTIVE.name().equals(state)) {
             presentation.setIcon(AllIcons.Diff.GutterCheckBoxSelected);
         } else if (ProfileData.SimpleProfile.INACTIVE.name().equals(state)) {
@@ -55,9 +53,5 @@ public class ProfileNode extends ExternalSystemNode<ProfileData> {
     @Override
     public boolean isAlwaysLeaf() {
         return true;
-    }
-
-    public ProfileData getProfileData() {
-        return profileData;
     }
 }
