@@ -50,6 +50,9 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
 
     private fun getUnixPath(mavenPath: Path): String {
         val basePath = mavenPath.resolve("bin")
+        if (basePath.resolve("mvnd.sh").exists()) {
+            return basePath.resolve("mvnd.sh").absolutePathString()
+        }
         if (basePath.resolve("mvn").exists()) {
             return basePath.resolve("mvn").absolutePathString()
         }
@@ -58,6 +61,9 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
 
     private fun getWinPath(mavenPath: Path): String {
         val basePath = mavenPath.resolve("bin")
+        if (basePath.resolve("mvnd.cmd").exists()) {
+            return basePath.resolve("mvnd.cmd").absolutePathString()
+        }
         if (basePath.resolve("mvn.cmd").exists()) {
             return basePath.resolve("mvn.cmd").absolutePathString()
         }

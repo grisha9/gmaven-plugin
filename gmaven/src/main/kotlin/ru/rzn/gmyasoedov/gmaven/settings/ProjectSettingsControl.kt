@@ -23,6 +23,7 @@ import com.intellij.openapi.ui.emptyText
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.ui.CollectionComboBoxModel
+import com.intellij.ui.UIBundle
 import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.layout.ValidationInfoBuilder
 import com.intellij.util.concurrency.AppExecutorUtil
@@ -35,6 +36,7 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.Callable
+import kotlin.io.path.exists
 
 class ProjectSettingsControl(private val project: Project, private val currentSettings: MavenProjectSettings) :
     AbstractExternalProjectSettingsControl<MavenProjectSettings>(project, currentSettings) {
@@ -178,7 +180,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
                         .bindText(mavenCustomPathBind)
                         .align(AlignX.FILL)
                         .resizableColumn()
-                        .validationOnApply { validationInfo(it) }
+                        .validationOnInput { validationInfo(it) }
                         .applyToComponent {
                             toolTipText = message("gmaven.settings.project.maven.dialog.title")
                             emptyText.text = toolTipText
@@ -193,14 +195,23 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
     private fun validationInfo(component: TextFieldWithBrowseButton): ValidationInfo? {
         val distributionSettings = distributionTypeMap[distributionTypeModel.selected] ?: return null
         if (isCustomPathDistribution(distributionSettings.type)) {
-
+            if (component.text.isEmpty()) {
+                return ValidationInfoBuilder(component)
+                    .error(UIBundle.message("create.new.folder.folder.name.cannot.be.empty.error.message"))
+            }
+            val binPath = Path.of(component.text).resolve("bin")
+            if (distributionSettings.type == DistributionType.CUSTOM) {
+                if (!binPath.resolve("mvn").exists() || !binPath.resolve("mvn.cmd").exists()) {
+                    return ValidationInfoBuilder(component).error(message("gmaven.settings.project.mvn.error"))
+                }
+            }
+            if (distributionSettings.type == DistributionType.MVND) {
+                if (!binPath.resolve("mvnd.sh").exists() || !binPath.resolve("mvnd.cmd").exists()) {
+                    return ValidationInfoBuilder(component).error(message("gmaven.settings.project.mvnd.error"))
+                }
+            }
         }
-        //mvnd or custom mvn
-        return if (component.text.isEmpty()) {
-            ValidationInfoBuilder(component).error("cannot be empty")
-        } else {
-            null
-        }
+        return null
     }
 
     private fun isCustomPathDistribution(distributionType: DistributionType) =
