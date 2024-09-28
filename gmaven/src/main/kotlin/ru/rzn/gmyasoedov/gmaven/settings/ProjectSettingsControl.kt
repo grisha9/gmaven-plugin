@@ -205,7 +205,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
                     return ValidationInfoBuilder(component).error(message("gmaven.settings.project.mvn.error"))
                 }
             }
-            if (distributionSettings.type == DistributionType.MVND) {
+            if (distributionSettings.type == DistributionType.CUSTOM_MVND) {
                 if (!binPath.resolve("mvnd.sh").exists() || !binPath.resolve("mvnd.cmd").exists()) {
                     return ValidationInfoBuilder(component).error(message("gmaven.settings.project.mvnd.error"))
                 }
@@ -215,7 +215,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
     }
 
     private fun isCustomPathDistribution(distributionType: DistributionType) =
-        distributionType == DistributionType.CUSTOM || distributionType == DistributionType.MVND
+        distributionType == DistributionType.CUSTOM || distributionType == DistributionType.CUSTOM_MVND
 
     private fun changeMavenTypeListener() {
         val distributionSettings = distributionTypeMap[distributionTypeModel.selected] ?: return
@@ -226,7 +226,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
         )
         if (mavenPathVisible.get()) {
             if (distributionType == DistributionType.MVN) {
-                mavenPathBind.set(distributionSettings.path!!.toString())
+                mavenPathBind.set(distributionSettings.path?.toString() ?: "")
             } else {
                 mavenPathBind.set(distributionSettings.url)
             }
@@ -357,6 +357,8 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
     private fun isNotEqualSettings(currentSetting: String?, bindSetting: String): Boolean {
         return (currentSetting ?: "") != bindSetting
     }
+
+    override fun getHelpId() = "GMaven_Project_Settings"
 }
 
 private fun Row.gSdkComboBox(
@@ -396,7 +398,7 @@ private fun getMavenDistributionsInfo(project: Project, projectSettings: MavenPr
         result.add(DistributionSettings.getLocal(mavenHome.toPath()))
     }
     result.add(DistributionSettings(DistributionType.CUSTOM, null, null))
-    result.add(DistributionSettings(DistributionType.MVND, null, null))
+    result.add(DistributionSettings(DistributionType.CUSTOM_MVND, null, null))
     return result.map { DistributionInfo(getDistributionUIText(it), it) }
 }
 
@@ -408,7 +410,7 @@ private fun getDistributionUIText(each: DistributionSettings): String {
         "Use Maven Wrapper"
     } else if (each.type == DistributionType.MVN) {
         getMvnText(each)
-    } else if (each.type == DistributionType.MVND) {
+    } else if (each.type == DistributionType.CUSTOM_MVND) {
         "Maven Daemon"
     } else {
         "Custom Maven"
