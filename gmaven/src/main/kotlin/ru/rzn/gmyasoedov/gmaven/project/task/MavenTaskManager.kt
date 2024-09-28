@@ -60,11 +60,7 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         val mavenHome = getMavenHome(settings.distributionSettings)
         try {
             val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
-            if (taskNames.size == 1 && taskNames.first() == TASK_DEPENDENCY_TREE) {
-                runTasks2(request, tasks) { cancellationMap[id] = it }
-                return
-            }
-            runTasks(request, tasks) { cancellationMap[id] = it }
+            runTasks2(request, tasks) { cancellationMap[id] = it }
         } finally {
             cancellationMap.remove(id)
         }
