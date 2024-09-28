@@ -9,6 +9,7 @@ import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceTyp
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.module.ModuleTypeManager
+import com.intellij.openapi.project.Project
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.*
@@ -30,9 +31,9 @@ import kotlin.io.path.Path
 
 fun getMavenHome(executionSettings: MavenExecutionSettings): Path {
     val distributionSettings = executionSettings.distributionSettings
-    if (distributionSettings.type == DistributionType.WRAPPER && distributionSettings.url.isNullOrBlank()) {
+    if (distributionSettings.type == DistributionType.WRAPPER) {
         val externalProjectPath = executionSettings.executionWorkspace.externalProjectPath
-        val distributionUrl = MvnDotProperties.getDistributionUrl(externalProjectPath)
+        val distributionUrl = getDistributionUrl(externalProjectPath, executionSettings.project)
         distributionSettings.url = distributionUrl
     }
     if (distributionSettings.path != null) return distributionSettings.path
@@ -43,6 +44,15 @@ fun getMavenHome(executionSettings: MavenExecutionSettings): Path {
     }
     val quickFixId = OpenGMavenSettingsCallback.ID
     throw ExternalSystemException(GBundle.message("gmaven.notification.mvn.not.found", quickFixId), quickFixId)
+}
+
+private fun getDistributionUrl(externalProjectPath: String, project: Project?): String {
+    if (project == null) return MvnDotProperties.getDistributionUrl(externalProjectPath)
+    return try {
+        MvnDotProperties.getDistributionUrl(project, externalProjectPath)
+    } catch (e: Exception) {
+        MvnDotProperties.getDistributionUrl(externalProjectPath)
+    }
 }
 
 fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.ProjectResolverContext): PluginsData {

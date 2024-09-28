@@ -61,12 +61,19 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
     private val importArgsBind = propertyGraph.property("")
 
     private val distributionTypeModel = CollectionComboBoxModel(mutableListOf<String>())
-    private val mavenPathBind = propertyGraph.property("")
+    private val mavenUrlBind = propertyGraph.property("")
     private val mavenCustomPathBind = propertyGraph.property("")
 
     private val distributionTypeMap = mutableMapOf<String, DistributionSettings>()
     private val mavenPathVisible = AtomicBooleanProperty(false)
 
+    init {
+        mavenCustomPathBind.afterChange {
+            val pathValue = it.takeIf { it.isNotEmpty() } ?: return@afterChange
+            val settings = distributionTypeMap[distributionTypeModel.selected] ?: return@afterChange
+            settings.path = Path.of(pathValue)
+        }
+    }
 
     override fun validate(settings: MavenProjectSettings) = true
 
@@ -168,7 +175,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
                 row {
                     textField()
                         .align(AlignX.FILL)
-                        .bindText(mavenPathBind)
+                        .bindText(mavenUrlBind)
                         .resizableColumn()
                         .enabled(false)
                 }.visibleIf(mavenPathVisible)
@@ -226,12 +233,13 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
         )
         if (mavenPathVisible.get()) {
             if (distributionType == DistributionType.MVN) {
-                mavenPathBind.set(distributionSettings.path?.toString() ?: "")
+                mavenUrlBind.set(distributionSettings.path?.toString() ?: "")
             } else {
-                mavenPathBind.set(distributionSettings.url)
+                mavenUrlBind.set(distributionSettings.url)
             }
         } else {
-            mavenPathBind.set("")
+            mavenUrlBind.set("")
+            mavenCustomPathBind.set(distributionSettings.path?.toString() ?: "")
         }
     }
 
@@ -250,6 +258,8 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
         importArgsBind.set(currentSettings.argumentsImport ?: "")
 
         setSelectedJdk(jdkComboBox, currentSettings.jdkName)
+
+        mavenCustomPathBind.set(currentSettings.distributionSettings.path?.toString() ?: "")
         if (distributionTypeMap.isNotEmpty()) {
             setSelectedMavenType(currentSettings)
         } else {
@@ -259,8 +269,6 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
                 })
                 .submit(AppExecutorUtil.getAppExecutorService())
         }
-
-        mavenCustomPathBind.set(currentSettings.distributionSettings.path?.toString() ?: "")
     }
 
     override fun isExtraSettingModified(): Boolean {
@@ -341,6 +349,11 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
         for (each in distributionInfo) {
             distributionTypeModel.add(each.description)
             distributionTypeMap[each.description] = each.distributionSettings
+            if (isCustomPathDistribution(each.distributionSettings.type)) {
+                val customPath = mavenCustomPathBind.get().takeIf { it.isNotEmpty() }
+                    ?: currentSettings.localRepositoryPath ?: ""
+                each.distributionSettings.path = Path.of(customPath)
+            }
         }
         distributionTypeModel.update()
     }

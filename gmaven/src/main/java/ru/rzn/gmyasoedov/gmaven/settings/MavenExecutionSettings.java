@@ -1,6 +1,7 @@
 package ru.rzn.gmyasoedov.gmaven.settings;
 
 import com.intellij.openapi.externalSystem.model.settings.ExternalSystemExecutionSettings;
+import com.intellij.openapi.project.Project;
 import com.intellij.util.execution.ParametersListUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,6 +16,9 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     @Serial
     private static final long serialVersionUID = 1L;
+
+    @Nullable
+    public Project project;
 
     @NotNull
     private final MavenExecutionWorkspace executionWorkspace = new MavenExecutionWorkspace();

@@ -258,6 +258,7 @@ public final class MavenManager
         if (settings.isSkipTests()) {
             result.withEnvironmentVariables(Map.of("skipTests", "true"));
         }
+        result.project = project;
         return result;
     }
 }
