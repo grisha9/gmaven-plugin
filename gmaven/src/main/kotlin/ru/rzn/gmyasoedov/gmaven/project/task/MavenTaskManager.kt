@@ -12,12 +12,10 @@ import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager
 import com.intellij.openapi.util.registry.Registry
 import org.jetbrains.annotations.VisibleForTesting
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants.TASK_DEPENDENCY_TREE
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.getMavenHome
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
-import ru.rzn.gmyasoedov.gmaven.server.runTasks
 import ru.rzn.gmyasoedov.gmaven.server.runTasks2
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
@@ -57,7 +55,7 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         }
         val sdk = settings.jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) }
             ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
-        val mavenHome = getMavenHome(settings.distributionSettings)
+        val mavenHome = getMavenHome(settings)
         try {
             val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
             runTasks2(request, tasks) { cancellationMap[id] = it }

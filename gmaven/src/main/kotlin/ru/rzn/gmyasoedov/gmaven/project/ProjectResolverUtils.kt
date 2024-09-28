@@ -18,7 +18,9 @@ import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.*
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.MainJavaCompilerData.Companion.ASPECTJ_COMPILER_ID
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification.OpenGMavenSettingsCallback
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
-import ru.rzn.gmyasoedov.gmaven.settings.DistributionSettings
+import ru.rzn.gmyasoedov.gmaven.project.wrapper.MvnDotProperties
+import ru.rzn.gmyasoedov.gmaven.settings.DistributionType
+import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.*
@@ -26,7 +28,13 @@ import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import java.nio.file.Path
 import kotlin.io.path.Path
 
-fun getMavenHome(distributionSettings: DistributionSettings): Path {
+fun getMavenHome(executionSettings: MavenExecutionSettings): Path {
+    val distributionSettings = executionSettings.distributionSettings
+    if (distributionSettings.type == DistributionType.WRAPPER && distributionSettings.url.isNullOrBlank()) {
+        val externalProjectPath = executionSettings.executionWorkspace.externalProjectPath
+        val distributionUrl = MvnDotProperties.getDistributionUrl(externalProjectPath)
+        distributionSettings.url = distributionUrl
+    }
     if (distributionSettings.path != null) return distributionSettings.path
     if (distributionSettings.url != null) {
         val mavenHome = MavenWrapperDistribution.getOrDownload(distributionSettings.url)

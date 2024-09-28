@@ -8,6 +8,7 @@ import com.intellij.psi.util.CachedValuesManager
 import java.io.ByteArrayInputStream
 import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.exists
 
 
 object MvnDotProperties {
@@ -17,6 +18,19 @@ object MvnDotProperties {
     fun getDistributionUrl(project: Project, projectPath: String): String {
         val propertiesVFile = getWrapperPropertiesVFile(projectPath) ?: return ""
         return getWrapperProperties(project, propertiesVFile).getProperty(DISTRIBUTION_URL_PROPERTY, "")
+    }
+
+    @JvmStatic
+    fun getDistributionUrl(projectPath: String): String {
+        val propertiesVFile = getWrapperPropertiesVFile(projectPath) ?: return ""
+        return getWrapperProperties(propertiesVFile).getProperty(DISTRIBUTION_URL_PROPERTY, "")
+    }
+
+    @JvmStatic
+    fun isWrapperExist(projectDirectory: VirtualFile): Boolean {
+        val nioPath = projectDirectory.toNioPath()
+        return nioPath.resolve(".mvn").resolve("wrapper").resolve("maven-wrapper.properties").exists()
+                && nioPath.resolve("mvnw").exists()
     }
 
     private fun getWrapperProperties(project: Project, wrapperProperties: VirtualFile): Properties {

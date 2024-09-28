@@ -12,6 +12,7 @@ import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification.ShowFullLogCallback
 import ru.rzn.gmyasoedov.gmaven.project.process.BaseMavenCommandLine
 import ru.rzn.gmyasoedov.gmaven.project.process.GOSProcessHandler
+import ru.rzn.gmyasoedov.gmaven.settings.DistributionType
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotUpdateType
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
@@ -46,7 +47,15 @@ fun getProjectModel2(
 
 fun printDebugCommandLine(request: GServerRequest, commandLine: GeneralCommandLine) {
     val parameterList = commandLine.parametersList.getList().dropWhile { it != "-f" }
-    val stringBuilder = StringBuilder("mvn")
+    val distributionType = request.settings.distributionSettings.type
+    val stringBuilder = StringBuilder("")
+    if (distributionType == DistributionType.WRAPPER) {
+        stringBuilder.append("mvnw")
+    } else if (distributionType == DistributionType.CUSTOM_MVND) {
+        stringBuilder.append("mvnd")
+    } else {
+        stringBuilder.append("mvn")
+    }
     for (parameter in parameterList) {
         stringBuilder.append(" $parameter")
     }

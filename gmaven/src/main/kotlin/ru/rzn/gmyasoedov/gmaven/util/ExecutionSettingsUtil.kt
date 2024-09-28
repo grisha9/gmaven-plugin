@@ -13,21 +13,13 @@ import com.intellij.openapi.util.registry.Registry
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData
 import ru.rzn.gmyasoedov.gmaven.project.profile.ProjectProfilesStateService
-import ru.rzn.gmyasoedov.gmaven.project.wrapper.MvnDotProperties
-import ru.rzn.gmyasoedov.gmaven.settings.*
+import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionWorkspace
+import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
+import ru.rzn.gmyasoedov.gmaven.settings.ProjectExecution
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import java.nio.file.Path
 import java.util.*
 import kotlin.io.path.exists
-
-fun getDistributionSettings(projectSettings: MavenProjectSettings, project: Project): DistributionSettings {
-    val settings = projectSettings.distributionSettings
-    if (settings.type != DistributionType.WRAPPER) return settings
-    val distributionUrl = MvnDotProperties.getDistributionUrl(project, projectSettings.externalProjectPath)
-    if (settings.url == distributionUrl) return settings
-    projectSettings.distributionSettings = DistributionSettings.getWrapper(distributionUrl)
-    return projectSettings.distributionSettings
-}
 
 fun getLocalRepoPath(project: Project, externalProjectPath: String): String? {
     val projectDataNode = ProjectDataManager.getInstance()
