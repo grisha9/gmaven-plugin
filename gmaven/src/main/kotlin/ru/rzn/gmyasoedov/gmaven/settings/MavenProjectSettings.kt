@@ -14,7 +14,8 @@ class MavenProjectSettings : ExternalProjectSettings() {
     var nonRecursive  = false
     var useWholeProjectContext = true
     var showPluginNodes = true
-    var useMvndForTasks = false
+    @Deprecated("delete in next release") var useMvndForTasks = false
+    var incrementalSync = false
     var snapshotUpdateType = SnapshotUpdateType.DEFAULT
     var outputLevel = OutputLevelType.DEFAULT
     var threadCount: String? = null
@@ -40,6 +41,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
         result.argumentsImport = argumentsImport
         result.useMvndForTasks = useMvndForTasks
         result.localRepositoryPath = localRepositoryPath
+        result.incrementalSync = incrementalSync
         return result
     }
 }
