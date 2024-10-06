@@ -2,23 +2,29 @@
 
 package ru.rzn.gmyasoedov.gmaven.util
 
+import com.intellij.openapi.actionSystem.ex.ActionManagerEx
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.registry.Registry
+import com.intellij.openapi.vfs.toNioPathOrNull
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants.MODULE_PROP_BUILD_FILE
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.ProfileData
 import ru.rzn.gmyasoedov.gmaven.project.profile.ProjectProfilesStateService
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionWorkspace
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectExecution
+import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 
 fun getLocalRepoPath(project: Project, externalProjectPath: String): String? {
@@ -50,7 +56,7 @@ fun fillExecutionWorkSpace(
     val mainModuleNode = allModules
         .find { MavenUtils.equalsPaths(it.data.linkedExternalProjectPath, projectSettings.externalProjectPath) }
     workspace.projectBuildFile = if (projectSettings.projectBuildFile != null) projectSettings.projectBuildFile else
-        mainModuleNode?.data?.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
+        mainModuleNode?.data?.getProperty(MODULE_PROP_BUILD_FILE)
 
     val isRootPath = MavenUtils.equalsPaths(projectSettings.externalProjectPath, projectPath)
     var targetModuleNode: DataNode<ModuleData>? = null
@@ -61,7 +67,32 @@ fun fillExecutionWorkSpace(
     }
     addedIgnoredModule(workspace, allModules, targetModuleNode)
     addedProfiles(projectDataNode, ProjectProfilesStateService.getInstance(project), workspace)
+    setIncrementalPath(project, workspace, projectSettings, allModules)
     setMultiModuleProjectDirectory(projectSettings.externalProjectPath, workspace)
+}
+
+private fun setIncrementalPath(
+    project: Project,
+    workspace: MavenExecutionWorkspace,
+    projectSettings: MavenProjectSettings,
+    allModules: Collection<DataNode<ModuleData>>
+) {
+    workspace.projectBuildFile ?: return
+    if (!projectSettings.incrementalSync) return
+    if (Registry.`is`("gmaven.import.readonly")) return
+    if (ActionManagerEx.getInstanceEx().lastPreformedActionId != "ExternalSystem.ProjectRefreshAction") return
+
+    val incrementBuildFile = try {
+        FileEditorManager.getInstance(project)?.selectedTextEditor?.virtualFile?.toNioPathOrNull()
+    } catch (e: Exception) {
+        MavenLog.LOG.error(e.message, e)
+        null
+    } ?: return
+    val incrementBuildPath = incrementBuildFile.absolutePathString()
+    if (MavenUtils.equalsPaths(workspace.projectBuildFile, incrementBuildPath)) return
+    workspace.incrementalProjectName = allModules
+        .find { MavenUtils.equalsPaths(it.data.getProperty(MODULE_PROP_BUILD_FILE), incrementBuildPath) }
+        ?.data?.let { MavenUtils.toGAString(it) }
 }
 
 private fun getTargetModuleAndContextMap(
@@ -85,7 +116,7 @@ private fun fillProjectBuildFiles(
     moduleByInternalName: TreeMap<String, DataNode<ModuleData>>
 ) {
     val module = node.data
-    workspace.subProjectBuildFile = module.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
+    workspace.subProjectBuildFile = module.getProperty(MODULE_PROP_BUILD_FILE)
     if (projectSettings.useWholeProjectContext) {
         val parentBuildFile = getParentBuildFile(node, moduleByInternalName)
         if (parentBuildFile != null) {
@@ -111,7 +142,7 @@ private fun getParentBuildFile(
             return getParentBuildFile(parentModule, moduleByInternalName)
         }
     }
-    return node.data.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE)
+    return node.data.getProperty(MODULE_PROP_BUILD_FILE)
 }
 
 private fun addedIgnoredModule(
@@ -123,8 +154,7 @@ private fun addedIgnoredModule(
         targetModuleNode.data.internalName
     } else {
         val buildFile = workspace.subProjectBuildFile ?: workspace.projectBuildFile ?: return
-        val parentNode = allModules
-            .find { it.data.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) == buildFile } ?: return
+        val parentNode = allModules.find { it.data.getProperty(MODULE_PROP_BUILD_FILE) == buildFile } ?: return
         parentNode.data.internalName
     } + "."
     allModules.asSequence()
@@ -148,6 +178,7 @@ private fun addedProfiles(profilesStateService: ProjectProfilesStateService, wor
     profilesStateService.getProfileExecutions().forEach { workspace.addProfile(it) }
 }
 
+@Deprecated("delete in next release")
 private fun setMultiModuleProjectDirectory(
     externalProjectPath: String?, workspace: MavenExecutionWorkspace
 ) {

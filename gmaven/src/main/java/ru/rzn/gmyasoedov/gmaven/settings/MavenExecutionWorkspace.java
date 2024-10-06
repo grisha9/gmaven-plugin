@@ -24,6 +24,8 @@ public class MavenExecutionWorkspace implements Serializable {
     private String externalProjectPath;
     @Nullable
     private String multiModuleProjectDirectory;
+    @Nullable
+    private String incrementalProjectName;
 
     public void addProfile(@Nullable ProfileExecution data) {
         if (data != null) {
@@ -80,5 +82,13 @@ public class MavenExecutionWorkspace implements Serializable {
 
     public void setMultiModuleProjectDirectory(@Nullable String multiModuleProjectDirectory) {
         this.multiModuleProjectDirectory = multiModuleProjectDirectory;
+    }
+
+    public @Nullable String getIncrementalProjectName() {
+        return incrementalProjectName;
+    }
+
+    public void setIncrementalProjectName(@Nullable String incrementalProjectName) {
+        this.incrementalProjectName = incrementalProjectName;
     }
 }

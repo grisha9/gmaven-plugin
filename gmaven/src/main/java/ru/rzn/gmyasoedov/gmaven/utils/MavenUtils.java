@@ -402,7 +402,7 @@ public class MavenUtils {
 
     @NotNull
     public static String toGAString(@NotNull ModuleData moduleData) {
-        return toGAString(moduleData.getGroup(), moduleData.getModuleName());
+        return toGAString(Objects.requireNonNullElse(moduleData.getGroup(), ""), moduleData.getModuleName());
     }
 
     @NotNull

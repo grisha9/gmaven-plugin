@@ -37,8 +37,7 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
     }
 
     private fun setupProjectPath(commandLine: GeneralCommandLine, request: GServerRequest) {
-        commandLine.addParameter("-f")
-        commandLine.addParameter(request.projectPath.absolutePathString())
+        commandLine.addParameters("-f", request.projectPath.absolutePathString())
     }
 
     private fun getExeMavenPath(): String {

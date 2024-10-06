@@ -41,6 +41,7 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
     private boolean showPluginNodes = true;
     private boolean isSkipTests = false;
     private boolean readonly = false;
+    private boolean incrementalSync = false;
     @NotNull
     private ProjectSettingsControlBuilder.OutputLevelType outputLevel = DEFAULT;
     @NotNull
@@ -195,6 +196,14 @@ public class MavenExecutionSettings extends ExternalSystemExecutionSettings {
 
     public void setReadonly(boolean readonly) {
         this.readonly = readonly;
+    }
+
+    public boolean isIncrementalSync() {
+        return incrementalSync;
+    }
+
+    public void setIncrementalSync(boolean incrementalSync) {
+        this.incrementalSync = incrementalSync;
     }
 
     @Override

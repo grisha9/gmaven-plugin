@@ -51,6 +51,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
     private val useWholeProjectContextBind = propertyGraph.property(false)
     private val resolveModulePerSourceSetBind = propertyGraph.property(false)
     private val showPluginNodesBind = propertyGraph.property(false)
+    private val incrementalSyncBind = propertyGraph.property(false)
 
     private val updateSnapshotsModel = CollectionComboBoxModel(SnapshotUpdateType.values().toList())
     private val outputLevelModel = CollectionComboBoxModel(OutputLevelType.values().toList())
@@ -108,6 +109,13 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
                         .align(AlignX.FILL)
                         .applyToComponent { toolTipText = message("gmaven.settings.project.plugins.tooltip") }
                         .bindSelected(showPluginNodesBind)
+                        .resizableColumn()
+                }
+
+                row {
+                    checkBox(message("gmaven.settings.project.incremental"))
+                        .align(AlignX.FILL)
+                        .bindSelected(incrementalSyncBind)
                         .resizableColumn()
                 }
 
@@ -248,6 +256,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
         useWholeProjectContextBind.set(currentSettings.useWholeProjectContext)
         resolveModulePerSourceSetBind.set(currentSettings.resolveModulePerSourceSet)
         showPluginNodesBind.set(currentSettings.showPluginNodes)
+        incrementalSyncBind.set(currentSettings.incrementalSync)
 
         updateSnapshotsModel.selectedItem = currentSettings.snapshotUpdateType
         outputLevelModel.selectedItem = currentSettings.outputLevel
@@ -276,6 +285,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
         if (currentSettings.useWholeProjectContext != useWholeProjectContextBind.get()) return true
         if (currentSettings.resolveModulePerSourceSet != resolveModulePerSourceSetBind.get()) return true
         if (currentSettings.showPluginNodes != showPluginNodesBind.get()) return true
+        if (currentSettings.incrementalSync != incrementalSyncBind.get()) return true
 
         if (currentSettings.snapshotUpdateType != updateSnapshotsModel.selected) return true
         if (currentSettings.outputLevel != outputLevelModel.selected) return true
@@ -303,6 +313,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
         settings.useWholeProjectContext = useWholeProjectContextBind.get()
         settings.resolveModulePerSourceSet = resolveModulePerSourceSetBind.get()
         settings.showPluginNodes = showPluginNodesBind.get()
+        settings.incrementalSync = incrementalSyncBind.get()
 
         settings.snapshotUpdateType = updateSnapshotsModel.selected!!
         settings.outputLevel = outputLevelModel.selected!!
