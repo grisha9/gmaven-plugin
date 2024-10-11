@@ -34,6 +34,9 @@ fun getMavenHome(executionSettings: MavenExecutionSettings): Path {
     if (distributionSettings.type == DistributionType.WRAPPER) {
         val externalProjectPath = executionSettings.executionWorkspace.externalProjectPath
         val distributionUrl = getDistributionUrl(externalProjectPath, executionSettings.project)
+        if (distributionUrl != distributionSettings.url) {
+            distributionSettings.path = null
+        }
         distributionSettings.url = distributionUrl
     }
     if (distributionSettings.path != null) return distributionSettings.path
