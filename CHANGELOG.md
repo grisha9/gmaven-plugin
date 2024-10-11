@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [242.2] - 2024-10-10
+### Added
+- Read only mode [wiki](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-project-settings#readonly-mode)
+- Full support [Maven Daemon](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-project-settings#maven-daemon-full-support)
+
 ## [242.1] - 2024-09-15
 ### Added
 - Support IDEA 242.* version. Icons for new UI.
