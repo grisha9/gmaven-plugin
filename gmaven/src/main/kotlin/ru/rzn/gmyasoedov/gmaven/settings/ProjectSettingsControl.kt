@@ -327,7 +327,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
 
     override fun disposeUIResources() {
         super.disposeUIResources()
-        disposable.dispose()
+        Disposer.dispose(disposable)
     }
 
     private fun setSelectedJdk(jdkComboBox: SdkComboBox?, jdkName: String?) {
