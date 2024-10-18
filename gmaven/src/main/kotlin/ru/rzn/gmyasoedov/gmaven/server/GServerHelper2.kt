@@ -164,9 +164,13 @@ private fun runMavenImport(
 private fun runMavenImportInner(processSupport: GOSProcessHandler, resultFilePath: Path): MavenMapResult {
     return try {
         processSupport.startAndWait()
-        return FileReader(resultFilePath.toFile(), StandardCharsets.UTF_8).use {
+        val result = FileReader(resultFilePath.toFile(), StandardCharsets.UTF_8).use {
             Gson().fromJson(it, MavenMapResult::class.java)
         }
+        if (processSupport.exitCode != 0 && result.exceptions.isEmpty()) {
+            throw ExternalSystemException("Process terminated see log")
+        }
+        return result
     } catch (e: Exception) {
         MavenLog.LOG.warn(e)
         GServerUtils.toResult(e)
