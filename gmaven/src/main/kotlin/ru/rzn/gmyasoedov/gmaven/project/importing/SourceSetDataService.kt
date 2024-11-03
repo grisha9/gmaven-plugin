@@ -32,7 +32,8 @@ class SourceSetDataService : AbstractModuleDataService<SourceSetData>() {
     override fun createModule(
         sourceSetModuleNode: DataNode<SourceSetData>, modelsProvider: IdeModifiableModelsProvider
     ): Module {
-        val parentModuleNode = (sourceSetModuleNode.parent as DataNode<ModuleData>?)!!
+        val parentModuleNode = sourceSetModuleNode.parent
+            .takeIf { it?.data is ModuleData } ?: throw IllegalStateException()
         val parentModule = parentModuleNode.getUserData(MODULE_KEY)!!
         val actualModuleName = modelsProvider.modifiableModuleModel.getActualName(parentModule)
 
