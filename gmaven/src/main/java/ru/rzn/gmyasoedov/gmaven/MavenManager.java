@@ -219,6 +219,7 @@ public final class MavenManager
             result.setUseMvndForTasks(projectSettings.getUseMvndForTasks());
             result.setCheckSources(settings.isCheckSourcesInLocalRepo());
             result.setSkipTests(settings.isSkipTests());
+            result.setIncrementalSync(projectSettings.getIncrementalSync());
             result.setShowPluginNodes(!Registry.is("gmaven.import.readonly") && projectSettings.getShowPluginNodes());
             result.setReadonly(Registry.is("gmaven.import.readonly"));
             if (result.isReadonly()) {

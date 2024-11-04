@@ -35,12 +35,12 @@ fun getProjectModel2(
 
     printDebugCommandLine(request, commandLine)
     val processHandler = GOSProcessHandler(request, commandLine, processConsumer)
-    val mavenResult = runMavenImport(processHandler, resultFilePath)
+    val mavenResult = runMavenImport(processHandler, resultFilePath, request)
     if (mavenResult.pluginNotResolved || forceInstallPlugin(processHandler)) {
         firstRun(request)
         printDebugCommandLine(request, commandLine)
         val processHandler2 = GOSProcessHandler(request, commandLine, processConsumer)
-        return runMavenImport(processHandler2, resultFilePath)
+        return runMavenImport(processHandler2, resultFilePath, request)
     }
     return mavenResult
 }
@@ -120,8 +120,7 @@ private fun setupBaseParamsFromSettings(request: GServerRequest, commandLine: Ge
         commandLine.addParameter("-DskipTests")
     }
     if (request.settings.threadCount?.isNotBlank() == true) {
-        commandLine.addParameter("-T")
-        commandLine.addParameter(request.settings.threadCount!!)
+        commandLine.addParameters("-T", request.settings.threadCount!!)
     }
     if (request.settings.outputLevel == ProjectSettingsControlBuilder.OutputLevelType.QUITE) {
         commandLine.addParameter("-q")
@@ -131,16 +130,12 @@ private fun setupBaseParamsFromSettings(request: GServerRequest, commandLine: Ge
     }
     val profiles = request.settings.executionWorkspace.profilesData.map { it.toRawName() }
     if (profiles.isNotEmpty()) {
-        commandLine.addParameter("-P")
-        commandLine.addParameter(profiles.joinToString(separator = ","))
+        commandLine.addParameters("-P", profiles.joinToString(separator = ","))
     }
-
     val projectList = request.settings.executionWorkspace.projectData.map { it.toRawName() }
     if (projectList.isNotEmpty()) {
-        commandLine.addParameter("-pl")
-        commandLine.addParameter(projectList.joinToString(separator = ","))
-
-        getSubTaskArgs().forEach { commandLine.addParameter(it) }
+        commandLine.addParameters("-pl", projectList.joinToString(separator = ","))
+        commandLine.addParameters(getSubTaskArgs())
     }
     request.settings.arguments.forEach { commandLine.addParameter(it) }
 }
@@ -151,17 +146,23 @@ private fun setupImportParamsFromSettings(request: GServerRequest, commandLine: 
     val importTaskName = "ru.rzn.gmyasoedov:maven-model-reader-plugin:$MAVEN_MODEL_READER_PLUGIN_VERSION:" +
             (if (request.readOnly) "read" else "resolve")
     commandLine.addParameter(importTaskName)
+    if (request.settings.executionWorkspace.incrementalProjectName != null) {
+        commandLine.parametersList.addProperty("incremental", "true")
+        commandLine.addParameters("-pl", request.settings.executionWorkspace.incrementalProjectName, "-am", "-amd")
+    }
 }
 
 private fun runMavenImport(
-    processSupport: GOSProcessHandler, resultFilePath: Path,
+    processSupport: GOSProcessHandler, resultFilePath: Path, request: GServerRequest,
 ): MavenMapResult {
-    val mavenResult = runMavenImportInner(processSupport, resultFilePath)
+    val mavenResult = runMavenImportInner(processSupport, resultFilePath, request)
     processExceptions(mavenResult.exceptions)
     return mavenResult
 }
 
-private fun runMavenImportInner(processSupport: GOSProcessHandler, resultFilePath: Path): MavenMapResult {
+private fun runMavenImportInner(
+    processSupport: GOSProcessHandler, resultFilePath: Path, request: GServerRequest
+): MavenMapResult {
     return try {
         processSupport.startAndWait()
         val result = FileReader(resultFilePath.toFile(), StandardCharsets.UTF_8).use {
@@ -181,7 +182,7 @@ private fun runMavenImportInner(processSupport: GOSProcessHandler, resultFilePat
     } finally {
         if (processSupport.exitCode != 0) {
             FileUtil.delete(resultFilePath)
-        } else if (Registry.`is`("gmaven.process.remove.result.file")) {
+        } else if (!request.settings.isIncrementalSync && Registry.`is`("gmaven.process.remove.result.file")) {
             if (!resultFilePath.parent.name.equals("target", true)) FileUtil.delete(resultFilePath)
         }
     }

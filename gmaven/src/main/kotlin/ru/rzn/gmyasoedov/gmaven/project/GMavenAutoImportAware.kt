@@ -46,8 +46,8 @@ class GMavenAutoImportAware : ExternalSystemAutoImportAware {
         return ExternalSystemApiUtil.findAll(parentDataNode, ProjectKeys.MODULE)
             .asSequence()
             .map { it.data }
-            .filter { it.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) is String }
-            .map { File(it.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) as String) }
+            .mapNotNull { it.getProperty(GMavenConstants.MODULE_PROP_BUILD_FILE) }
+            .map { File(it) }
             .toMutableList()
     }
 
