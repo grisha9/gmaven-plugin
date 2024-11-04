@@ -168,10 +168,14 @@ private fun runMavenImportInner(processSupport: GOSProcessHandler, resultFilePat
             Gson().fromJson(it, MavenMapResult::class.java)
         }
         if (processSupport.exitCode != 0 && result.exceptions.isEmpty()) {
-            throw ExternalSystemException("Process terminated see log")
+            throw ExternalSystemException("Process terminated. See log")
         }
         return result
     } catch (e: Exception) {
+        if (processSupport.exitCode != 0) {
+            MavenLog.LOG.debug(e)
+            throw ExternalSystemException("Process terminated. See log")
+        }
         MavenLog.LOG.warn(e)
         GServerUtils.toResult(e)
     } finally {
