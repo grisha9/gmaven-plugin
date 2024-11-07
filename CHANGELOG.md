@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [242.3] - 2024-11-07
+### Added
+- Incremental sync (Experimental feature in gmaven settings)
+- ### Fixed
+- Sync Maven-plugin fixed process result output
+
 ## [242.2] - 2024-10-10
 ### Added
 - Read only mode [wiki](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-project-settings#readonly-mode)
