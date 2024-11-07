@@ -7,6 +7,7 @@
 - Incremental sync (Experimental feature in gmaven settings)
 - ### Fixed
 - Sync Maven-plugin fixed process result output
+- Effective pom action
 
 ## [242.2] - 2024-10-10
 ### Added
