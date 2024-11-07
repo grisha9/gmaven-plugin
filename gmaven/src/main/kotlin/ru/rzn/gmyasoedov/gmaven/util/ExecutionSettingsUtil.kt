@@ -182,7 +182,7 @@ private fun addedProfiles(profilesStateService: ProjectProfilesStateService, wor
 private fun setMultiModuleProjectDirectory(
     externalProjectPath: String?, workspace: MavenExecutionWorkspace
 ) {
-    if (externalProjectPath == null || !Registry.`is`("gmaven.multiModuleProjectDirectory")) return
+    if (externalProjectPath == null) return
     val projectPathString = workspace.subProjectBuildFile ?: workspace.projectBuildFile ?: return
     val projectPath = Path.of(projectPathString)
     val projectDirPath = if (projectPath.toFile().isDirectory()) projectPath else projectPath.parent

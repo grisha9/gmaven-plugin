@@ -8,7 +8,6 @@ import com.intellij.openapi.externalSystem.model.project.*
 import com.intellij.openapi.externalSystem.model.project.dependencies.ProjectDependenciesImpl
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.roots.DependencyScope
-import com.intellij.openapi.util.registry.Registry
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver.ProjectResolverContext
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
@@ -148,8 +147,6 @@ private fun addLibrary(
 private fun linkProjectLibrary(
     context: ProjectResolverContext, ideProject: DataNode<ProjectData>, library: LibraryData
 ): Boolean {
-    if (!Registry.`is`("gmaven.library.map.for.performance")) return true
-
     val cache = context.libraryDataMap
     val libraryName = library.externalName
 
