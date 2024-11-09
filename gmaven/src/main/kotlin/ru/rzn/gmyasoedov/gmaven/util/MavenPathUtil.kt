@@ -35,6 +35,14 @@ object MavenPathUtil {
             WslPath.getDistributionByWindowsUncPath(settings.executionWorkspace.externalProjectPath) else null
     }
 
+    fun checkOnWsl(path: String): String {
+        val wslDistribution = if (SystemInfo.isWindows && Registry.`is`("gmaven.wsl.support"))
+            WslPath.getDistributionByWindowsUncPath(path) else null
+        wslDistribution ?: return path
+
+        return wslDistribution.getWslPath(path)!!
+    }
+
     @VisibleForTesting
     @TestOnly
     fun getLocalMavenPluginPathForTest(): String {
