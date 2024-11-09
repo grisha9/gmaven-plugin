@@ -32,7 +32,7 @@ import kotlin.io.path.name
 fun getProjectModel(
     request: GServerRequest, processConsumer: ((process: GOSProcessHandler) -> Unit)? = null
 ): MavenMapResult {
-    val wslDistribution = MavenPathUtil.getWsl(request)
+    val wslDistribution = MavenPathUtil.getWsl(request.settings)
     if (wslDistribution != null) return getProjectModelWsl(request, wslDistribution, processConsumer)
 
     val baseMavenCommandLine = BaseMavenCommandLine(request)
@@ -111,7 +111,7 @@ fun runTasks(
 }
 
 private fun getCommandLine(request: GServerRequest): GeneralCommandLine {
-    val wsl = MavenPathUtil.getWsl(request)
+    val wsl = MavenPathUtil.getWsl(request.settings)
     return if (wsl == null)
         BaseMavenCommandLine(request, false).getCommandLine()
     else

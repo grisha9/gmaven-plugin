@@ -22,6 +22,7 @@ import ru.rzn.gmyasoedov.gmaven.project.wrapper.MavenWrapperDistribution
 import ru.rzn.gmyasoedov.gmaven.project.wrapper.MvnDotProperties
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionType
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
+import ru.rzn.gmyasoedov.gmaven.util.MavenPathUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.*
@@ -32,6 +33,10 @@ import kotlin.io.path.Path
 fun getMavenHome(executionSettings: MavenExecutionSettings): Path {
     val distributionSettings = executionSettings.distributionSettings
     if (distributionSettings.type == DistributionType.WRAPPER) {
+        val wslDistribution = MavenPathUtil.getWsl(executionSettings)
+        if (wslDistribution != null) {
+            return Path.of(executionSettings.executionWorkspace.externalProjectPath).resolve("mvnw")
+        }
         val externalProjectPath = executionSettings.executionWorkspace.externalProjectPath
         val distributionUrl = getDistributionUrl(externalProjectPath, executionSettings.project)
         if (distributionUrl != distributionSettings.url) {
