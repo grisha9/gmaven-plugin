@@ -13,6 +13,7 @@ import com.intellij.openapi.externalSystem.task.TaskCallback
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.PsiFileFactory
+import com.intellij.util.execution.ParametersListUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.TASK_EFFECTIVE_POM
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
@@ -57,9 +58,12 @@ class EffectivePomAction : ExternalSystemAction() {
         settings.externalSystemIdString = GMavenConstants.SYSTEM_ID.id
         settings.executionName = TASK_EFFECTIVE_POM
         settings.externalProjectPath = projectSettings.externalProjectPath
-        settings.taskNames = listOf(TASK_EFFECTIVE_POM, "-f", virtualFile.toNioPath().toString())
-        settings.scriptParameters = "-N"
-        settings.scriptParameters = "-Doutput=$resultNioPath"
+        settings.taskNames = listOf(TASK_EFFECTIVE_POM)
+        settings.scriptParameters = " -N"
+        settings.scriptParameters += " " + ParametersListUtil.escape("-Doutput=$resultNioPath")
+        settings.scriptParameters += " -f"
+        settings.scriptParameters += " " + ParametersListUtil.escape("${virtualFile.toNioPath()}")
+
         settings.env = env
 
         ExternalSystemUtil.runTask(

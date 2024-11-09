@@ -27,11 +27,12 @@ import com.intellij.openapi.util.NlsSafe
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.util.text.StringUtil
-import com.intellij.util.execution.ParametersListUtil
+import com.intellij.util.execution.ParametersListUtil.escape
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.*
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
+import ru.rzn.gmyasoedov.gmaven.util.MavenPathUtil.getExtClassesJarPathString
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenArtifactState
@@ -94,10 +95,10 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
 
         val resultPath = Path(externalProjectPath).resolve(GMavenServer.GMAVEN_DEPENDENCY_TREE)
         val settings = ExternalSystemTaskExecutionSettings()
-        settings.scriptParameters = MavenUtils.getGMavenExtClassPath()
+        settings.scriptParameters = escape("-Dmaven.ext.class.path=" + getExtClassesJarPathString())
         settings.scriptParameters += " -Daether.conflictResolver.verbose=true"
         settings.scriptParameters += " -Daether.dependencyManager.verbose=true"
-        settings.scriptParameters += " -DresultFilePath=${ParametersListUtil.escape(resultPath.absolutePathString())}"
+        settings.scriptParameters += " " + escape("-DresultFilePath=${resultPath.absolutePathString()}")
         if (!Registry.`is`("gmaven.process.tree.fallback")) {
             settings.scriptParameters += " -pl $artifactGA -am"
         }

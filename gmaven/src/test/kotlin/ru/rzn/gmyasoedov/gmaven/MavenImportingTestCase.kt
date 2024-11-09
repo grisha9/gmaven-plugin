@@ -37,6 +37,8 @@ abstract class MavenImportingTestCase : MavenTestCase() {
 
     protected fun getProjectSettings() = mavenProjectSettings!!
 
+    protected fun getSettings() = mavenSettings!!
+
     protected fun getExternalProjectPath() = mavenProjectSettings!!.externalProjectPath
 
     protected fun getLanguageLevel(): LanguageLevel {

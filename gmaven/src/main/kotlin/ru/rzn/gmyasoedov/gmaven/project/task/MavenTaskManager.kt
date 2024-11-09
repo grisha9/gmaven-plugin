@@ -11,7 +11,6 @@ import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundE
 import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager
 import com.intellij.openapi.util.registry.Registry
 import org.jetbrains.annotations.VisibleForTesting
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.getMavenHome
@@ -23,8 +22,6 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.io.path.Path
-import kotlin.io.path.notExists
 
 class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
     private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, Any>()
@@ -39,7 +36,7 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
     ) {
         settings ?: throw ExternalSystemException("settings is empty")
 
-        val tasks = getTasks(taskNames, settings)
+        val tasks = getTasks(taskNames)
         val workspace = settings.executionWorkspace
         val projectBuildFile = workspace.projectBuildFile
             ?: throw ExternalSystemException("project build file is empty")
@@ -64,13 +61,13 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
         }
     }
 
-    private fun getTasks(taskNames: List<String>, settings: MavenExecutionSettings): List<String> {
+    private fun getTasks(taskNames: List<String>): List<String> {
         val tasks = if (Registry.stringValue("gmaven.lifecycles").contains(" ")) {
             taskNames.flatMap { it.split(" ") }
         } else {
             taskNames
         }
-        return preprocessSettingsAndOrder(tasks, settings)
+        return prepareTaskOrder(tasks)
     }
 
     override fun cancelTask(id: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
@@ -86,17 +83,6 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
             WARNING,
             listOf(ActionManager.getInstance().getAction("OpenLog"), ShowLogAction.notificationAction())
         )
-    }
-
-    private fun preprocessSettingsAndOrder(taskNames: List<String>, settings: MavenExecutionSettings): List<String> {
-        if (taskNames.size == 3 && taskNames[0] == GMavenConstants.TASK_EFFECTIVE_POM) {
-            if (taskNames[taskNames.size - 2] != "-f") return taskNames
-            val buildFile = taskNames[taskNames.size - 1]
-            if (Path(buildFile).notExists()) return taskNames
-            settings.executionWorkspace.subProjectBuildFile = buildFile
-            return listOf(taskNames[0])
-        }
-        return prepareTaskOrder(taskNames)
     }
 
     @VisibleForTesting

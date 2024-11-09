@@ -4,10 +4,11 @@ package ru.rzn.gmyasoedov.gmaven.server
 
 import com.google.gson.Gson
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.registry.Registry
-import com.intellij.util.PathUtil
+import ru.rzn.gmyasoedov.gmaven.GMavenConstants.*
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification.ShowFullLogCallback
 import ru.rzn.gmyasoedov.gmaven.project.process.BaseMavenCommandLine
@@ -15,9 +16,9 @@ import ru.rzn.gmyasoedov.gmaven.project.process.GOSProcessHandler
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionType
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotUpdateType
+import ru.rzn.gmyasoedov.gmaven.util.MavenPathUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenMapResult
-import ru.rzn.gmyasoedov.serverapi.GMavenServer.MAVEN_MODEL_READER_PLUGIN_VERSION
 import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import java.io.FileReader
 import java.nio.charset.StandardCharsets
@@ -46,7 +47,7 @@ fun getProjectModel2(
 }
 
 fun printDebugCommandLine(request: GServerRequest, commandLine: GeneralCommandLine) {
-    val parameterList = commandLine.parametersList.getList().dropWhile { it != "-f" }
+    val parameterList = commandLine.parametersList.list.dropWhile { it != "-f" }
     val distributionType = request.settings.distributionSettings.type
     val stringBuilder = StringBuilder("")
     if (distributionType == DistributionType.WRAPPER) {
@@ -61,6 +62,9 @@ fun printDebugCommandLine(request: GServerRequest, commandLine: GeneralCommandLi
     }
     stringBuilder.append(System.lineSeparator()).append(System.lineSeparator())
     request.listener?.onTaskOutput(request.taskId, stringBuilder.toString(), true)
+    if (ApplicationManager.getApplication().isUnitTestMode) {
+        println(stringBuilder.toString())
+    }
 }
 
 fun runTasks2(
@@ -88,13 +92,13 @@ private fun firstRun(request: GServerRequest) {
         val commandLine = BaseMavenCommandLine(request, false).getCommandLine()
         commandLine.addParameter("-N")
         commandLine.addParameter("install:install-file")
-        val clazz = Class.forName("ru.rzn.gmyasoedov.maven.plugin.reader.util.ObjectUtils")
-        commandLine.addParameter("-Dfile=" + PathUtil.getJarPathForClass(clazz))
-        commandLine.addParameter("-DgroupId=ru.rzn.gmyasoedov")
-        commandLine.addParameter("-DartifactId=maven-model-reader-plugin")
-        commandLine.addParameter("-Dversion=" + MAVEN_MODEL_READER_PLUGIN_VERSION)
+        commandLine.addParameter("-Dfile=" + MavenPathUtil.getLocalMavenPluginPath())
+        commandLine.addParameter("-DgroupId=$PLUGIN_GROUP_ID")
+        commandLine.addParameter("-DartifactId=$PLUGIN_ARTIFACT_ID")
+        commandLine.addParameter("-Dversion=$PLUGIN_VERSION")
         commandLine.addParameter("-Dpackaging=jar")
 
+        printDebugCommandLine(request, commandLine)
         val processHandler = GOSProcessHandler(request, commandLine)
         processHandler.startAndWait()
     } catch (e: Exception) {
@@ -143,8 +147,7 @@ private fun setupBaseParamsFromSettings(request: GServerRequest, commandLine: Ge
 private fun setupImportParamsFromSettings(request: GServerRequest, commandLine: GeneralCommandLine) {
     setupBaseParamsFromSettings(request, commandLine)
     request.settings.argumentsImport?.forEach { commandLine.addParameter(it) }
-    val importTaskName = "ru.rzn.gmyasoedov:maven-model-reader-plugin:$MAVEN_MODEL_READER_PLUGIN_VERSION:" +
-            (if (request.readOnly) "read" else "resolve")
+    val importTaskName = "$PLUGIN_BASE_NAME:" + (if (request.readOnly) "read" else "resolve")
     commandLine.addParameter(importTaskName)
     if (request.settings.executionWorkspace.incrementalProjectName != null) {
         commandLine.parametersList.addProperty("incremental", "true")
@@ -163,9 +166,10 @@ private fun runMavenImport(
 private fun runMavenImportInner(
     processSupport: GOSProcessHandler, resultFilePath: Path, request: GServerRequest
 ): MavenMapResult {
+    var result: MavenMapResult? = null
     return try {
         processSupport.startAndWait()
-        val result = FileReader(resultFilePath.toFile(), StandardCharsets.UTF_8).use {
+        result = FileReader(resultFilePath.toFile(), StandardCharsets.UTF_8).use {
             Gson().fromJson(it, MavenMapResult::class.java)
         }
         if (processSupport.exitCode != 0 && result.exceptions.isEmpty()) {
@@ -173,6 +177,9 @@ private fun runMavenImportInner(
         }
         return result
     } catch (e: Exception) {
+        if (result?.pluginNotResolved == true) {
+            return result
+        }
         if (processSupport.exitCode != 0) {
             MavenLog.LOG.debug(e)
             throw ExternalSystemException("Process terminated. See log")

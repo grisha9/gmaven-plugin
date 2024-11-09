@@ -8,7 +8,7 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPl
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.MavenServerCmdState
-import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
+import ru.rzn.gmyasoedov.gmaven.util.MavenPathUtil
 import ru.rzn.gmyasoedov.serverapi.GMavenServer
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
@@ -81,7 +81,7 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
 
     private fun setupGmavenPluginsProperty(params: GeneralCommandLine) {
         if (!isImport) return
-        params.addParameter(MavenUtils.getGMavenExtClassPath())
+        params.parametersList.addProperty("maven.ext.class.path", MavenPathUtil.getExtClassesJarPathString())
         params.parametersList.addProperty("resultAsTree", "true")
         params.parametersList.addProperty("resultFilePath", resultFilePath.absolutePathString())
         if (!request.settings.isShowPluginNodes) {
@@ -103,8 +103,7 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
         }
     }
 
-    private fun createListParameter(pluginsForImport: MutableList<String>) =
-        ParametersListUtil.escape(pluginsForImport.joinToString(","))
+    private fun createListParameter(plugins: MutableList<String>) = plugins.joinToString(",")
 
     private fun setupMavenOpts(commandLine: GeneralCommandLine) {
         var mavenOpts = System.getenv("MAVEN_OPTS") ?: ""

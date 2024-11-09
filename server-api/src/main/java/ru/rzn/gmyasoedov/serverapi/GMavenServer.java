@@ -15,7 +15,6 @@ public interface GMavenServer extends Remote {
     String GMAVEN_PLUGINS_RESOLVE = "gmaven.resolvedArtifactIds";
     String GMAVEN_PLUGIN_ANNOTATION_PROCESSOR = "gmaven.plugin.annotation.paths.%s";
     String RESOLVE_TASK_VERSION = "1.2.3";
-    String MAVEN_MODEL_READER_PLUGIN_VERSION = "0.2";
     String RESOLVE_TASK = "ru.rzn.gmyasoedov:model-reader:" + RESOLVE_TASK_VERSION + ":resolve";
     String READ_TASK = "ru.rzn.gmyasoedov:model-reader:" + RESOLVE_TASK_VERSION + ":read";
     String GMAVEN_DEPENDENCY_TREE = "gmaven.event.dependency.tree";
