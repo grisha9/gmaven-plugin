@@ -15,7 +15,7 @@ import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.getMavenHome
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
-import ru.rzn.gmyasoedov.gmaven.server.runTasks2
+import ru.rzn.gmyasoedov.gmaven.server.runTasks
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
@@ -42,20 +42,12 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
             ?: throw ExternalSystemException("project build file is empty")
         val buildPath = Path.of(workspace.subProjectBuildFile ?: projectBuildFile)
 
-        if (settings.isUseMvndForTasks) {
-            try {
-                MvndTaskManager.executeTasks(settings, buildPath, tasks)
-                return
-            } catch (e: Throwable) {
-                processErrorAndShowNotify(e)
-            }
-        }
         val sdk = settings.jdkName?.let { ExternalSystemJdkUtil.getJdk(null, it) }
             ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
         val mavenHome = getMavenHome(settings)
         try {
             val request = GServerRequest(id, buildPath, mavenHome, sdk, settings, listener = listener)
-            runTasks2(request, tasks) { cancellationMap[id] = it }
+            runTasks(request, tasks) { cancellationMap[id] = it }
         } finally {
             cancellationMap.remove(id)
         }

@@ -97,16 +97,13 @@ class FirstRunTest : MavenImportingTestCase() {
         assertModules("project", "project.m1")
 
         val localRepositoryPath = getLocalRepositoryPath()
-        FileUtil.delete(localRepositoryPath)
-        Assert.assertFalse(localRepositoryPath.exists())
-
         getSettings().isOfflineMode = true
 
         val externalProjectPath = Path(getExternalProjectPath()).resolve("dir with space")
         FileUtil.createDirectory(externalProjectPath.toFile())
         Assert.assertTrue(externalProjectPath.exists())
 
-        val mavenPluginPath = Path(MavenPathUtil.getLocalMavenPluginPath())
+        val mavenPluginPath = Path(MavenPathUtil.getLocalMavenPluginPathForTest())
         val mavenPluginCopyPath = externalProjectPath.resolve(mavenPluginPath.name)
         FileUtil.copy(mavenPluginPath.toFile(), mavenPluginCopyPath.toFile())
         Assert.assertTrue(mavenPluginCopyPath.exists())

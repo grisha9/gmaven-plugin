@@ -216,7 +216,6 @@ public final class MavenManager
             result.setSnapshotUpdateType(projectSettings.getSnapshotUpdateType());
             result.setThreadCount(projectSettings.getThreadCount());
             result.setOutputLevel(projectSettings.getOutputLevel());
-            result.setUseMvndForTasks(projectSettings.getUseMvndForTasks());
             result.setCheckSources(settings.isCheckSourcesInLocalRepo());
             result.setSkipTests(settings.isSkipTests());
             result.setIncrementalSync(projectSettings.getIncrementalSync());

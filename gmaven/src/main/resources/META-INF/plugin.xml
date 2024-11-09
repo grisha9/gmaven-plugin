@@ -119,13 +119,10 @@
                      description="Maven bundled wrapper version"/>
         <registryKey key="gmaven.vm.remove.javaagent" defaultValue="true"
                      description="Remove java vm parameter -javaagent for maven import process"/>
-        <registryKey key="gmaven.mvnd.path" defaultValue="mvnd"
-                     description="Maven daemon integration. Path to mvnd. Default use symlink - mvnd"/>
         <registryKey key="gmaven.lifecycles"
                      defaultValue="clean,validate,compile,test,package,verify,install,deploy,site"
                      description="Maven lifecycles(comma delimiter)"/>
-        <registryKey key="gmaven.subtask.args"
-                     defaultValue="-am,-amd"
+        <registryKey key="gmaven.subtask.args" defaultValue="-am"
                      description="Additional Maven args for sub-task(not root pom) execution(comma delimiter)"/>
         <registryKey key="gmaven.gutter.annotation" defaultValue="true"
                      description="Disable/Enable gutter icon for navigation"/>
@@ -140,8 +137,7 @@
                      description="Not change IDEA settings in: 'File | Settings | Build, Execution, Deployment | Compiler | Java Compiler'"/>
         <registryKey key="GMAVEN.system.in.process" defaultValue="true"
                      description="Whether IDEA should use 'in-process' mode for interaction with plugin api"/>
-        <registryKey key="gmaven.server.new" defaultValue="true"
-                     description="New integration with maven reader plugin via file"/>
+        <registryKey key="gmaven.wsl.support" defaultValue="true" description="WSL support"/>
         <registryKey key="gmaven.process.jsonPrettyPrinting" defaultValue="false"
                      description="Maven model reader plugin - set json pretty printing format"/>
         <registryKey key="gmaven.process.tree.fallback" defaultValue="false"

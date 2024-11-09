@@ -15,7 +15,6 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUt
 import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
 import com.intellij.openapi.projectRoots.Sdk
-import com.intellij.openapi.util.registry.Registry
 import com.intellij.pom.java.LanguageLevel
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
@@ -26,7 +25,6 @@ import ru.rzn.gmyasoedov.gmaven.project.policy.ReadProjectResolverPolicy
 import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
-import ru.rzn.gmyasoedov.gmaven.server.getProjectModel2
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.util.toFeatureString
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
@@ -68,20 +66,10 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         val buildPath = Path.of(settings.executionWorkspace.projectBuildFile ?: projectPath)
         val request = getServerRequest(id, buildPath, mavenHome, sdk, listener, settings, resolverPolicy)
         try {
-            val projectModel = getProjectModel(request, id)
+            val projectModel = getProjectModel(request) { cancellationMap[id] = it }
             return getProjectDataNode(projectPath, projectModel, settings)
         } finally {
             cancellationMap.remove(id)
-        }
-    }
-
-    private fun getProjectModel(
-        request: GServerRequest, id: ExternalSystemTaskId
-    ): MavenMapResult {
-        return if (Registry.`is`("gmaven.server.new")) {
-            getProjectModel2(request) { cancellationMap[id] = it }
-        } else {
-            getProjectModel(request) { cancellationMap[id] = it }
         }
     }
 

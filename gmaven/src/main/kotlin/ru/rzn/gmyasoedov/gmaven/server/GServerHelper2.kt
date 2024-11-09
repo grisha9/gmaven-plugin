@@ -4,15 +4,19 @@ package ru.rzn.gmyasoedov.gmaven.server
 
 import com.google.gson.Gson
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.execution.wsl.WSLDistribution
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.registry.Registry
+import com.intellij.openapi.util.text.StringUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.*
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification.ShowFullLogCallback
 import ru.rzn.gmyasoedov.gmaven.project.process.BaseMavenCommandLine
 import ru.rzn.gmyasoedov.gmaven.project.process.GOSProcessHandler
+import ru.rzn.gmyasoedov.gmaven.project.process.WslBaseMavenCommandLine
+import ru.rzn.gmyasoedov.gmaven.server.wsl.WslPathTransformer
 import ru.rzn.gmyasoedov.gmaven.settings.DistributionType
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder
 import ru.rzn.gmyasoedov.gmaven.settings.ProjectSettingsControlBuilder.SnapshotUpdateType
@@ -25,10 +29,12 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import kotlin.io.path.name
 
-fun getProjectModel2(
-    request: GServerRequest,
-    processConsumer: ((process: GOSProcessHandler) -> Unit)? = null
+fun getProjectModel(
+    request: GServerRequest, processConsumer: ((process: GOSProcessHandler) -> Unit)? = null
 ): MavenMapResult {
+    val wslDistribution = MavenPathUtil.getWsl(request)
+    if (wslDistribution != null) return getProjectModelWsl(request, wslDistribution, processConsumer)
+
     val baseMavenCommandLine = BaseMavenCommandLine(request)
     val commandLine = baseMavenCommandLine.getCommandLine()
     val resultFilePath = baseMavenCommandLine.resultFilePath
@@ -46,7 +52,23 @@ fun getProjectModel2(
     return mavenResult
 }
 
-fun printDebugCommandLine(request: GServerRequest, commandLine: GeneralCommandLine) {
+fun getProjectModelWsl(
+    request: GServerRequest,
+    wslDistribution: WSLDistribution,
+    processConsumer: ((process: GOSProcessHandler) -> Unit)? = null
+): MavenMapResult {
+    val baseMavenCommandLine = WslBaseMavenCommandLine(request, wslDistribution)
+    val commandLine = baseMavenCommandLine.getCommandLine()
+    val resultFilePath = baseMavenCommandLine.resultFilePath
+    setupImportParamsFromSettings(request, commandLine)
+
+    printDebugCommandLine(request, commandLine)
+    val processHandler = GOSProcessHandler(request, commandLine, processConsumer)
+    val result = runMavenImport(processHandler, resultFilePath, request)
+    return WslPathTransformer.transform(result, wslDistribution)
+}
+
+private fun printDebugCommandLine(request: GServerRequest, commandLine: GeneralCommandLine) {
     val parameterList = commandLine.parametersList.list.dropWhile { it != "-f" }
     val distributionType = request.settings.distributionSettings.type
     val stringBuilder = StringBuilder("")
@@ -67,7 +89,7 @@ fun printDebugCommandLine(request: GServerRequest, commandLine: GeneralCommandLi
     }
 }
 
-fun runTasks2(
+fun runTasks(
     request: GServerRequest,
     tasks: List<String>,
     processConsumer: ((process: GOSProcessHandler) -> Unit)? = null
@@ -75,7 +97,8 @@ fun runTasks2(
     if (tasks.isEmpty()) {
         throw ExternalSystemException("tasks list is empty")
     }
-    val commandLine = BaseMavenCommandLine(request, false).getCommandLine()
+    val commandLine = getCommandLine(request)
+
     setupBaseParamsFromSettings(request, commandLine)
     tasks.forEach { commandLine.addParameter(it) }
 
@@ -85,6 +108,14 @@ fun runTasks2(
     if (exitCode != null && exitCode != 0) {
         throw RuntimeException("See full maven log in run tab")
     }
+}
+
+private fun getCommandLine(request: GServerRequest): GeneralCommandLine {
+    val wsl = MavenPathUtil.getWsl(request)
+    return if (wsl == null)
+        BaseMavenCommandLine(request, false).getCommandLine()
+    else
+        WslBaseMavenCommandLine(request, wsl, false).getCommandLine()
 }
 
 private fun firstRun(request: GServerRequest) {
@@ -205,6 +236,16 @@ private fun processExceptions(exceptions: List<String>) {
         throw ExternalSystemException(message, fixId)
     }
     throw ExternalSystemException(errorString)
+}
+
+private fun getSubTaskArgs(): List<String> {
+    return try {
+        val stringValue = Registry.stringValue("gmaven.subtask.args")
+        if (StringUtil.isEmptyOrSpaces(stringValue)) return emptyList()
+        stringValue.split(",").map { it.trim() }
+    } catch (ignored: Exception) {
+        emptyList()
+    }
 }
 
 private fun forceInstallPlugin(processHandler: GOSProcessHandler) =
