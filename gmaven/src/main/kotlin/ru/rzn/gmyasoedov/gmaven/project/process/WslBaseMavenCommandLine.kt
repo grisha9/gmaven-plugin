@@ -2,10 +2,17 @@ package ru.rzn.gmyasoedov.gmaven.project.process
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.wsl.WSLDistribution
+import com.intellij.execution.wsl.WslPath
+import com.intellij.openapi.externalSystem.model.ExternalSystemException
+import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkException
+import com.intellij.openapi.externalSystem.service.notification.callback.OpenProjectJdkSettingsCallback
+import com.intellij.openapi.externalSystem.util.ExternalSystemBundle
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.util.execution.ParametersListUtil
+import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
+import ru.rzn.gmyasoedov.gmaven.project.externalSystem.notification.OpenGMavenSettingsCallback
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.MavenServerCmdState
 import ru.rzn.gmyasoedov.gmaven.util.MavenPathUtil
@@ -25,13 +32,26 @@ class WslBaseMavenCommandLine(
 
     fun getCommandLine(): GeneralCommandLine {
         val commandLine = GeneralCommandLine()
+        val javaHomeWsl = request.settings.javaHome?.let { WslPath.getDistributionByWindowsUncPath(it) }
+        if (javaHomeWsl == null) {
+            val message = "WSL " + ExternalSystemBundle.message(
+                "external.system.project_jdk.not_specified", OpenProjectJdkSettingsCallback.ID
+            )
+            throw ExternalSystemJdkException(message, null, OpenProjectJdkSettingsCallback.ID)
+        }
         commandLine.environment["JAVA_HOME"] = wslDistribution.getWslPath(request.settings.javaHome!!)
         setupDebugParam(commandLine)
         setupGmavenPluginsProperty(commandLine)
         setupMavenOpts(commandLine)
         setupProjectPath(commandLine, request)
 
-        commandLine.exePath = wslDistribution.getWslPath(getExeMavenPath())!!
+        val windowsPath = getExeMavenPath()
+        val mvnDistribution = WslPath.getDistributionByWindowsUncPath(windowsPath.toString())
+        if (mvnDistribution == null) {
+            val message = "WSL " + GBundle.message("gmaven.notification.mvn.not.found", OpenGMavenSettingsCallback.ID)
+            throw ExternalSystemException(message, OpenGMavenSettingsCallback.ID)
+        }
+        commandLine.exePath = wslDistribution.getWslPath(windowsPath)!!
         commandLine.workDirectory = workingDirectory.toFile()
         commandLine.isRedirectErrorStream = true
 
