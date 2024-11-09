@@ -2,12 +2,12 @@
 
 ## [Unreleased]
 
-## [242.3] - 2024-11-07
+## [242.4] - 2024-11-07
 ### Added
 - Incremental sync (Experimental feature in gmaven settings)
 - ### Fixed
 - Sync Maven-plugin fixed process result output
-- Effective pom action
+- escaping space symbol in path ([issue](https://github.com/grisha9/gmaven-plugin/issues/20))
 
 ## [242.2] - 2024-10-10
 ### Added
