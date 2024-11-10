@@ -53,7 +53,7 @@ public final class GMavenConstants {
     public static final String PLUGIN_VERSION = "0.4";
     public static final String PLUGIN_BASE_NAME = PLUGIN_GROUP_ID + ":" + PLUGIN_ARTIFACT_ID + ":" + PLUGIN_VERSION;
     public static final String TASK_DEPENDENCY_TREE = PLUGIN_BASE_NAME + ":tree";
-    public static final String DEPENDENCY_TREE_EVENT_SPY_CLASS = "ru.rzn.gmyasoedov.evemt.spy.GMavenEventSpyConstants";
+    public static final String DEPENDENCY_TREE_EVENT_SPY_CLASS = "ru.rzn.gmyasoedov.event.spy.GMavenEventSpyConstants";
     public static final String GMAVEN_PLUGIN_CLASS = "ru.rzn.gmyasoedov.maven.plugin.reader.util.ObjectUtils";
 
     @NotNull
