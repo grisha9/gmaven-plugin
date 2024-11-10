@@ -11,7 +11,6 @@ import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.extensions.PluginDescriptor;
 import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.externalSystem.model.project.ModuleData;
@@ -24,7 +23,6 @@ import com.intellij.openapi.projectRoots.JdkUtil;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkType;
-import com.intellij.openapi.projectRoots.ex.JavaSdkUtil;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.util.NlsSafe;
@@ -169,16 +167,6 @@ public class MavenUtils {
         Notifications.Bus.notify(new Notification(
                 GMavenConstants.GMAVEN, title, e.getMessage(), NotificationType.ERROR), project
         );
-    }
-
-    public static void setupProjectSdk(@NotNull Project project) {
-        if (ProjectRootManager.getInstance(project).getProjectSdk() == null) {
-            ApplicationManager.getApplication().runWriteAction(() -> {
-                Sdk projectSdk = suggestProjectSdk();
-                if (projectSdk == null) return;
-                JavaSdkUtil.applyJdkToProject(project, projectSdk);
-            });
-        }
     }
 
     @Nullable

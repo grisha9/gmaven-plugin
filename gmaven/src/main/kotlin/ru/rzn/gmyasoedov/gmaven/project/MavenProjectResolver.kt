@@ -56,18 +56,17 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         listener: ExternalSystemTaskNotificationListener
     ): DataNode<ProjectData> {
         settings ?: throw ExternalSystemException("settings is empty")
-        val sdk = settings.jdkName?.let { getSdk(it) }
         if (isPreviewMode) {
             return getPreviewProjectDataNode(projectPath, settings)
         }
 
-        sdk ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
+        val sdk = settings.jdkName?.let { getSdk(it) } ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
         val mavenHome = getMavenHome(settings)
         val buildPath = Path.of(settings.executionWorkspace.projectBuildFile ?: projectPath)
         val request = getServerRequest(id, buildPath, mavenHome, sdk, listener, settings, resolverPolicy)
         try {
             val projectModel = getProjectModel(request) { cancellationMap[id] = it }
-            return getProjectDataNode(projectPath, projectModel, settings)
+            return getProjectDataNode(projectPath, projectModel, settings, sdk)
         } finally {
             cancellationMap.remove(id)
         }
@@ -112,7 +111,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     }
 
     private fun getProjectDataNode(
-        projectPath: String, mavenResult: MavenMapResult, settings: MavenExecutionSettings
+        projectPath: String, mavenResult: MavenMapResult, settings: MavenExecutionSettings, sdk: Sdk
     ): DataNode<ProjectData> {
         val container = mavenResult.container
         val project = container.project
@@ -124,7 +123,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
 
         val projectDataNode = DataNode(ProjectKeys.PROJECT, projectData, null)
 
-        val sdkName: String = settings.jdkName!! //todo
+        val sdkName: String = sdk.name
         val projectSdkData = ProjectSdkData(sdkName)
         projectDataNode.createChild(ProjectSdkData.KEY, projectSdkData)
         var languageLevel = LanguageLevel.parse(sdkName)
