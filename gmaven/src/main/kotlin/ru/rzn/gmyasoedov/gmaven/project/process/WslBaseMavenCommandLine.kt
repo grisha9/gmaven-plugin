@@ -1,6 +1,7 @@
 package ru.rzn.gmyasoedov.gmaven.project.process
 
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.execution.wsl.WSLCommandLineOptions
 import com.intellij.execution.wsl.WSLDistribution
 import com.intellij.execution.wsl.WslPath
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
@@ -55,6 +56,7 @@ class WslBaseMavenCommandLine(
         commandLine.workDirectory = workingDirectory.toFile()
         commandLine.isRedirectErrorStream = true
 
+        wslDistribution.patchCommandLine(commandLine, request.settings.project, WSLCommandLineOptions())
         return commandLine
     }
 
