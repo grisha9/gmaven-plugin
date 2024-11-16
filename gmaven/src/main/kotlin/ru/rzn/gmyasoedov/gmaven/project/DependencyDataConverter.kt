@@ -127,21 +127,20 @@ private fun addLibrary(
         level = LibraryLevel.MODULE
     }
     if (scope != DependencyScope.TEST) {
-        val libraryDependencyData = LibraryDependencyData(mainNode.data, createdLibrary, level)
-        libraryDependencyData.scope = scope
-        libraryDependencyData.order = 20 + getScopeOrder(libraryDependencyData.scope)
-        mainNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData)
-
-        val libraryDependencyDataTest = LibraryDependencyData(testNode.data, createdLibrary, level)
-        libraryDependencyDataTest.scope = scope
-        libraryDependencyDataTest.order = libraryDependencyData.order
-        testNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyDataTest)
+        addLibraryDependencyData(mainNode, createdLibrary, level, scope)
+        addLibraryDependencyData(testNode, createdLibrary, level, scope)
     } else {
-        val libraryDependencyData = LibraryDependencyData(mainNode.data, createdLibrary, level)
-        libraryDependencyData.scope = scope
-        libraryDependencyData.order = 20 + getScopeOrder(libraryDependencyData.scope)
-        mainNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData)
+        addLibraryDependencyData(testNode, createdLibrary, level, scope)
     }
+}
+
+private fun addLibraryDependencyData(
+    dataNode: DataNode<SourceSetData>, library: LibraryData, level: LibraryLevel, scope: DependencyScope
+) {
+    val libraryDependencyData = LibraryDependencyData(dataNode.data, library, level)
+    libraryDependencyData.scope = scope
+    libraryDependencyData.order = 20 + getScopeOrder(libraryDependencyData.scope)
+    dataNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData)
 }
 
 private fun linkProjectLibrary(
