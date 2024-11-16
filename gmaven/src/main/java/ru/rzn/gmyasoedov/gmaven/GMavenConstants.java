@@ -48,9 +48,9 @@ public final class GMavenConstants {
     public static final String TASK_RESOLVE_PLUGINS = "dependency:resolve-plugins";
     public static final String TASK_DOWNLOAD_SOURCE = "dependency:sources";
     public static final String TASK_EFFECTIVE_POM = "help:effective-pom";
-    public static final String PLUGIN_GROUP_ID = "ru.rzn.gmyasoedov";
+    public static final String PLUGIN_GROUP_ID = "io.github.grisha9";
     public static final String PLUGIN_ARTIFACT_ID = "maven-model-reader-plugin";
-    public static final String PLUGIN_VERSION = "0.2";
+    public static final String PLUGIN_VERSION = "0.4";
     public static final String PLUGIN_BASE_NAME = PLUGIN_GROUP_ID + ":" + PLUGIN_ARTIFACT_ID + ":" + PLUGIN_VERSION;
     public static final String TASK_DEPENDENCY_TREE = PLUGIN_BASE_NAME + ":tree";
     public static final String DEPENDENCY_TREE_EVENT_SPY_CLASS = "ru.rzn.gmyasoedov.event.spy.GMavenEventSpyConstants";
