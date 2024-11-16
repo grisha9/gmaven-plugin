@@ -1,7 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven.project.task
 
 import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExecutionSettings
-import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import com.intellij.openapi.externalSystem.service.execution.configuration.ExternalSystemReifiedRunConfigurationExtension
 import com.intellij.openapi.externalSystem.service.execution.configuration.addBeforeRunFragment
 import com.intellij.openapi.externalSystem.service.execution.configuration.addCommandLineFragment
@@ -13,15 +12,16 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.util.execution.ParametersListUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
+import ru.rzn.gmyasoedov.gmaven.execution.GMavenRunConfiguration
 import java.util.*
 
 class GMavenRunConfigurationExtension :
-    ExternalSystemReifiedRunConfigurationExtension<ExternalSystemRunConfiguration>(
-        ExternalSystemRunConfiguration::class.java
+    ExternalSystemReifiedRunConfigurationExtension<GMavenRunConfiguration>(
+        GMavenRunConfiguration::class.java
     ) {
 
-    override fun SettingsEditorFragmentContainer<ExternalSystemRunConfiguration>.configureFragments(
-        configuration: ExternalSystemRunConfiguration
+    override fun SettingsEditorFragmentContainer<GMavenRunConfiguration>.configureFragments(
+        configuration: GMavenRunConfiguration
     ) {
         val project = configuration.project
         addBeforeRunFragment(GMavenBeforeRunTaskProvider.ID)
@@ -29,7 +29,7 @@ class GMavenRunConfigurationExtension :
         addCommandLineFragment(project, workingDirectoryField)
     }
 
-    private fun SettingsEditorFragmentContainer<ExternalSystemRunConfiguration>.addWorkingDirectoryFragment(
+    private fun SettingsEditorFragmentContainer<GMavenRunConfiguration>.addWorkingDirectoryFragment(
         project: Project
     ) = addWorkingDirectoryFragment(
         project,
@@ -52,9 +52,8 @@ class GMavenRunConfigurationExtension :
         settings.taskNames = ParametersListUtil.parse(commandLine, true, true)
     }
 
-    private fun SettingsEditorFragmentContainer<ExternalSystemRunConfiguration>.addCommandLineFragment(
-        project: Project,
-        workingDirectoryField: WorkingDirectoryField
+    private fun SettingsEditorFragmentContainer<GMavenRunConfiguration>.addCommandLineFragment(
+        project: Project, workingDirectoryField: WorkingDirectoryField
     ) = addCommandLineFragment(
         project,
         GMavenCommandLineInfo(workingDirectoryField),
