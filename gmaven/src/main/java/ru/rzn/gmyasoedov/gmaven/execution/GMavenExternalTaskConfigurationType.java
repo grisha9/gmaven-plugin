@@ -1,7 +1,10 @@
 package ru.rzn.gmyasoedov.gmaven.execution;
 
+import com.intellij.execution.configurations.ConfigurationFactory;
+import com.intellij.openapi.externalSystem.model.ProjectSystemId;
 import com.intellij.openapi.externalSystem.service.execution.AbstractExternalSystemTaskConfigurationType;
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil;
+import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 
@@ -22,6 +25,15 @@ public final class GMavenExternalTaskConfigurationType extends AbstractExternalS
   @Override
   protected @NotNull String getConfigurationFactoryId() {
     return GMavenConstants.SYSTEM_ID.getReadableName();
+  }
+
+  @NotNull
+  @Override
+  protected GMavenRunConfiguration doCreateConfiguration(@NotNull ProjectSystemId externalSystemId,
+                                                         @NotNull Project project,
+                                                         @NotNull ConfigurationFactory factory,
+                                                         @NotNull String name) {
+    return new GMavenRunConfiguration(project, factory, name);
   }
 
   @Override
