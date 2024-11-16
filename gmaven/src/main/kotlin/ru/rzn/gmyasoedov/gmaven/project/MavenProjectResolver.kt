@@ -15,7 +15,6 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUt
 import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
 import com.intellij.openapi.projectRoots.Sdk
-import com.intellij.openapi.util.registry.Registry
 import com.intellij.pom.java.LanguageLevel
 import org.jdom.Element
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
@@ -26,7 +25,6 @@ import ru.rzn.gmyasoedov.gmaven.project.policy.ReadProjectResolverPolicy
 import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
-import ru.rzn.gmyasoedov.gmaven.server.getProjectModel2
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 import ru.rzn.gmyasoedov.gmaven.util.toFeatureString
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
@@ -58,30 +56,19 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
         listener: ExternalSystemTaskNotificationListener
     ): DataNode<ProjectData> {
         settings ?: throw ExternalSystemException("settings is empty")
-        val sdk = settings.jdkName?.let { getSdk(it) }
         if (isPreviewMode) {
             return getPreviewProjectDataNode(projectPath, settings)
         }
 
-        sdk ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
+        val sdk = settings.jdkName?.let { getSdk(it) } ?: throw ProjectJdkNotFoundException() //InvalidJavaHomeException
         val mavenHome = getMavenHome(settings)
         val buildPath = Path.of(settings.executionWorkspace.projectBuildFile ?: projectPath)
         val request = getServerRequest(id, buildPath, mavenHome, sdk, listener, settings, resolverPolicy)
         try {
-            val projectModel = getProjectModel(request, id)
-            return getProjectDataNode(projectPath, projectModel, settings)
+            val projectModel = getProjectModel(request) { cancellationMap[id] = it }
+            return getProjectDataNode(projectPath, projectModel, settings, sdk)
         } finally {
             cancellationMap.remove(id)
-        }
-    }
-
-    private fun getProjectModel(
-        request: GServerRequest, id: ExternalSystemTaskId
-    ): MavenMapResult {
-        return if (Registry.`is`("gmaven.server.new")) {
-            getProjectModel2(request) { cancellationMap[id] = it }
-        } else {
-            getProjectModel(request) { cancellationMap[id] = it }
         }
     }
 
@@ -124,7 +111,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     }
 
     private fun getProjectDataNode(
-        projectPath: String, mavenResult: MavenMapResult, settings: MavenExecutionSettings
+        projectPath: String, mavenResult: MavenMapResult, settings: MavenExecutionSettings, sdk: Sdk
     ): DataNode<ProjectData> {
         val container = mavenResult.container
         val project = container.project
@@ -136,7 +123,7 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
 
         val projectDataNode = DataNode(ProjectKeys.PROJECT, projectData, null)
 
-        val sdkName: String = settings.jdkName!! //todo
+        val sdkName: String = sdk.name
         val projectSdkData = ProjectSdkData(sdkName)
         projectDataNode.createChild(ProjectSdkData.KEY, projectSdkData)
         var languageLevel = LanguageLevel.parse(sdkName)

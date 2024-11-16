@@ -10,9 +10,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly(project(":server"))
-    compileOnly(project(":server-api"))
-    compileOnly("org.apache.maven:maven-embedder:3.3.1")
+    compileOnly("org.apache.maven:maven-core:3.3.1")
 }
 
 tasks.getByName<Test>("test") {

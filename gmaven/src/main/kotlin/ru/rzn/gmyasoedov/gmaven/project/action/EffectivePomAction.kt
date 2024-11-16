@@ -20,9 +20,11 @@ import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
+import ru.rzn.gmyasoedov.gmaven.util.MavenPathUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import java.io.IOException
 import java.nio.file.Files
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.name
 
 
@@ -59,10 +61,13 @@ class EffectivePomAction : ExternalSystemAction() {
         settings.executionName = TASK_EFFECTIVE_POM
         settings.externalProjectPath = projectSettings.externalProjectPath
         settings.taskNames = listOf(TASK_EFFECTIVE_POM)
+
+        val resultNioPathString = MavenPathUtil.checkOnWsl(resultNioPath.absolutePathString())
+        val mavenPomPathString = MavenPathUtil.checkOnWsl(virtualFile.toNioPath().absolutePathString())
         settings.scriptParameters = " -N"
-        settings.scriptParameters += " " + ParametersListUtil.escape("-Doutput=$resultNioPath")
+        settings.scriptParameters += " " + ParametersListUtil.escape("-Doutput=$resultNioPathString")
         settings.scriptParameters += " -f"
-        settings.scriptParameters += " " + ParametersListUtil.escape("${virtualFile.toNioPath()}")
+        settings.scriptParameters += " " + ParametersListUtil.escape(mavenPomPathString)
 
         settings.env = env
 

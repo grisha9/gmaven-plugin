@@ -1,11 +1,16 @@
 package ru.rzn.gmyasoedov.gmaven.util
 
+import com.intellij.execution.wsl.WSLDistribution
+import com.intellij.execution.wsl.WslPath
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.util.SystemInfo
+import com.intellij.openapi.util.registry.Registry
 import com.intellij.util.PathUtil
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.annotations.VisibleForTesting
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.DEPENDENCY_TREE_EVENT_SPY_CLASS
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.GMAVEN_PLUGIN_CLASS
+import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 
 object MavenPathUtil {
 
@@ -23,6 +28,19 @@ object MavenPathUtil {
             return testMavenPluginPath
         }
         return getLocalMavenPluginPathForTest()
+    }
+
+    fun getWsl(settings: MavenExecutionSettings): WSLDistribution? {
+        return if (SystemInfo.isWindows && Registry.`is`("gmaven.wsl.support"))
+            WslPath.getDistributionByWindowsUncPath(settings.executionWorkspace.externalProjectPath) else null
+    }
+
+    fun checkOnWsl(path: String): String {
+        val wslDistribution = if (SystemInfo.isWindows && Registry.`is`("gmaven.wsl.support"))
+            WslPath.getDistributionByWindowsUncPath(path) else null
+        wslDistribution ?: return path
+
+        return wslDistribution.getWslPath(path)!!
     }
 
     @VisibleForTesting

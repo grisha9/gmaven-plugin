@@ -40,7 +40,7 @@ dependencies {
     implementation(project(":server-api"))
     runtimeOnly(project(":server"))
     runtimeOnly(project(":maven-ext-event-handler"))
-    runtimeOnly(fileTree("libs") { include("*.jar") })
+    runtimeOnly("io.github.grisha9:maven-model-reader-plugin:0.4")
 }
 
 intellijPlatform {
