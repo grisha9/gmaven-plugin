@@ -4,6 +4,7 @@ package ru.rzn.gmyasoedov.gmaven.settings;
 import com.intellij.openapi.externalSystem.util.ExternalSystemSettingsControl;
 import com.intellij.openapi.externalSystem.util.ExternalSystemUiUtil;
 import com.intellij.openapi.externalSystem.util.PaintAwarePanel;
+import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.registry.Registry;
 import com.intellij.ui.components.JBCheckBox;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +25,9 @@ public class SystemSettingsControlBuilder implements ExternalSystemSettingsContr
     @Nullable
     private JBCheckBox checkSourcesCheckBox;
     @Nullable
-    private JBCheckBox checkReadonlyCheckBox;
+    private JBCheckBox readonlyCheckBox;
+    @Nullable
+    private JBCheckBox wslSupportCheckBox;
 
     public SystemSettingsControlBuilder(@NotNull MavenSettings initialSettings) {
         myInitialSettings = initialSettings;
@@ -36,13 +39,17 @@ public class SystemSettingsControlBuilder implements ExternalSystemSettingsContr
         skipTestsCheckBox = new JBCheckBox(GBundle.message("gmaven.settings.system.skip.tests"));
         checkSourcesCheckBox = new JBCheckBox(GBundle.message("gmaven.settings.system.check.sources"));
         checkSourcesCheckBox.setToolTipText(message("gmaven.settings.system.check.sources.tooltip"));
-        checkReadonlyCheckBox = new JBCheckBox(GBundle.message("gmaven.settings.system.readonly"));
-        checkReadonlyCheckBox.setToolTipText(message("gmaven.settings.system.readonly.tooltip"));
+        readonlyCheckBox = new JBCheckBox(GBundle.message("gmaven.settings.system.readonly"));
+        readonlyCheckBox.setToolTipText(message("gmaven.settings.system.readonly.tooltip"));
+        wslSupportCheckBox = new JBCheckBox(GBundle.message("gmaven.settings.system.wsl"));
+        wslSupportCheckBox.setToolTipText(message("gmaven.settings.system.wsl.tooltip"));
+        wslSupportCheckBox.setVisible(SystemInfo.isWindows);
 
         canvas.add(offlineCheckBox, ExternalSystemUiUtil.getLabelConstraints(indentLevel));
         canvas.add(skipTestsCheckBox, ExternalSystemUiUtil.getLabelConstraints(indentLevel));
-        canvas.add(checkReadonlyCheckBox, ExternalSystemUiUtil.getLabelConstraints(indentLevel));
-        canvas.add(checkSourcesCheckBox, ExternalSystemUiUtil.getFillLineConstraints(0));
+        canvas.add(readonlyCheckBox, ExternalSystemUiUtil.getLabelConstraints(indentLevel));
+        canvas.add(checkSourcesCheckBox, ExternalSystemUiUtil.getLabelConstraints(indentLevel));
+        canvas.add(wslSupportCheckBox, ExternalSystemUiUtil.getFillLineConstraints(0));
     }
 
     @Override
@@ -61,8 +68,11 @@ public class SystemSettingsControlBuilder implements ExternalSystemSettingsContr
         if (checkSourcesCheckBox != null) {
             checkSourcesCheckBox.setSelected(myInitialSettings.isCheckSourcesInLocalRepo());
         }
-        if (checkReadonlyCheckBox != null) {
-            checkReadonlyCheckBox.setSelected(Registry.is("gmaven.import.readonly"));
+        if (readonlyCheckBox != null) {
+            readonlyCheckBox.setSelected(Registry.is("gmaven.import.readonly"));
+        }
+        if (wslSupportCheckBox != null) {
+            wslSupportCheckBox.setSelected(Registry.is("gmaven.wsl.support"));
         }
     }
 
@@ -74,7 +84,10 @@ public class SystemSettingsControlBuilder implements ExternalSystemSettingsContr
         if (skipTestsCheckBox != null && skipTestsCheckBox.isSelected() != myInitialSettings.isSkipTests()) {
             return true;
         }
-        if (checkReadonlyCheckBox != null && checkReadonlyCheckBox.isSelected() != Registry.is("gmaven.import.readonly")) {
+        if (readonlyCheckBox != null && readonlyCheckBox.isSelected() != Registry.is("gmaven.import.readonly")) {
+            return true;
+        }
+        if (wslSupportCheckBox != null && wslSupportCheckBox.isSelected() != Registry.is("gmaven.wsl.support")) {
             return true;
         }
         if (checkSourcesCheckBox != null
@@ -95,8 +108,11 @@ public class SystemSettingsControlBuilder implements ExternalSystemSettingsContr
         if (checkSourcesCheckBox != null) {
             settings.setCheckSourcesInLocalRepo(checkSourcesCheckBox.isSelected());
         }
-        if (checkReadonlyCheckBox != null) {
-            Registry.get("gmaven.import.readonly").setValue(checkReadonlyCheckBox.isSelected());
+        if (readonlyCheckBox != null) {
+            Registry.get("gmaven.import.readonly").setValue(readonlyCheckBox.isSelected());
+        }
+        if (wslSupportCheckBox != null) {
+            Registry.get("gmaven.wsl.support").setValue(wslSupportCheckBox.isSelected());
         }
     }
 

@@ -33,7 +33,7 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
     override fun linkToExistingProject(projectFile: VirtualFile, project: Project) {
         val mavenSettings = MavenSettings.getInstance(project)
         mavenSettings.storeProjectFilesExternally = true
-        val mavenProjectSettings = createMavenProjectSettings(projectFile, project)
+        val mavenProjectSettings = createMavenProjectSettings(projectFile)
         attachProjectAndRefresh(mavenProjectSettings, project)
     }
 

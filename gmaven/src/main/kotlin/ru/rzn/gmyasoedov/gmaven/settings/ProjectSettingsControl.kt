@@ -202,6 +202,9 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
                             emptyText.text = toolTipText
                         }
                 }.visibleIf(mavenPathVisible.not())
+
+                row(" ") { }
+                row(" ") { }
             }
         }
 
