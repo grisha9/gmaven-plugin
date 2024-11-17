@@ -10,7 +10,7 @@ class MavenProjectSettings : ExternalProjectSettings() {
     var distributionSettings: DistributionSettings = DistributionSettings.getBundled()
     var jdkName: String? = ExternalSystemJdkUtil.USE_PROJECT_JDK
     var vmOptions: String? = null
-    var resolveModulePerSourceSet = false
+    var resolveModulePerSourceSet = true
     var nonRecursive  = false
     var useWholeProjectContext = true
     var showPluginNodes = true

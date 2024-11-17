@@ -77,10 +77,14 @@ abstract class MavenImportingTestCase : MavenTestCase() {
             ?.let { ExternalSystemApiUtil.findAllRecursively(it, ProjectKeys.MODULE) } ?: emptyList()
     }
 
+    protected fun getModuleNode(name: String): DataNode<ModuleData>? {
+        return getModulesNode().find { it.data.moduleName == name }
+    }
+
     protected fun import(projectFile: VirtualFile) {
         mavenSettings = MavenSettings.getInstance(project)
         mavenSettings!!.storeProjectFilesExternally = true
-        mavenProjectSettings = createMavenProjectSettings(projectFile, project)
+        mavenProjectSettings = createMavenProjectSettings(projectFile)
 
         GOpenProjectProvider().attachProjectAndRefresh(mavenProjectSettings!!, project)
     }
