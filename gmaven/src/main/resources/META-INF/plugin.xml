@@ -142,8 +142,6 @@
                      description="Maven model reader plugin - set json pretty printing format"/>
         <registryKey key="gmaven.process.tree.fallback" defaultValue="false"
                      description="Maven dependency tree for whole project - take extra time but more stable"/>
-        <registryKey key="gmaven.process.install.plugin" defaultValue="false"
-                     description="Install maven-model-reader-plugin on error"/>
         <registryKey key="gmaven.process.remove.result.file" defaultValue="true" description="Remove result json file"/>
         <registryKey key="gmaven.import.readonly" defaultValue="false" description="Read only project import. Without download dependencies"/>
         <notificationGroup id="GMaven" displayType="BALLOON"/>

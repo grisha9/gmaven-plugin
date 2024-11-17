@@ -43,11 +43,12 @@ fun getProjectModel(
     printDebugCommandLine(request, commandLine)
     val processHandler = GOSProcessHandler(request, commandLine, processConsumer)
     val mavenResult = runMavenImport(processHandler, resultFilePath, request)
-    if (mavenResult.pluginNotResolved || forceInstallPlugin(processHandler)) {
-        firstRun(request)
-        printDebugCommandLine(request, commandLine)
-        val processHandler2 = GOSProcessHandler(request, commandLine, processConsumer)
-        return runMavenImport(processHandler2, resultFilePath, request)
+    if (mavenResult.pluginNotResolved) {
+        throw ExternalSystemException(
+            GBundle.message(
+                "gmaven.model.reader.plugin.not.found", PLUGIN_GROUP_ID, PLUGIN_ARTIFACT_ID, PLUGIN_VERSION
+            )
+        )
     }
     return mavenResult
 }
@@ -247,6 +248,3 @@ private fun getSubTaskArgs(): List<String> {
         emptyList()
     }
 }
-
-private fun forceInstallPlugin(processHandler: GOSProcessHandler) =
-    processHandler.exitCode != 0 && Registry.`is`("gmaven.process.install.plugin")
