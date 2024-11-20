@@ -137,10 +137,10 @@ private fun addLibrary(
         libraryDependencyDataTest.order = libraryDependencyData.order
         testNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyDataTest)
     } else {
-        val libraryDependencyData = LibraryDependencyData(mainNode.data, createdLibrary, level)
+        val libraryDependencyData = LibraryDependencyData(testNode.data, createdLibrary, level)
         libraryDependencyData.scope = scope
         libraryDependencyData.order = 20 + getScopeOrder(libraryDependencyData.scope)
-        mainNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData)
+        testNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData)
     }
 }
 
