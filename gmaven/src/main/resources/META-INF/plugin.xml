@@ -15,7 +15,8 @@
         <![CDATA[
         <h3>Fixed</h3>
         <ul>
-            <li>Support test-jar type for module dependency (<a href="https://github.com/grisha9/gmaven-plugin/issues/15" target="_blank" rel="nofollow">Issue</a>)</li>
+            <li>Split module - test scope</li>
+            <li>Gmaven run config setting (visible in Gradle)</li>
         </ul>
     ]]>
     </change-notes>
