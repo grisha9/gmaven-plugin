@@ -37,6 +37,7 @@ import ru.rzn.gmyasoedov.gmaven.project.GMavenAutoImportAware;
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver;
 import ru.rzn.gmyasoedov.gmaven.project.task.MavenTaskManager;
 import ru.rzn.gmyasoedov.gmaven.settings.*;
+import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 
 import javax.swing.*;
 import java.io.File;
@@ -44,7 +45,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
-import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_PROJECT_JDK;
+import static com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil.USE_INTERNAL_JAVA;
 import static ru.rzn.gmyasoedov.gmaven.util.ExecutionSettingsUtil.fillExecutionWorkSpace;
 import static ru.rzn.gmyasoedov.gmaven.util.ExecutionSettingsUtil.getDistributionSettings;
 
@@ -235,20 +236,29 @@ public final class MavenManager
         }
         result.setIdeProjectPath(ideProjectPath);
 
-        //todo - сделать как в org.jetbrains.plugins.gradle.GradleManager#configureExecutionWorkspace
-        String jdkName = projectSettings != null ? projectSettings.getJdkName() : null;
-        Sdk jdk = ExternalSystemJdkUtil.getJdk(project, jdkName);
-        if (jdk == null) {
-            jdk = ExternalSystemJdkUtil.getJdk(project, USE_PROJECT_JDK);
-        }
-        if (jdk != null) {
-            result.setJavaHome(jdk.getHomePath());
-            result.setJdkName(jdk.getName());
-        }
+        setJdk(project, projectSettings, result);
 
         if (settings.isSkipTests()) {
             result.withEnvironmentVariables(Map.of("skipTests", "true"));
         }
         return result;
+    }
+
+    private static void setJdk(
+            @NotNull Project project, @Nullable MavenProjectSettings projectSettings, MavenExecutionSettings result
+    ) {
+        String jdkName = projectSettings != null ? projectSettings.getJdkName() : null;
+        Sdk jdk = ExternalSystemJdkUtil.getJdk(project, jdkName);
+        if (jdk == null) {
+            System.out.println("!!!!!!! " + jdkName);
+            jdk = MavenUtils.suggestProjectSdk();
+            if (jdk == null) {
+                jdk = ExternalSystemJdkUtil.getJdk(project, USE_INTERNAL_JAVA);
+            }
+        }
+        if (jdk != null) {
+            result.setJavaHome(jdk.getHomePath());
+            result.setJdkName(jdk.getName());
+        }
     }
 }

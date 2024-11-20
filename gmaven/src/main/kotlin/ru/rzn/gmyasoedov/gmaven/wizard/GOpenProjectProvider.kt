@@ -21,7 +21,6 @@ import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.project.policy.ReadProjectResolverPolicy
 import ru.rzn.gmyasoedov.gmaven.settings.MavenProjectSettings
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
-import ru.rzn.gmyasoedov.gmaven.util.updateMavenJdk
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 
 
@@ -81,7 +80,6 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
             override fun onSuccess(externalProject: DataNode<ProjectData>?) {
                 if (externalProject == null) return
                 ProjectDataManager.getInstance().importData(externalProject, project)
-                updateMavenJdk(project, externalProjectPath)
             }
         }
     }
@@ -94,7 +92,6 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
             override fun onSuccess(externalProject: DataNode<ProjectData>?) {
                 if (externalProject == null) return
                 ProjectDataManager.getInstance().importData(externalProject, project)
-                updateMavenJdk(project, externalProjectPath)
 
                 DumbService.getInstance(project).runWhenSmart {
                     ExternalSystemUtil.refreshProject(externalProjectPath, ImportSpecBuilder(project, SYSTEM_ID))
