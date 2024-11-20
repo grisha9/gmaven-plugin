@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [232.31] - 2024-11-20
+### Fixed
+- Split module - test scope
+- Gmaven run config setting (visible in Gradle)
+
 ## [232.30] - 2024-07-13
 ### Fixed
 - Support test-jar type for module dependency ([issue](https://github.com/grisha9/gmaven-plugin/issues/15))
