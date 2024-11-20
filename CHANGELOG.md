@@ -3,9 +3,7 @@
 ## [Unreleased]
 
 ## [233.31] - 2024-11-20
-
 ### Fixed
-
 - Split module - test scope
 - Gmaven run config setting (visible in Gradle)
 

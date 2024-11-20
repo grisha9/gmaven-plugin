@@ -250,7 +250,6 @@ public final class MavenManager
         String jdkName = projectSettings != null ? projectSettings.getJdkName() : null;
         Sdk jdk = ExternalSystemJdkUtil.getJdk(project, jdkName);
         if (jdk == null) {
-            System.out.println("!!!!!!! " + jdkName);
             jdk = MavenUtils.suggestProjectSdk();
             if (jdk == null) {
                 jdk = ExternalSystemJdkUtil.getJdk(project, USE_INTERNAL_JAVA);
