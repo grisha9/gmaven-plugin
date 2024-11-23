@@ -7,9 +7,7 @@ import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.util.PathUtil
 import org.jetbrains.annotations.TestOnly
-import org.jetbrains.annotations.VisibleForTesting
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.DEPENDENCY_TREE_EVENT_SPY_CLASS
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants.GMAVEN_PLUGIN_CLASS
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
 
 object MavenPathUtil {
@@ -20,12 +18,16 @@ object MavenPathUtil {
         }
 
         return PathUtil.getJarPathForClass(Class.forName(DEPENDENCY_TREE_EVENT_SPY_CLASS))
-
     }
 
     fun getWsl(settings: MavenExecutionSettings): WSLDistribution? {
         return if (SystemInfo.isWindows && Registry.`is`("gmaven.wsl.support"))
             WslPath.getDistributionByWindowsUncPath(settings.executionWorkspace.externalProjectPath) else null
+    }
+
+    fun getWsl(path: String): WSLDistribution? {
+        return if (SystemInfo.isWindows && Registry.`is`("gmaven.wsl.support"))
+            WslPath.getDistributionByWindowsUncPath(path) else null
     }
 
     fun checkOnWsl(path: String): String {
@@ -34,13 +36,6 @@ object MavenPathUtil {
         wslDistribution ?: return path
 
         return wslDistribution.getWslPath(path)!!
-    }
-
-    @VisibleForTesting
-    @TestOnly
-    fun getLocalMavenPluginPathForTest(): String {
-        val clazz = Class.forName(GMAVEN_PLUGIN_CLASS)
-        return PathUtil.getJarPathForClass(clazz)
     }
 
     @TestOnly
