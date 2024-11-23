@@ -2,12 +2,22 @@
 
 ## [Unreleased]
 
+## [242.5] - 2024-11-23
+
+### Added
+
+- WSL
+  Support [Wiki](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-project-settings#wsl-support-wondows-users-only)
+- Deployed maven plugin to maven central and migrate on it ([issue](https://github.com/grisha9/gmaven-plugin/issues/21))
+- ### Fixed
+- Escaping space symbol in starting maven process path ([issue](https://github.com/grisha9/gmaven-plugin/issues/20))
+
 ## [242.4] - 2024-11-07
 ### Added
 - Incremental sync (Experimental feature in gmaven settings)
 - ### Fixed
 - Sync Maven-plugin fixed process result output
-- escaping space symbol in path ([issue](https://github.com/grisha9/gmaven-plugin/issues/20))
+- Escaping space symbol in path ([issue](https://github.com/grisha9/gmaven-plugin/issues/20))
 
 ## [242.2] - 2024-10-10
 ### Added
