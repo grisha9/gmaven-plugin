@@ -65,6 +65,7 @@ class WslBaseMavenCommandLine(
     private fun getExeMavenPath(): Path {
         val mavenPath = request.mavenPath
         if (mavenPath.name == "mvnd.sh") return mavenPath
+        if (mavenPath.name == "mvnw") return mavenPath
         return BaseMavenCommandLine.getUnixPath(mavenPath)
     }
 
