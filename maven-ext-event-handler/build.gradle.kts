@@ -13,11 +13,7 @@ dependencies {
     compileOnly("org.apache.maven:maven-core:3.3.1")
 }
 
-tasks.getByName<Test>("test") {
-    useJUnitPlatform()
-}
-
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_7;
+    sourceCompatibility = JavaVersion.VERSION_1_8;
     targetCompatibility = JavaVersion.VERSION_1_8;
 }

@@ -17,7 +17,6 @@ class FirstRunTest : MavenImportingTestCase() {
     override fun tearDown() {
         super.tearDown()
         MavenPathUtil.testEventSpyJarPath = ""
-        MavenPathUtil.testMavenPluginPath = ""
     }
 
     fun testFirstRunWithEmpty2M() {
@@ -53,11 +52,10 @@ class FirstRunTest : MavenImportingTestCase() {
         import(projectFile)
         assertModules("project", "project.m1")
 
-        val localRepositoryPath = getLocalRepositoryPath()
+        val localRepositoryPath = getLocalRepositoryMavenPluginPath()
         FileUtil.delete(localRepositoryPath)
         Assert.assertFalse(localRepositoryPath.exists())
 
-        getSettings().isOfflineMode = true
         reimport()
         assertModules("project", "project.m1")
         Assert.assertTrue(localRepositoryPath.exists())
@@ -96,18 +94,11 @@ class FirstRunTest : MavenImportingTestCase() {
         import(projectFile)
         assertModules("project", "project.m1")
 
-        val localRepositoryPath = getLocalRepositoryPath()
-        getSettings().isOfflineMode = true
+        val localRepositoryPath = getLocalRepositoryMavenPluginPath()
 
         val externalProjectPath = Path(getExternalProjectPath()).resolve("dir with space")
         FileUtil.createDirectory(externalProjectPath.toFile())
         Assert.assertTrue(externalProjectPath.exists())
-
-        val mavenPluginPath = Path(MavenPathUtil.getLocalMavenPluginPathForTest())
-        val mavenPluginCopyPath = externalProjectPath.resolve(mavenPluginPath.name)
-        FileUtil.copy(mavenPluginPath.toFile(), mavenPluginCopyPath.toFile())
-        Assert.assertTrue(mavenPluginCopyPath.exists())
-        MavenPathUtil.testMavenPluginPath = mavenPluginCopyPath.pathString
 
         val eventSpyJarPath = Path(MavenPathUtil.getEventSpyJarPathForTest())
         val eventSpyJarCopyPath = externalProjectPath.resolve(eventSpyJarPath.name)
@@ -122,7 +113,7 @@ class FirstRunTest : MavenImportingTestCase() {
         Assert.assertTrue(localRepositoryPath.exists())
     }
 
-    private fun getLocalRepositoryPath(): Path {
+    private fun getLocalRepositoryMavenPluginPath(): Path {
         var localRepositoryPath = Path(getProjectSettings().localRepositoryPath!!)
         val groupIds = PLUGIN_GROUP_ID.split(".")
         for (id in groupIds) {
