@@ -23,13 +23,6 @@ object MavenPathUtil {
 
     }
 
-    fun getLocalMavenPluginPath(): String {
-        if (ApplicationManager.getApplication().isUnitTestMode && testMavenPluginPath.isNotEmpty()) {
-            return testMavenPluginPath
-        }
-        return getLocalMavenPluginPathForTest()
-    }
-
     fun getWsl(settings: MavenExecutionSettings): WSLDistribution? {
         return if (SystemInfo.isWindows && Registry.`is`("gmaven.wsl.support"))
             WslPath.getDistributionByWindowsUncPath(settings.executionWorkspace.externalProjectPath) else null
@@ -54,9 +47,6 @@ object MavenPathUtil {
     fun getEventSpyJarPathForTest(): String {
         return PathUtil.getJarPathForClass(Class.forName(DEPENDENCY_TREE_EVENT_SPY_CLASS))
     }
-
-    @TestOnly
-    var testMavenPluginPath: String = ""
 
     @TestOnly
     var testEventSpyJarPath: String = ""

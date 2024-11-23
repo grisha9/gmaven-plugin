@@ -5,7 +5,6 @@ import com.intellij.openapi.util.registry.Registry
 import junit.framework.TestCase
 import org.jetbrains.kotlin.idea.base.externalSystem.findAll
 import ru.rzn.gmyasoedov.gmaven.MavenImportingTestCase
-import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.PluginData
 
 class ReadonlyImportTest: MavenImportingTestCase() {
 
@@ -78,8 +77,6 @@ class ReadonlyImportTest: MavenImportingTestCase() {
         TestCase.assertTrue(modulesNodes.isNotEmpty())
         val libraryNodes = m2ModuleNode?.findAll(ProjectKeys.LIBRARY_DEPENDENCY) ?: emptyList()
         TestCase.assertTrue(libraryNodes.isNotEmpty())
-        val pluginNodes = m2ModuleNode?.findAll(PluginData.KEY) ?: emptyList()
-        TestCase.assertTrue(pluginNodes.isNotEmpty())
     }
 
     fun testReadonlyImport() {
@@ -147,7 +144,5 @@ class ReadonlyImportTest: MavenImportingTestCase() {
         TestCase.assertTrue(modulesNodes.isNotEmpty())
         val libraryNodes = m2ModuleNode?.findAll(ProjectKeys.LIBRARY_DEPENDENCY) ?: emptyList()
         TestCase.assertTrue(libraryNodes.isEmpty())
-        val pluginNodes = m2ModuleNode?.findAll(PluginData.KEY) ?: emptyList()
-        TestCase.assertTrue(pluginNodes.isEmpty())
     }
 }

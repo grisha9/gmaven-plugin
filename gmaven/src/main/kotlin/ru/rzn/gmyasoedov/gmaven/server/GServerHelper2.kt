@@ -119,26 +119,6 @@ private fun getCommandLine(request: GServerRequest): GeneralCommandLine {
         WslBaseMavenCommandLine(request, wsl, false).getCommandLine()
 }
 
-private fun firstRun(request: GServerRequest) {
-    try {
-        val commandLine = BaseMavenCommandLine(request, false).getCommandLine()
-        commandLine.addParameter("-N")
-        commandLine.addParameter("install:install-file")
-        commandLine.addParameter("-Dfile=" + MavenPathUtil.getLocalMavenPluginPath())
-        commandLine.addParameter("-DgroupId=$PLUGIN_GROUP_ID")
-        commandLine.addParameter("-DartifactId=$PLUGIN_ARTIFACT_ID")
-        commandLine.addParameter("-Dversion=$PLUGIN_VERSION")
-        commandLine.addParameter("-Dpackaging=jar")
-
-        printDebugCommandLine(request, commandLine)
-        val processHandler = GOSProcessHandler(request, commandLine)
-        processHandler.startAndWait()
-    } catch (e: Exception) {
-        MavenLog.LOG.warn(e)
-        throw e
-    }
-}
-
 private fun setupBaseParamsFromSettings(request: GServerRequest, commandLine: GeneralCommandLine) {
     if (request.settings.isNonRecursive) {
         commandLine.addParameter("-N")
