@@ -29,6 +29,7 @@ import ru.rzn.gmyasoedov.maven.plugin.reader.model.*
 import ru.rzn.gmyasoedov.serverapi.GServerUtils
 import java.nio.file.Path
 import kotlin.io.path.Path
+import kotlin.io.path.exists
 
 fun getMavenHome(executionSettings: MavenExecutionSettings): Path {
     val distributionSettings = executionSettings.distributionSettings
@@ -44,7 +45,7 @@ fun getMavenHome(executionSettings: MavenExecutionSettings): Path {
         }
         distributionSettings.url = distributionUrl
     }
-    if (distributionSettings.path != null) return distributionSettings.path
+    if (distributionSettings.path != null && distributionSettings.path.exists()) return distributionSettings.path
     if (distributionSettings.url != null) {
         val mavenHome = MavenWrapperDistribution.getOrDownload(distributionSettings.url)
         distributionSettings.path = mavenHome.path
