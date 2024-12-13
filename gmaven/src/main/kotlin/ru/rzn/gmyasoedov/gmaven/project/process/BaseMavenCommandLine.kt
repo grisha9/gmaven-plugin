@@ -4,12 +4,14 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.util.execution.ParametersListUtil
+import com.intellij.util.net.NetUtils
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenCompilerFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
-import ru.rzn.gmyasoedov.gmaven.server.MavenServerCmdState
 import ru.rzn.gmyasoedov.gmaven.util.MavenPathUtil.getExtClassesJarPathString
+import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import ru.rzn.gmyasoedov.serverapi.GMavenServer
+import java.io.IOException
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
@@ -99,7 +101,7 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
             if (Registry.`is`("gmaven.process.jsonPrettyPrinting")) {
                 commandLine.parametersList.addProperty("jsonPrettyPrinting", "true")
             }
-            val debugPort = MavenServerCmdState.getDebugPort() ?: return
+            val debugPort = getDebugPort() ?: return
             commandLine.parametersList.addProperty("jsonPrettyPrinting", "true")
             commandLine.addParameter("-Xdebug")
             commandLine.addParameter("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=*:$debugPort")
@@ -136,5 +138,16 @@ class BaseMavenCommandLine(private val request: GServerRequest, private val isIm
         }
 
         private fun createListParameter(plugins: MutableList<String>) = plugins.joinToString(",")
+
+        private fun getDebugPort(): Int? {
+            if (Registry.`is`("gmaven.server.debug")) {
+                try {
+                    return NetUtils.findAvailableSocketPort()
+                } catch (e: IOException) {
+                    MavenLog.LOG.warn(e)
+                }
+            }
+            return null
+        }
     }
 }

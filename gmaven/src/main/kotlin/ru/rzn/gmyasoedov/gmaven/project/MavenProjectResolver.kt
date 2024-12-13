@@ -22,7 +22,6 @@ import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.CompilerData
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.MavenFullImportPlugin
 import ru.rzn.gmyasoedov.gmaven.project.externalSystem.model.SourceSetData
 import ru.rzn.gmyasoedov.gmaven.project.policy.ReadProjectResolverPolicy
-import ru.rzn.gmyasoedov.gmaven.server.GServerRemoteProcessSupport
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.getProjectModel
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
@@ -40,7 +39,7 @@ import kotlin.io.path.absolutePathString
 
 class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSettings> {
 
-    private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, Any>()
+    private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, OSProcessHandler>()
 
     override fun cancelTask(id: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
         cancelTask(id, cancellationMap)
@@ -187,11 +186,8 @@ class MavenProjectResolver : ExternalSystemProjectResolver<MavenExecutionSetting
     class CompilerDataHolder(val plugin: MavenPlugin, val compilerData: CompilerData)
 
     companion object {
-        fun cancelTask(id: ExternalSystemTaskId, cancellationMap: ConcurrentHashMap<ExternalSystemTaskId, Any>) {
-            when (val remove = cancellationMap.remove(id)) {
-                is GServerRemoteProcessSupport -> remove.stopAll()
-                is OSProcessHandler -> remove.destroyProcess()
-            }
+        fun cancelTask(id: ExternalSystemTaskId, cancellationMap: MutableMap<ExternalSystemTaskId, OSProcessHandler>) {
+            cancellationMap.remove(id)?.destroyProcess()
         }
     }
 }

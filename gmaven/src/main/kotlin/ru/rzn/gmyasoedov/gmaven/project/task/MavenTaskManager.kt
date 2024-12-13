@@ -1,8 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven.project.task
 
-import com.intellij.ide.actions.ShowLogAction
-import com.intellij.notification.NotificationType.WARNING
-import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.execution.process.OSProcessHandler
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
@@ -11,20 +9,17 @@ import com.intellij.openapi.externalSystem.service.execution.ProjectJdkNotFoundE
 import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager
 import com.intellij.openapi.util.registry.Registry
 import org.jetbrains.annotations.VisibleForTesting
-import ru.rzn.gmyasoedov.gmaven.bundle.GBundle.message
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver
 import ru.rzn.gmyasoedov.gmaven.project.getMavenHome
 import ru.rzn.gmyasoedov.gmaven.server.GServerRequest
 import ru.rzn.gmyasoedov.gmaven.server.runTasks
 import ru.rzn.gmyasoedov.gmaven.settings.MavenExecutionSettings
-import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
-import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
-    private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, Any>()
+    private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, OSProcessHandler>()
 
     override fun executeTasks(
         id: ExternalSystemTaskId,
@@ -65,16 +60,6 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
     override fun cancelTask(id: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
         MavenProjectResolver.cancelTask(id, cancellationMap)
         return true
-    }
-
-    private fun processErrorAndShowNotify(e: Throwable) {
-        MavenLog.LOG.warn(e)
-        GMavenNotification.createNotification(
-            message("gmaven.mvnd.notification.title"),
-            message("gmaven.mvnd.notification.error"),
-            WARNING,
-            listOf(ActionManager.getInstance().getAction("OpenLog"), ShowLogAction.notificationAction())
-        )
     }
 
     @VisibleForTesting
