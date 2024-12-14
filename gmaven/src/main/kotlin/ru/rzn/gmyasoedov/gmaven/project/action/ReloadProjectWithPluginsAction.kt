@@ -25,8 +25,8 @@ class ReloadProjectWithPluginsAction :
     ExternalSystemNodeAction<AbstractExternalEntityData>(AbstractExternalEntityData::class.java), DumbAware {
 
     init {
-        getTemplatePresentation().text = GBundle.message("gmaven.action.reload.with.plugins.text")
-        getTemplatePresentation().setDescription(
+        templatePresentation.text = GBundle.message("gmaven.action.reload.with.plugins.text")
+        templatePresentation.setDescription(
             ExternalSystemBundle.messagePointer("action.refresh.project.description", "External")
         )
     }

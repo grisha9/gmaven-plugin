@@ -193,6 +193,11 @@
             <add-to-group group-id="ExternalSystemView.BaseProjectMenu" anchor="after" relative-to-action="ExternalSystem.RefreshProject"/>
             <add-to-group group-id="ExternalSystemView.ModuleMenu" anchor="after" relative-to-action="ExternalSystem.RefreshProject"/>
         </action>
+        <action id="GMaven.ExternalSystem.RunSimplePomTaskAction"
+                class="ru.rzn.gmyasoedov.gmaven.project.action.RunSimplePomTaskAction">
+            <add-to-group group-id="ExternalSystemView.TaskMenu" anchor="before"
+                          relative-to-action="ExternalSystem.CreateRunConfiguration"/>
+        </action>
         <action id="GMaven.ExternalSystem.RefreshProjectWithSources" icon="AllIcons.Actions.Refresh"
                 class="ru.rzn.gmyasoedov.gmaven.project.action.ReloadProjectWithSourcesAction">
             <add-to-group group-id="ExternalSystemView.BaseProjectMenu" anchor="after" relative-to-action="GMaven.ExternalSystem.RefreshProjectWithPlugins"/>

@@ -63,7 +63,7 @@ fun fillExecutionWorkSpace(
     if (!isRootPath) {
         val contextPair = getTargetModuleAndContextMap(projectPath, allModules)
         targetModuleNode = contextPair.first
-        targetModuleNode?.let { fillProjectBuildFiles(it, workspace, projectSettings, contextPair.second) }
+        targetModuleNode?.let { fillProjectBuildFiles(it, workspace, contextPair.second) }
     }
     addedIgnoredModule(workspace, allModules, targetModuleNode)
     addedProfiles(projectDataNode, ProjectProfilesStateService.getInstance(project), workspace)
@@ -112,24 +112,23 @@ private fun getTargetModuleAndContextMap(
 private fun fillProjectBuildFiles(
     node: DataNode<ModuleData>,
     workspace: MavenExecutionWorkspace,
-    projectSettings: MavenProjectSettings,
     moduleByInternalName: TreeMap<String, DataNode<ModuleData>>
 ) {
     val module = node.data
     workspace.subProjectBuildFile = module.getProperty(MODULE_PROP_BUILD_FILE)
-    if (projectSettings.useWholeProjectContext) {
-        val parentBuildFile = getParentBuildFile(node, moduleByInternalName)
-        if (parentBuildFile != null) {
-            workspace.projectBuildFile = parentBuildFile
-            if (MavenUtils.equalsPaths(workspace.projectBuildFile, workspace.subProjectBuildFile)) {
-                workspace.subProjectBuildFile = null
-            }
+    if (ActionManagerEx.getInstanceEx().lastPreformedActionId == "GMaven.ExternalSystem.RunSimplePomTaskAction") return
+
+    val parentBuildFile = getParentBuildFile(node, moduleByInternalName)
+    if (parentBuildFile != null) {
+        workspace.projectBuildFile = parentBuildFile
+        if (MavenUtils.equalsPaths(workspace.projectBuildFile, workspace.subProjectBuildFile)) {
+            workspace.subProjectBuildFile = null
         }
-        if (workspace.subProjectBuildFile != null) {
-            workspace.addProject(ProjectExecution(MavenUtils.toGAString(module), true))
-        }
-        workspace.subProjectBuildFile = null
     }
+    if (workspace.subProjectBuildFile != null) {
+        workspace.addProject(ProjectExecution(MavenUtils.toGAString(module), true))
+    }
+    workspace.subProjectBuildFile = null
 }
 
 private fun getParentBuildFile(

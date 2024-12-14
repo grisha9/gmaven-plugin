@@ -49,7 +49,6 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
     private val propertyGraph = PropertyGraph()
 
     private val nonRecursiveBind = propertyGraph.property(false)
-    private val useWholeProjectContextBind = propertyGraph.property(false)
     private val resolveModulePerSourceSetBind = propertyGraph.property(false)
     private val showPluginNodesBind = propertyGraph.property(false)
     private val incrementalSyncBind = propertyGraph.property(false)
@@ -87,14 +86,6 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
                     checkBox(message("gmaven.settings.project.recursive"))
                         .align(AlignX.FILL)
                         .bindSelected(nonRecursiveBind)
-                        .resizableColumn()
-                }
-
-                row {
-                    checkBox(message("gmaven.settings.project.task.context"))
-                        .align(AlignX.FILL)
-                        .applyToComponent { toolTipText = message("gmaven.settings.project.task.context.tooltip") }
-                        .bindSelected(useWholeProjectContextBind)
                         .resizableColumn()
                 }
 
@@ -263,7 +254,6 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
 
     override fun resetExtraSettings(isDefaultModuleCreation: Boolean) {
         nonRecursiveBind.set(currentSettings.nonRecursive)
-        useWholeProjectContextBind.set(currentSettings.useWholeProjectContext)
         resolveModulePerSourceSetBind.set(currentSettings.resolveModulePerSourceSet)
         showPluginNodesBind.set(currentSettings.showPluginNodes)
         incrementalSyncBind.set(currentSettings.incrementalSync)
@@ -292,7 +282,6 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
 
     override fun isExtraSettingModified(): Boolean {
         if (currentSettings.nonRecursive != nonRecursiveBind.get()) return true
-        if (currentSettings.useWholeProjectContext != useWholeProjectContextBind.get()) return true
         if (currentSettings.resolveModulePerSourceSet != resolveModulePerSourceSetBind.get()) return true
         if (currentSettings.showPluginNodes != showPluginNodesBind.get()) return true
         if (currentSettings.incrementalSync != incrementalSyncBind.get()) return true
@@ -320,7 +309,6 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
 
     override fun applyExtraSettings(settings: MavenProjectSettings) {
         settings.nonRecursive = nonRecursiveBind.get()
-        settings.useWholeProjectContext = useWholeProjectContextBind.get()
         settings.resolveModulePerSourceSet = resolveModulePerSourceSetBind.get()
         settings.showPluginNodes = showPluginNodesBind.get()
         settings.incrementalSync = incrementalSyncBind.get()

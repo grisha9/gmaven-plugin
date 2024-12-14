@@ -12,7 +12,6 @@ class MavenProjectSettings : ExternalProjectSettings() {
     var vmOptions: String? = null
     var resolveModulePerSourceSet = true
     var nonRecursive  = false
-    var useWholeProjectContext = true
     var showPluginNodes = true
     var incrementalSync = false
     var snapshotUpdateType = SnapshotUpdateType.DEFAULT
@@ -35,7 +34,6 @@ class MavenProjectSettings : ExternalProjectSettings() {
         result.snapshotUpdateType = snapshotUpdateType
         result.showPluginNodes = showPluginNodes
         result.threadCount = threadCount
-        result.useWholeProjectContext = useWholeProjectContext
         result.arguments = arguments
         result.argumentsImport = argumentsImport
         result.localRepositoryPath = localRepositoryPath
