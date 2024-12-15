@@ -122,6 +122,7 @@ public class GMavenServerImpl implements GMavenServer {
         System.setProperty("library.jansi.path", Paths.get(mavenHome, "lib", "jansi-native").toString());
         System.setProperty("maven.multiModuleProjectDirectory", projectPath);
         System.setProperty("user.dir", request.projectPath);
+        //System.setProperty("maven.mainClass", "org.apache.maven.cling.MavenCling");
         if (request.multiModuleProjectDirectory != null) {
             System.out.printf("userDir: %s multiModuleProjectDir: %s%n", request.projectPath, projectPath);
         }
