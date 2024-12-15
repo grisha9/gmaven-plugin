@@ -10,6 +10,7 @@ import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.module.ModuleTypeManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.SystemInfo
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.SYSTEM_ID
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 import ru.rzn.gmyasoedov.gmaven.extensionpoints.plugin.*
@@ -34,10 +35,9 @@ import kotlin.io.path.exists
 fun getMavenHome(executionSettings: MavenExecutionSettings): Path {
     val distributionSettings = executionSettings.distributionSettings
     if (distributionSettings.type == DistributionType.WRAPPER) {
-        val wslDistribution = MavenPathUtil.getWsl(executionSettings)
-        if (wslDistribution != null) {
-            return Path.of(executionSettings.executionWorkspace.externalProjectPath).resolve("mvnw")
-        }
+        val mvnwScript = getMvnwScript(executionSettings)
+        if (mvnwScript != null) return mvnwScript
+
         val externalProjectPath = executionSettings.executionWorkspace.externalProjectPath
         val distributionUrl = getDistributionUrl(externalProjectPath, executionSettings.project)
         if (distributionUrl != distributionSettings.url) {
@@ -62,6 +62,21 @@ private fun getDistributionUrl(externalProjectPath: String, project: Project?): 
     } catch (e: Exception) {
         MvnDotProperties.getDistributionUrl(externalProjectPath)
     }
+}
+
+private fun getMvnwScript(executionSettings: MavenExecutionSettings): Path? {
+    val wslDistribution = MavenPathUtil.getWsl(executionSettings)
+    val projectRootPath = Path.of(executionSettings.executionWorkspace.externalProjectPath)
+    val unixMvnw = projectRootPath.resolve("mvnw")
+    if (wslDistribution != null) {
+        return unixMvnw
+    }
+    if (SystemInfo.isWindows && projectRootPath.resolve("mvnw.cmd").exists()) {
+        return projectRootPath.resolve("mvnw.cmd")
+    } else if (unixMvnw.exists()) {
+        return unixMvnw
+    }
+    return null
 }
 
 fun getPluginsData(mavenProject: MavenProject, context: MavenProjectResolver.ProjectResolverContext): PluginsData {
