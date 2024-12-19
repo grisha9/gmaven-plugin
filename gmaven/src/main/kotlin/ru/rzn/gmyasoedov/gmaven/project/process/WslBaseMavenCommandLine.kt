@@ -37,7 +37,7 @@ class WslBaseMavenCommandLine(
         }
         commandLine.environment["JAVA_HOME"] = wslDistribution.getWslPath(request.settings.javaHome!!)
         val wslExtClassesJarPath = wslDistribution.getWslPath(getExtClassesJarPathString())!!
-        val resultJsonFilePath = wslDistribution.getWslPath(resultFilePath)!!
+        val resultJsonFilePath = wslDistribution.getWslPath(resultFilePath.toString())!!
         BaseMavenCommandLine.setupGmavenPluginsProperty(
             commandLine, request, isImport, resultJsonFilePath, wslExtClassesJarPath
         )
@@ -50,7 +50,7 @@ class WslBaseMavenCommandLine(
             val message = "WSL " + GBundle.message("gmaven.notification.mvn.not.found", OpenGMavenSettingsCallback.ID)
             throw ExternalSystemException(message, OpenGMavenSettingsCallback.ID)
         }
-        commandLine.exePath = wslDistribution.getWslPath(windowsPath)!!
+        commandLine.exePath = wslDistribution.getWslPath(windowsPath.toString())!!
         commandLine.workDirectory = workingDirectory.toFile()
         commandLine.isRedirectErrorStream = true
 
@@ -59,7 +59,7 @@ class WslBaseMavenCommandLine(
     }
 
     private fun setupProjectPath(commandLine: GeneralCommandLine, request: GServerRequest) {
-        commandLine.addParameters("-f", wslDistribution.getWslPath(request.projectPath))
+        commandLine.addParameters("-f", wslDistribution.getWslPath(request.projectPath.toString()))
     }
 
     private fun getExeMavenPath(): Path {

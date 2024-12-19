@@ -2,32 +2,17 @@
 
 ## [Unreleased]
 
-## [242.5] - 2024-11-23
-
+## [233.32] - 2024-12-19
 ### Added
 
-- WSL
-  Support [Wiki](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-project-settings#wsl-support-wondows-users-only)
-- Deployed maven plugin to maven central and migrate on it ([issue](https://github.com/grisha9/gmaven-plugin/issues/21))
-- ### Fixed
-- Escaping space symbol in starting maven process path ([issue](https://github.com/grisha9/gmaven-plugin/issues/20))
+- move features with master
 
-## [242.4] - 2024-11-07
-### Added
-- Incremental sync (Experimental feature in gmaven settings)
-- ### Fixed
-- Sync Maven-plugin fixed process result output
-- Escaping space symbol in path ([issue](https://github.com/grisha9/gmaven-plugin/issues/20))
+## [233.31] - 2024-11-20
 
-## [242.2] - 2024-10-10
-### Added
-- Read only mode [wiki](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-project-settings#readonly-mode)
-- Full support [Maven Daemon](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-project-settings#maven-daemon-full-support)
+### Fixed
 
-## [242.1] - 2024-09-15
-### Added
-- Support IDEA 242.* version. Icons for new UI.
-- Rework Maven integration via [file](https://github.com/grisha9/gmaven-plugin/wiki/New-integration-with-Maven-model-reader-plugin-via-file.-Since-242.1-GMaven-version)
+- Split module - test scope
+- Gmaven run config setting (visible in Gradle)
 
 ## [233.30] - 2024-07-13
 ### Fixed
@@ -134,7 +119,8 @@
 ## [232.14] - 2023-10-26
 ### Added
 - Quick fix for Maven distribution
-- Gutter icons for configuration files. [Wiki](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-registry-keys#gmavengutterannotation)   
+- Gutter icons for configuration
+  files. [Wiki](https://github.com/grisha9/gmaven-plugin/wiki/GMaven-registry-keys#gmavengutterannotation)
 - Icon for Maven project configuration files
 
 ## [232.13] - 2023-10-16
