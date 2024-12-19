@@ -27,8 +27,6 @@ dependencies {
         bundledPlugin("com.intellij.properties")
         bundledPlugin("org.intellij.groovy")
         bundledPlugin("org.jetbrains.kotlin")
-        bundledPlugin("org.jetbrains.plugins.terminal")
-        bundledPlugin("com.jetbrains.sh")
 
         testImplementation("junit:junit:4.12")
         testFramework(TestFrameworkType.Platform)
@@ -39,7 +37,9 @@ dependencies {
 
     implementation(project(":server-api"))
     runtimeOnly(project(":maven-ext-event-handler"))
-    runtimeOnly("io.github.grisha9:maven-model-reader-plugin:0.4")
+    runtimeOnly("io.github.grisha9:maven-model-reader-plugin:0.4") {
+        exclude("com.google.code.gson", "gson")
+    }
 }
 
 intellijPlatform {
