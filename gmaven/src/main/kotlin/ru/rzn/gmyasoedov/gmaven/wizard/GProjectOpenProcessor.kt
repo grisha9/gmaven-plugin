@@ -1,11 +1,11 @@
 package ru.rzn.gmyasoedov.gmaven.wizard
 
+import com.intellij.openapi.progress.ModalTaskOwner
+import com.intellij.openapi.progress.runBlockingModal
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.platform.ide.progress.ModalTaskOwner
-import com.intellij.platform.ide.progress.runWithModalProgressBlocking
 import com.intellij.projectImport.ProjectOpenProcessor
-import icons.GMavenIcons
+import icons.OpenapiIcons
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 
 internal class GProjectOpenProcessor : ProjectOpenProcessor() {
@@ -18,14 +18,14 @@ internal class GProjectOpenProcessor : ProjectOpenProcessor() {
         projectToClose: Project?,
         forceOpenInNewFrame: Boolean
     ): Project? {
-        return runWithModalProgressBlocking(ModalTaskOwner.guess(), "") {
+        return runBlockingModal(ModalTaskOwner.guess(), "") {
             importProvider.openProject(virtualFile, projectToClose, forceOpenInNewFrame)
         }
     }
 
     override val name = GMavenConstants.GMAVEN
 
-    override val icon = GMavenIcons.MavenProject
+    override val icon = OpenapiIcons.RepositoryLibraryLogo
 
     override fun canImportProjectAfterwards(): Boolean = true
 

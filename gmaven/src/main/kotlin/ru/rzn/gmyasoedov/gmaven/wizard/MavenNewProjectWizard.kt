@@ -105,10 +105,8 @@ class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
                         .findExtensionOrFail(GProjectOpenProcessor::class.java)
                     openProcessor.importProjectAfterwards(project, buildFile)
                 } else {
-                    val mavenSettings = MavenSettings.getInstance(project)
-                    val parentCanonicalPath = parentStep.path
-                    val projectSettings = mavenSettings.getLinkedProjectSettings(parentCanonicalPath)
-                        ?: mavenSettings.getLinkedProjectSettings(Path.of(parentCanonicalPath).toString())
+                    val projectSettings = MavenSettings.getInstance(project)
+                        .getLinkedProjectSettings(parentStep.path)
                         ?: throw ExternalSystemException("settings not found " + parentStep.path)
                     ExternalProjectsManagerImpl.getInstance(project).runWhenInitialized {
                         ExternalSystemUtil.refreshProject(
@@ -139,7 +137,7 @@ class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
         override fun setupProject(project: Project) {
             super.setupProject(project)
             if (parent.generateOnboardingTips) {
-                prepareOnboardingTips(project)
+                prepareTipsInEditor(project)
             }
         }
     }

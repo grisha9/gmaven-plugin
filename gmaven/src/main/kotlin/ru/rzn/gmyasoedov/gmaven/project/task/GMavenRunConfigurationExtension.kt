@@ -1,11 +1,7 @@
 package ru.rzn.gmyasoedov.gmaven.project.task
 
 import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExecutionSettings
-import com.intellij.openapi.externalSystem.service.execution.configuration.ExternalSystemReifiedRunConfigurationExtension
-import com.intellij.openapi.externalSystem.service.execution.configuration.addBeforeRunFragment
-import com.intellij.openapi.externalSystem.service.execution.configuration.addCommandLineFragment
-import com.intellij.openapi.externalSystem.service.execution.configuration.addWorkingDirectoryFragment
-import com.intellij.openapi.externalSystem.service.execution.configuration.fragments.SettingsEditorFragmentContainer
+import com.intellij.openapi.externalSystem.service.execution.configuration.*
 import com.intellij.openapi.externalSystem.service.ui.project.path.ExternalSystemWorkingDirectoryInfo
 import com.intellij.openapi.externalSystem.service.ui.project.path.WorkingDirectoryField
 import com.intellij.openapi.project.Project
@@ -20,7 +16,7 @@ class GMavenRunConfigurationExtension :
         GMavenRunConfiguration::class.java
     ) {
 
-    override fun SettingsEditorFragmentContainer<GMavenRunConfiguration>.configureFragments(
+    override fun SettingsFragmentsContainer<GMavenRunConfiguration>.configureFragments(
         configuration: GMavenRunConfiguration
     ) {
         val project = configuration.project
@@ -29,7 +25,7 @@ class GMavenRunConfigurationExtension :
         addCommandLineFragment(project, workingDirectoryField)
     }
 
-    private fun SettingsEditorFragmentContainer<GMavenRunConfiguration>.addWorkingDirectoryFragment(
+    private fun SettingsFragmentsContainer<GMavenRunConfiguration>.addWorkingDirectoryFragment(
         project: Project
     ) = addWorkingDirectoryFragment(
         project,
@@ -52,11 +48,12 @@ class GMavenRunConfigurationExtension :
         settings.taskNames = ParametersListUtil.parse(commandLine, true, true)
     }
 
-    private fun SettingsEditorFragmentContainer<GMavenRunConfiguration>.addCommandLineFragment(
-        project: Project, workingDirectoryField: WorkingDirectoryField
+    private fun SettingsFragmentsContainer<GMavenRunConfiguration>.addCommandLineFragment(
+        project: Project,
+        workingDirectoryField: WorkingDirectoryField
     ) = addCommandLineFragment(
         project,
-        GMavenCommandLineInfo(workingDirectoryField),
+        GMavenCommandLineInfo(project, workingDirectoryField),
         { getRawCommandLine(settings) },
         { parseCommandLine(settings, it) }
     )

@@ -16,6 +16,7 @@ import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.PsiElement
 import com.intellij.psi.xml.XmlFile
 import com.intellij.psi.xml.XmlTag
+import com.intellij.util.containers.ContainerUtil
 import icons.GMavenIcons
 import kotlinx.collections.immutable.toImmutableSet
 import ru.rzn.gmyasoedov.gmaven.dom.XmlPsiUtil.getPlaceHolderValue
@@ -93,17 +94,28 @@ class PomXmlDomGutterAnnotator : Annotator {
         val artifactId = artifactIdTag.value.text
         if (artifactId.isEmpty()) return
 
-        val renderer = NavigationGutterIconBuilder
-            .create(AllIcons.Actions.Search)
+        val myBuilder = MyNavigationGutterIconBuilder(
+            AllIcons.Actions.Search,
+            { element: PsiElement? ->
+                ContainerUtil.createMaybeSingletonList(
+                    element
+                )
+            })
+
+        val builder = myBuilder
             .setTarget(artifactIdTag)
             .setTooltipText(FindBundle.message("find.what.group") + " $artifactId")
-            .createGutterIconRenderer(xmlTag.project) { event, element -> performSearch(event, element, artifactId) }
+        if (builder is MyNavigationGutterIconBuilder) {
+            val renderer = builder.createGutterIconRenderer(xmlTag.project) { event, element ->
+                performSearch(event, element, artifactId)
+            }
 
-        holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
-            .range(artifactIdTag)
-            .gutterIconRenderer(renderer)
-            .needsUpdateOnTyping(false)
-            .create()
+            holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
+                .range(artifactIdTag)
+                .gutterIconRenderer(renderer)
+                .needsUpdateOnTyping(false)
+                .create()
+        }
     }
 
     private fun performSearch(event: MouseEvent, element: PsiElement, artifactId: String) {

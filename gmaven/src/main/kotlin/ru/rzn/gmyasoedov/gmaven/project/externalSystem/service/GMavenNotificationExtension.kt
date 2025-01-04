@@ -17,7 +17,7 @@ class GMavenNotificationExtension : ExternalSystemNotificationExtension {
     override fun getTargetExternalSystemId() = GMavenConstants.SYSTEM_ID
 
     override fun customize(
-        notificationData: NotificationData, project: Project, externalProjectPath: String, error: Throwable?
+        notificationData: NotificationData, project: Project, error: Throwable?
     ) {
         printError(error)
         val e = (if (error is ExternalSystemException) error else null) ?: return
