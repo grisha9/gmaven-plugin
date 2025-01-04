@@ -11,7 +11,6 @@ import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExe
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.task.TaskCallback
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
-import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.PsiFileFactory
 import com.intellij.util.execution.ParametersListUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
@@ -22,6 +21,7 @@ import ru.rzn.gmyasoedov.gmaven.util.CachedModuleDataService
 import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification
 import ru.rzn.gmyasoedov.gmaven.util.MavenPathUtil
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog
+import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import java.io.IOException
 import java.nio.file.Files
 import kotlin.io.path.absolutePathString
@@ -42,13 +42,13 @@ class EffectivePomAction : ExternalSystemAction() {
     override fun isVisible(e: AnActionEvent): Boolean {
         val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return false
         val project = e.getData(CommonDataKeys.PROJECT) ?: return false
-        val filePath = virtualFile.toNioPathOrNull()?.toString()  ?: return false
+        val filePath = MavenUtils.toNioPathOrNull(virtualFile)?.toString() ?: return false
         return CachedModuleDataService.getDataHolder(project).isConfigPath(filePath)
     }
 
     override fun actionPerformed(e: AnActionEvent) {
         val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return
-        val configNioPath = virtualFile.toNioPathOrNull() ?: return
+        val configNioPath = MavenUtils.toNioPathOrNull(virtualFile) ?: return
         val project = e.getData(CommonDataKeys.PROJECT) ?: return
         val projectSettings = MavenSettings.getInstance(project)
             .getLinkedProjectSettings(configNioPath.parent.toString()) ?: return

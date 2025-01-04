@@ -4,7 +4,6 @@ import com.intellij.lang.xml.XMLLanguage
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.readText
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
@@ -61,8 +60,9 @@ object XmlPsiUtil {
         val psiFile = PsiManager.getInstance(project).findFile(virtualFile) ?: return null
         return if (psiFile is XmlFile) psiFile else {
             try {
+                val content = String(virtualFile.contentsToByteArray())
                 PsiFileFactory.getInstance(project)
-                    .createFileFromText(filePath.name, XMLLanguage.INSTANCE, virtualFile.readText()) as? XmlFile
+                    .createFileFromText(filePath.name, XMLLanguage.INSTANCE, content) as? XmlFile
             } catch (e: Exception) {
                 null
             }

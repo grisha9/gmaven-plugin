@@ -13,7 +13,6 @@ class MavenProjectSettings : ExternalProjectSettings() {
     var resolveModulePerSourceSet = true
     var nonRecursive  = false
     var showPluginNodes = true
-    var incrementalSync = false
     var snapshotUpdateType = SnapshotUpdateType.DEFAULT
     var outputLevel = OutputLevelType.DEFAULT
     var threadCount: String? = null
@@ -37,7 +36,6 @@ class MavenProjectSettings : ExternalProjectSettings() {
         result.arguments = arguments
         result.argumentsImport = argumentsImport
         result.localRepositoryPath = localRepositoryPath
-        result.incrementalSync = incrementalSync
         return result
     }
 }

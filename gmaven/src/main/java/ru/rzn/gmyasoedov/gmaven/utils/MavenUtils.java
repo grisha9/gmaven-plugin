@@ -71,6 +71,16 @@ public class MavenUtils {
     private MavenUtils() {
     }
 
+    @Nullable
+    public static Path toNioPathOrNull(@Nullable VirtualFile file) {
+        if (file == null) return null;
+        try {
+            return file.toNioPath();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     @NotNull
     public static VirtualFile getVFile(File file) {
         VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByIoFile(file);

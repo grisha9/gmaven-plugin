@@ -17,7 +17,9 @@ repositories {
 dependencies {
     implementation(project(":server-api"))
     runtimeOnly(project(":maven-ext-event-handler"))
-    runtimeOnly("io.github.grisha9:maven-model-reader-plugin:0.4")
+    runtimeOnly("io.github.grisha9:maven-model-reader-plugin:0.4") {
+        exclude("com.google.code.gson", "gson")
+    }
 }
 
 // Configure Gradle IntelliJ Plugin

@@ -161,10 +161,6 @@ private fun setupImportParamsFromSettings(request: GServerRequest, commandLine: 
     request.settings.argumentsImport?.forEach { commandLine.addParameter(it) }
     val importTaskName = "$PLUGIN_BASE_NAME:" + (if (request.readOnly) "read" else "resolve")
     commandLine.addParameter(importTaskName)
-    if (request.settings.executionWorkspace.incrementalProjectName != null) {
-        commandLine.parametersList.addProperty("incremental", "true")
-        commandLine.addParameters("-pl", request.settings.executionWorkspace.incrementalProjectName, "-am", "-amd")
-    }
 }
 
 private fun runMavenImport(
@@ -201,7 +197,7 @@ private fun runMavenImportInner(
     } finally {
         if (processSupport.exitCode != 0) {
             FileUtil.delete(resultFilePath)
-        } else if (!request.settings.isIncrementalSync && Registry.`is`("gmaven.process.remove.result.file")) {
+        } else if (Registry.`is`("gmaven.process.remove.result.file")) {
             if (!resultFilePath.parent.name.equals("target", true)) FileUtil.delete(resultFilePath)
         }
     }

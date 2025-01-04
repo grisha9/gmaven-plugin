@@ -1,12 +1,13 @@
 package ru.rzn.gmyasoedov.gmaven.wizard
 
-import com.intellij.ide.projectWizard.generators.AssetsJavaNewProjectWizardStep
+import com.intellij.ide.projectWizard.generators.AssetsNewProjectWizardStep
 import com.intellij.ide.projectWizard.generators.BuildSystemJavaNewProjectWizard
 import com.intellij.ide.projectWizard.generators.BuildSystemJavaNewProjectWizardData
 import com.intellij.ide.projectWizard.generators.JavaNewProjectWizard
 import com.intellij.ide.starters.local.StandardAssetsProvider
-import com.intellij.ide.wizard.NewProjectWizardChainStep.Companion.nextStep
-import com.intellij.ide.wizard.NewProjectWizardStep
+import com.intellij.ide.wizard.NewProjectWizardBaseData.Companion.name
+import com.intellij.ide.wizard.NewProjectWizardBaseData.Companion.path
+import com.intellij.ide.wizard.chain
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder
@@ -20,6 +21,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.projectImport.ProjectOpenProcessor
 import com.intellij.ui.UIBundle
 import com.intellij.ui.dsl.builder.Panel
+import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.bindSelected
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.GMAVEN
@@ -31,55 +33,27 @@ class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
 
     override val name = GMAVEN
 
-    override val ordinal = 110
-
-    override fun createStep(parent: JavaNewProjectWizard.Step): NewProjectWizardStep =
-        Step(parent).nextStep(::AssetsStep)
+    override fun createStep(parent: JavaNewProjectWizard.Step) = Step(parent).chain(::AssetsStep)
 
     class Step(parent: JavaNewProjectWizard.Step) :
         GMavenNewProjectWizardStep<JavaNewProjectWizard.Step>(parent),
-        BuildSystemJavaNewProjectWizardData by parent,
-        JavaNewProjectWizardData {
+        BuildSystemJavaNewProjectWizardData by parent {
 
-        override val addSampleCodeProperty = propertyGraph.property(true)
-            .bindBooleanStorage(NewProjectWizardStep.ADD_SAMPLE_CODE_PROPERTY_NAME)
-        override val generateOnboardingTipsProperty = propertyGraph
-            .property(AssetsJavaNewProjectWizardStep.proposeToGenerateOnboardingTipsByDefault())
-            .bindBooleanStorage(NewProjectWizardStep.GENERATE_ONBOARDING_TIPS_NAME)
+        private val addSampleCodeProperty = propertyGraph.property(true)
+            .bindBooleanStorage("NewProjectWizard.addSampleCodeState")
 
-        override var addSampleCode by addSampleCodeProperty
-        override var generateOnboardingTips by generateOnboardingTipsProperty
+        var addSampleCode by addSampleCodeProperty
 
-        private fun setupSampleCodeUI(builder: Panel) {
+        override fun setupSettingsUI(builder: Panel) {
+            super.setupSettingsUI(builder)
             builder.row {
                 checkBox(UIBundle.message("label.project.wizard.new.project.add.sample.code"))
                     .bindSelected(addSampleCodeProperty)
-            }
-        }
-
-        private fun setupSampleCodeWithOnBoardingTipsUI(builder: Panel) {
-            builder.indent {
-                row {
-                    checkBox(UIBundle.message("label.project.wizard.new.project.generate.onboarding.tips"))
-                        .bindSelected(generateOnboardingTipsProperty)
-                }
-            }.enabledIf(addSampleCodeProperty)
-        }
-
-        override fun setupSettingsUI(builder: Panel) {
-            parentData?.let { this.groupId = it.groupId }
-            setupJavaSdkUI(builder)
-            setupParentsUI(builder)
-            setupSampleCodeUI(builder)
-            setupSampleCodeWithOnBoardingTipsUI(builder)
-        }
-
-        override fun setupAdvancedSettingsUI(builder: Panel) {
-            setupGroupIdUI(builder)
-            setupArtifactIdUI(builder)
+            }.topGap(TopGap.SMALL)
         }
 
         override fun setupProject(project: Project) {
+            super.setupProject(project)
             project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, true)
             project.putUserData(ExternalSystemDataKeys.NEWLY_IMPORTED_PROJECT, true)
             ExternalProjectsManagerImpl.setupCreatedProject(project)
@@ -117,27 +91,16 @@ class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
                 }
             }
         }
-
-        init {
-            data.putUserData(JavaNewProjectWizardData.KEY, this)
-        }
     }
 
-    private class AssetsStep(private val parent: Step) : AssetsJavaNewProjectWizardStep(parent) {
-
+    private class AssetsStep(private val parent: Step) : AssetsNewProjectWizardStep(parent) {
         override fun setupAssets(project: Project) {
+            outputDirectory = Path.of(path, name).toString()
             if (context.isCreatingNewProject) {
                 addAssets(StandardAssetsProvider().getMavenIgnoreAssets())
             }
             if (parent.addSampleCode) {
-                withJavaSampleCodeAsset("src/main/java", parent.groupId, parent.generateOnboardingTips)
-            }
-        }
-
-        override fun setupProject(project: Project) {
-            super.setupProject(project)
-            if (parent.generateOnboardingTips) {
-                prepareTipsInEditor(project)
+                withJavaSampleCodeAsset(Path.of("src", "main", "java").toString(), parent.groupId)
             }
         }
     }

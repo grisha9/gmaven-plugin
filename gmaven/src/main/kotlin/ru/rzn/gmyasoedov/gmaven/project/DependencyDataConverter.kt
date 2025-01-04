@@ -151,7 +151,7 @@ private fun linkProjectLibrary(
 
     val libraryData = cache.computeIfAbsent(libraryName) {
         var newValueToCache = ExternalSystemApiUtil
-            .findChild(ideProject, ProjectKeys.LIBRARY) { it.data.externalName == libraryName }
+            .find(ideProject, ProjectKeys.LIBRARY) { it.data.externalName == libraryName }
         if (newValueToCache == null) {
             newValueToCache = ideProject.createChild(ProjectKeys.LIBRARY, library)
         }

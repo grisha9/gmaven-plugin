@@ -3,7 +3,6 @@ package ru.rzn.gmyasoedov.gmaven.dom.reference
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
@@ -14,6 +13,7 @@ import com.intellij.psi.xml.XmlTag
 import ru.rzn.gmyasoedov.gmaven.dom.XmlPsiUtil
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.gmaven.utils.MavenArtifactUtil
+import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import java.nio.file.Path
 import java.util.*
 
@@ -85,7 +85,7 @@ class MavenPropertyPsiReference(
         }
 
         if (propertyName == MULTIPROJECT_DIR_PROP) {
-            val dirPath = xmlFile.parent?.virtualFile?.toNioPathOrNull()?.toString() ?: return null
+            val dirPath = MavenUtils.toNioPathOrNull(xmlFile.parent?.virtualFile)?.toString() ?: return null
             val setting = MavenSettings.getInstance(element.project)
                 .getLinkedProjectSettings(dirPath) ?: return null
             val virtualFile = LocalFileSystem.getInstance().findFileByPath(setting.externalProjectPath) ?: return null
