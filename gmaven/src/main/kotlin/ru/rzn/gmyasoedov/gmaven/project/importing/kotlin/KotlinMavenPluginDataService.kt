@@ -46,7 +46,7 @@ class KotlinMavenPluginDataService : AbstractProjectDataService<KotlinMavenPlugi
             kotlinFacet.configureFacet(compilerVersion, defaultPlatform, modifiableModelsProvider)
 
             val sharedArguments = getCompilerArgumentsByConfigurationElement(kotlinData, defaultPlatform)
-            parseCompilerArgumentsToFacet(sharedArguments, kotlinFacet, modifiableModelsProvider)
+            parseCompilerArgumentsToFacet(sharedArguments, emptyList(), kotlinFacet, modifiableModelsProvider)
 
             NoArgMavenProjectImportHandler.invoke(kotlinFacet, kotlinData)
             AllOpenMavenProjectImportHandler.invoke(kotlinFacet, kotlinData)
