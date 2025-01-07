@@ -1,5 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven.wizard;
 
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -24,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants;
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle;
+import ru.rzn.gmyasoedov.gmaven.util.GMavenNotification;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenLog;
 import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils;
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.MavenId;
@@ -109,7 +111,8 @@ public class GMavenModuleBuilderHelper {
         try {
             MavenUtils.setupFileTemplate(project, buildScriptFile, properties);
         } catch (IOException e) {
-            showError(project, e);
+            String title = GBundle.message("notification.title.failed.to.create.maven.project");
+            GMavenNotification.INSTANCE.createNotification(title, e.getMessage(), NotificationType.ERROR, List.of());
         }
 
         updateProjectPom(project, buildScriptFile);
@@ -188,10 +191,6 @@ public class GMavenModuleBuilderHelper {
 
     private static PsiFile getPsiFile(Project project, VirtualFile pom) {
         return PsiManager.getInstance(project).findFile(pom);
-    }
-
-    private static void showError(Project project, Throwable e) {
-        MavenUtils.showError(project, GBundle.message("notification.title.failed.to.create.maven.project"), e);
     }
 
     private Properties getTemplateProperties(@NotNull VirtualFile file, @Nullable Sdk sdk

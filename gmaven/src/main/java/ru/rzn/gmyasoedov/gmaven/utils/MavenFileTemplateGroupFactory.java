@@ -12,7 +12,9 @@ public class MavenFileTemplateGroupFactory implements FileTemplateGroupDescripto
 
   @Override
   public FileTemplateGroupDescriptor getFileTemplatesDescriptor() {
-    FileTemplateGroupDescriptor group = new FileTemplateGroupDescriptor(GMavenConstants.GMAVEN, MavenProject);
+    FileTemplateGroupDescriptor group = new FileTemplateGroupDescriptor(
+            GMavenConstants.SYSTEM_ID.getReadableName(), MavenProject
+    );
     group.addTemplate(new FileTemplateDescriptor(MAVEN_PROJECT_XML_TEMPLATE, MavenProject));
     return group;
   }
