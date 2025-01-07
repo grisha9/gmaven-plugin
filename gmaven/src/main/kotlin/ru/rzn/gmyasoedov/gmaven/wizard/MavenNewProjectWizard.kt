@@ -22,14 +22,13 @@ import com.intellij.ui.UIBundle
 import com.intellij.ui.dsl.builder.Panel
 import com.intellij.ui.dsl.builder.bindSelected
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
-import ru.rzn.gmyasoedov.gmaven.GMavenConstants.GMAVEN
 import ru.rzn.gmyasoedov.gmaven.settings.MavenSettings
 import ru.rzn.gmyasoedov.maven.plugin.reader.model.SimpleMavenId
 import java.nio.file.Path
 
 class MavenNewProjectWizard : BuildSystemJavaNewProjectWizard {
 
-    override val name = GMAVEN
+    override val name = GMavenConstants.SYSTEM_ID.readableName
 
     override val ordinal = 110
 

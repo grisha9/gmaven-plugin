@@ -1,7 +1,6 @@
 package ru.rzn.gmyasoedov.gmaven;
 
 import com.intellij.openapi.externalSystem.model.ProjectSystemId;
-import com.intellij.openapi.util.NlsSafe;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,9 +17,6 @@ public final class GMavenConstants {
     private static final String BUNDLED_DISTRIBUTION_URL =
             "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/%s/apache-maven-%s-bin.zip";
 
-    @NotNull
-    @NlsSafe
-    public static final String GMAVEN = "GMaven";
     public static final String POM_XML = "pom.xml";
     public static final String SUPER_POM_PREFIX = "pom-4.";
     public static final String PROFILES_XML = "profiles.xml";
@@ -58,7 +54,7 @@ public final class GMavenConstants {
 
     @NotNull
     @NonNls
-    public static final ProjectSystemId SYSTEM_ID = new ProjectSystemId(GMAVEN.toUpperCase(), GMAVEN);
+    public static final ProjectSystemId SYSTEM_ID = new ProjectSystemId("GMAVEN", "Easy Maven");
 
     public static final int BUILTIN_TASKS_DATA_NODE_ORDER = 10;
     public static final int BUILTIN_DEPENDENCIES_DATA_NODE_ORDER = 20;
