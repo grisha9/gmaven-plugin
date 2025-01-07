@@ -5,7 +5,7 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
-    <name>Gmaven</name>
+    <name>Easy Maven</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="grisha0909@gmail.com">Grigoriy.Myasoedov</vendor>
@@ -99,7 +99,7 @@
 
         <stepsBeforeRunProvider implementation="ru.rzn.gmyasoedov.gmaven.project.task.GMavenBeforeRunTaskProvider"/>
 
-        <toolWindow id="GMaven" anchor="right" icon="GMavenIcons.ToolWindowMaven"
+        <toolWindow id="Easy Maven" anchor="right" icon="GMavenIcons.ToolWindowMaven"
                     factoryClass="ru.rzn.gmyasoedov.gmaven.ui.MavenToolWindowFactory"/>
         <consoleFilterProvider implementation="ru.rzn.gmyasoedov.gmaven.project.filter.MavenConsoleFilterProvider"
                                order="first"/>
@@ -142,7 +142,7 @@
                      description="Maven dependency tree for whole project - take extra time but more stable"/>
         <registryKey key="gmaven.process.remove.result.file" defaultValue="true" description="Remove result json file"/>
         <registryKey key="gmaven.import.readonly" defaultValue="false" description="Read only project import. Without download dependencies"/>
-        <notificationGroup id="GMaven" displayType="BALLOON"/>
+        <notificationGroup id="Easy Maven" displayType="BALLOON"/>
 
         <fileTypeOverrider implementation="ru.rzn.gmyasoedov.gmaven.dom.PomFileTypeOverrider" order="first"/>
         <completion.contributor language="XML" order="first"
