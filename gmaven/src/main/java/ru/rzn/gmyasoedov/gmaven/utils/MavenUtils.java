@@ -8,9 +8,6 @@ import com.intellij.ide.fileTemplates.FileTemplate;
 import com.intellij.ide.fileTemplates.FileTemplateManager;
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.ide.plugins.PluginManagerCore;
-import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationType;
-import com.intellij.notification.Notifications;
 import com.intellij.openapi.extensions.PluginDescriptor;
 import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.externalSystem.model.project.ModuleData;
@@ -24,7 +21,6 @@ import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkType;
 import com.intellij.openapi.roots.ProjectRootManager;
-import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtilRt;
@@ -170,13 +166,6 @@ public class MavenUtils {
             if (isSimplePomFile(name)) return true;
             return isPotentialPomFile(name);
         }
-    }
-
-    public static void showError(Project project, @NlsContexts.NotificationTitle String title, Throwable e) {
-        MavenLog.LOG.warn(title, e);
-        Notifications.Bus.notify(new Notification(
-                GMavenConstants.GMAVEN, title, e.getMessage(), NotificationType.ERROR), project
-        );
     }
 
     @Nullable
