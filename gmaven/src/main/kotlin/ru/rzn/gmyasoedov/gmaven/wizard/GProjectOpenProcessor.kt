@@ -23,7 +23,7 @@ internal class GProjectOpenProcessor : ProjectOpenProcessor() {
         }
     }
 
-    override val name = GMavenConstants.GMAVEN
+    override val name = GMavenConstants.SYSTEM_ID.readableName
 
     override val icon = GMavenIcons.MavenProject
 

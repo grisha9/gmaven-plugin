@@ -18,7 +18,7 @@ import java.nio.file.Path
 import javax.swing.Icon
 
 internal class LinkMavenProjectImportBuilder : ProjectImportBuilder<Any>() {
-    override fun getName(): String = GMavenConstants.GMAVEN
+    override fun getName(): String = GMavenConstants.SYSTEM_ID.readableName
 
     override fun getIcon(): Icon = GMavenIcons.MavenProject
 
