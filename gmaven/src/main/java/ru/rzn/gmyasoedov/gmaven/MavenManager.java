@@ -34,7 +34,6 @@ import icons.GMavenIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rzn.gmyasoedov.gmaven.bundle.GBundle;
-import ru.rzn.gmyasoedov.gmaven.chooser.MavenPomFileChooserDescriptor;
 import ru.rzn.gmyasoedov.gmaven.project.GMavenAutoImportAware;
 import ru.rzn.gmyasoedov.gmaven.project.MavenProjectResolver;
 import ru.rzn.gmyasoedov.gmaven.project.task.MavenTaskManager;
@@ -167,7 +166,7 @@ public final class MavenManager
     @NotNull
     @Override
     public FileChooserDescriptor getExternalProjectDescriptor() {
-        return new MavenPomFileChooserDescriptor();
+        return FileChooserDescriptorFactory.createSingleFileOrFolderDescriptor();
     }
 
     @Nullable
