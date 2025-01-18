@@ -21,14 +21,16 @@ import ru.rzn.gmyasoedov.gmaven.bundle.GBundle
 
 class RunSimplePomTaskAction :
     ExternalSystemNodeAction<AbstractExternalEntityData>(AbstractExternalEntityData::class.java), DumbAware {
-    private val delegateAction = Executor.EXECUTOR_EXTENSION_NAME
-        .findExtension(DefaultRunExecutor::class.java)
-        ?.let { RunContextAction(it) }
+    private val delegateAction: RunContextAction?
 
     init {
         templatePresentation.icon = AllIcons.Actions.Execute
         templatePresentation.text = GBundle.message("gmaven.action.task.single.pom", "")
-        templatePresentation.setDescription(GBundle.message("gmaven.action.task.single.pom.description"))
+        templatePresentation.description = GBundle.message("gmaven.action.task.single.pom.description")
+
+        delegateAction = Executor.EXECUTOR_EXTENSION_NAME
+            .findExtension(DefaultRunExecutor::class.java)
+            ?.let { RunContextAction(it) }
     }
 
     override fun isEnabled(e: AnActionEvent): Boolean {
@@ -59,7 +61,8 @@ class RunSimplePomTaskAction :
         externalData: AbstractExternalEntityData,
         e: AnActionEvent
     ) {
-        delegateAction?.actionPerformed(e)
+        delegateAction ?: return
+        delegateAction::class.members.firstOrNull { it.name == "actionPerformed" }?.call(delegateAction, e)
     }
 
     private fun getModuleName(taskNode: ExternalSystemNode<*>): String? {
