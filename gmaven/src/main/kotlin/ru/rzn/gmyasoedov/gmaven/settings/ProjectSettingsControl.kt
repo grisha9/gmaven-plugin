@@ -53,8 +53,8 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
     private val showPluginNodesBind = propertyGraph.property(false)
     private val incrementalSyncBind = propertyGraph.property(false)
 
-    private val updateSnapshotsModel = CollectionComboBoxModel(SnapshotUpdateType.values().toList())
-    private val outputLevelModel = CollectionComboBoxModel(OutputLevelType.values().toList())
+    private val updateSnapshotsModel = CollectionComboBoxModel(SnapshotUpdateType.entries)
+    private val outputLevelModel = CollectionComboBoxModel(OutputLevelType.entries)
 
     private val threadCountBind = propertyGraph.property("")
     private val vmOptionsBind = propertyGraph.property("")
