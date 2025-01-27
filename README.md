@@ -4,10 +4,12 @@ GMaven
 The lightweight Maven plugin that gets the project model through maven task execution.
 This provides greater simplicity and original build tool behavior in obtaining project data.
 
-### IntelliJ Plugin - https://plugins.jetbrains.com/plugin/22370-gmaven
-### Plugin wiki page - https://github.com/grisha9/gmaven-plugin/wiki 
+### IntelliJ Plugin [page](https://plugins.jetbrains.com/plugin/22370-gmaven)
 
-#### Articles about GMaven: 
+### Plugin [wiki](https://github.com/grisha9/gmaven-plugin/wiki)
+
+#### Articles about Easy Maven (GMaven - old name):
+
 - [dev.to](https://dev.to/grisha9/my-intellij-idea-plugin-for-maven-support-gmaven-cn9);
 - [habr.com](https://habr.com/ru/articles/753828/) (Russian);
 
@@ -26,15 +28,7 @@ The plugin adds support for the Maven for Java language projects:
 ### Prerequisites
 
 1. IntelliJ IDEA 2021.3+
-2. JDK 11+
 3. Maven 3.3.1+
-
-
-### General information
-
-- For open existing project structure - select GMaven plugin on the dialog box after selecting the project
-- For creating new project select GMaven on build system tab on New Project Wizard
-
 
 ### Setup
 
