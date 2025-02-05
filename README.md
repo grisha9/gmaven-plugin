@@ -1,5 +1,7 @@
-GMaven
+Easy Maven
 ==================
+
+#### (Old name: Gmaven)
 
 The lightweight Maven plugin that gets the project model through maven task execution.
 This provides greater simplicity and original build tool behavior in obtaining project data.
@@ -19,6 +21,7 @@ This provides greater simplicity and original build tool behavior in obtaining p
 The plugin adds support for the Maven for Java language projects:
  - Import project structure to IDE
  - Original Maven behavior for getting project model
+- Maven 4
  - Execution Maven tasks 
  - Support separate modules for production and test roots
  - Groovy support
@@ -29,11 +32,6 @@ The plugin adds support for the Maven for Java language projects:
 
 1. IntelliJ IDEA 2021.3+
 3. Maven 3.3.1+
-
-### Setup
-
-- For manual build run the command: gradlew clean build
-- And then get distribution from: gmaven-plugin/gmaven/build/distributions
 
 
 ### Issues
