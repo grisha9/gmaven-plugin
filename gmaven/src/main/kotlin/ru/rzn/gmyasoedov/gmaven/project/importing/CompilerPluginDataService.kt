@@ -143,8 +143,8 @@ class CompilerPluginDataService : AbstractProjectDataService<CompilerPluginData,
         return find ?: newProfile.also { addModuleProcessorProfile(it) }
     }
 
-    private fun createProcessorConfigProfile(compilerPluginData: CompilerPluginData): ProcessorConfigProfileImpl {
-        val newProfile = ProcessorConfigProfileImpl(IMPORTED_PROFILE_NAME)
+    private fun createProcessorConfigProfile(compilerPluginData: CompilerPluginData): ProcessorConfigProfile {
+        val newProfile: ProcessorConfigProfile = ProcessorConfigProfileImpl(IMPORTED_PROFILE_NAME)
         newProfile.setProcessorPath(compilerPluginData.path.joinToString(separator = File.pathSeparator))
         return newProfile
     }
