@@ -2,11 +2,13 @@
 
 ## [Unreleased]
 
-## [242.5.1] - 2025-01-17
+## [242.6] - 2025-02-08
 
 ### Added
 
+- Rename to Easy Maven ([issue](https://github.com/grisha9/gmaven-plugin/issues/10))
 - Support 2025.1 eap
+- Support [MCOMPILER-391](https://issues.apache.org/jira/browse/MCOMPILER-391)
 
 ## [242.5] - 2024-11-23
 ### Added
