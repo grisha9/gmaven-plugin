@@ -70,8 +70,7 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
         project: Project,
         externalProjectPath: String
     ): ImportSpecBuilder {
-        return if (!Registry.`is`("gmaven.fast.open.project")
-            || ApplicationManager.getApplication().isHeadlessEnvironment
+        return if (ApplicationManager.getApplication().isHeadlessEnvironment
             || ApplicationManager.getApplication().isUnitTestMode
         ) {
             ImportSpecBuilder(project, SYSTEM_ID).callback(createFinalImportCallback(project, externalProjectPath))

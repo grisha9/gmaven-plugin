@@ -46,7 +46,7 @@ fun getProjectModel(
     if (mavenResult.pluginNotResolved) {
         throw ExternalSystemException(
             GBundle.message(
-                "gmaven.model.reader.plugin.not.found", PLUGIN_GROUP_ID, PLUGIN_ARTIFACT_ID, PLUGIN_VERSION
+                "gmaven.model.reader.plugin.not.found", PLUGIN_GROUP_ID, PLUGIN_ARTIFACT_ID, getVersion()
             )
         )
     }
@@ -159,7 +159,7 @@ private fun setupBaseParamsFromSettings(request: GServerRequest, commandLine: Ge
 private fun setupImportParamsFromSettings(request: GServerRequest, commandLine: GeneralCommandLine) {
     setupBaseParamsFromSettings(request, commandLine)
     request.settings.argumentsImport?.forEach { commandLine.addParameter(it) }
-    val importTaskName = "$PLUGIN_BASE_NAME:" + (if (request.readOnly) "read" else "resolve")
+    val importTaskName = "${getModelReaderPluginGAV()}:" + (if (request.readOnly) "read" else "resolve")
     commandLine.addParameter(importTaskName)
 }
 

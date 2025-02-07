@@ -21,6 +21,8 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.openapi.ui.emptyText
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.util.registry.Registry
+import com.intellij.openapi.util.registry.Registry.stringValue
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.ui.CollectionComboBoxModel
 import com.intellij.ui.ScrollPaneFactory
@@ -63,6 +65,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
     private val distributionTypeModel = CollectionComboBoxModel(mutableListOf<String>())
     private val mavenUrlBind = propertyGraph.property("")
     private val mavenCustomPathBind = propertyGraph.property("")
+    private val modelReaderVersionBind = propertyGraph.property("")
 
     private val distributionTypeMap = mutableMapOf<String, DistributionSettings>()
     private val mavenPathVisible = AtomicBooleanProperty(false)
@@ -186,8 +189,16 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
                         }
                 }.visibleIf(mavenPathVisible.not())
 
-                row(" ") { }
-                row(" ") { }
+                row(message("gmaven.settings.project.maven.plugin.version")) {
+                    textField()
+                        .align(AlignX.FILL)
+                        .bindText(modelReaderVersionBind)
+                        .resizableColumn()
+                        .comment(message("gmaven.settings.project.maven.plugin.version.tooltip"))
+                }
+
+                row("-") { }
+                row("-") { }
             }
         }
 
@@ -256,6 +267,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
         vmOptionsBind.set(currentSettings.vmOptions ?: "")
         additionalArgsBind.set(currentSettings.arguments ?: "")
         importArgsBind.set(currentSettings.argumentsImport ?: "")
+        modelReaderVersionBind.set(stringValue("gmaven.model.plugin.version"))
 
         setSelectedJdk(jdkComboBox, currentSettings.jdkName)
 
@@ -283,6 +295,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
         if (isNotEqualSettings(currentSettings.vmOptions, vmOptionsBind.get())) return true
         if (isNotEqualSettings(currentSettings.arguments, additionalArgsBind.get())) return true
         if (isNotEqualSettings(currentSettings.argumentsImport, importArgsBind.get())) return true
+        if (isNotEqualSettings(stringValue("gmaven.model.plugin.version"), modelReaderVersionBind.get())) return true
 
         val jdkNameBindSetting = jdkComboBox?.let { getJdkName(it.selectedItem) } ?: ""
         if (isNotEqualSettings(currentSettings.jdkName, jdkNameBindSetting)) return true
@@ -309,6 +322,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
         settings.vmOptions = vmOptionsBind.get()
         settings.arguments = additionalArgsBind.get()
         settings.argumentsImport = importArgsBind.get()
+        Registry.get("gmaven.model.plugin.version").setValue(modelReaderVersionBind.get())
 
         settings.jdkName = jdkComboBox?.let { getJdkName(it.selectedItem) }
         settings.distributionSettings = getDistributionSettings()
