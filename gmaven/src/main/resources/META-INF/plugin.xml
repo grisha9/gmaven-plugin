@@ -118,8 +118,8 @@
         <registryKey key="gmaven.gutter.annotation" defaultValue="true"
                      description="Disable/Enable gutter icon for navigation"/>
         <registryKey key="gmaven.show.full.log" defaultValue="false" description="Show full log"/>
-        <registryKey key="gmaven.fast.open.project" defaultValue="true"
-                     description="Fast open project"/>
+        <registryKey key="gmaven.model.plugin.version" defaultValue="0.5"
+                     description="Version of: io.github.grisha9:maven-model-reader-plugin"/>
         <registryKey key="gmaven.search.artifact.maven.central" defaultValue="true"
                      description="Search artifacts in maven central"/>
         <registryKey key="gmaven.show.all.errors" defaultValue="false"
