@@ -32,7 +32,6 @@ public final class GMavenConstants {
     public static final String MODULE_PROP_PARENT_GA = "parentGA";
     public static final String MODULE_PROP_LOCAL_REPO = "localRepo";
     public static final String MODULE_PROP_HAS_DEPENDENCIES = "hasDependencies";
-    public static final String APECTJ_COMPILER_LIB = "org.aspectj:aspectjtools";
 
     @NotNull
     @NonNls
@@ -46,11 +45,10 @@ public final class GMavenConstants {
     public static final String TASK_EFFECTIVE_POM = "help:effective-pom";
     public static final String PLUGIN_GROUP_ID = "io.github.grisha9";
     public static final String PLUGIN_ARTIFACT_ID = "maven-model-reader-plugin";
-    public static final String PLUGIN_VERSION = "0.4";
-    public static final String PLUGIN_BASE_NAME = PLUGIN_GROUP_ID + ":" + PLUGIN_ARTIFACT_ID + ":" + PLUGIN_VERSION;
-    public static final String TASK_DEPENDENCY_TREE = PLUGIN_BASE_NAME + ":tree";
+    public static final String TASK_DEPENDENCY_TREE = getModelReaderPluginGAV() + ":tree";
     public static final String DEPENDENCY_TREE_EVENT_SPY_CLASS = "ru.rzn.gmyasoedov.event.spy.GMavenEventSpyConstants";
-    public static final String GMAVEN_PLUGIN_CLASS = "ru.rzn.gmyasoedov.maven.plugin.reader.util.ObjectUtils";
+
+    private static final String PLUGIN_VERSION = "0.5";
 
     @NotNull
     @NonNls
@@ -69,5 +67,16 @@ public final class GMavenConstants {
     public static String getBundledDistributionUrl() {
         String version = requireNonNullElse(stringValue("gmaven.bundled.wrapper.version"), BUNDLED_MAVEN_VERSION);
         return format(BUNDLED_DISTRIBUTION_URL, version, version);
+    }
+
+    public static String getModelReaderPluginGAV() {
+        String version = getVersion();
+        return PLUGIN_GROUP_ID + ":" + PLUGIN_ARTIFACT_ID + ":" + version;
+    }
+
+    public static @NotNull String getVersion() {
+        String version = stringValue("gmaven.model.plugin.version");
+        version = !version.isBlank() ? version : PLUGIN_VERSION;
+        return version;
     }
 }
