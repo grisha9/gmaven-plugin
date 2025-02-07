@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [232.33] - 2025-02-08
+
+### Added
+
+- Support [MCOMPILER-391](https://issues.apache.org/jira/browse/MCOMPILER-391)
+
 ## [232.32] - 2025-01-07
 ### Added
 
