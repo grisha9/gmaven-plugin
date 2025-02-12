@@ -31,7 +31,9 @@ The plugin adds support for the Maven for Java language projects:
 ### Prerequisites
 
 1. IntelliJ IDEA 2021.3+
-3. Maven 3.3.1+
+2. Maven 3.3.1+
+3. Access to [Maven Central](https://mvnrepository.com/artifact/io.github.grisha9/maven-model-reader-plugin)
+   for [model-reader-plugin](https://github.com/grisha9/maven-model-reader)
 
 
 ### Issues
