@@ -46,7 +46,7 @@ intellijPlatform {
 
     pluginConfiguration {
         id = "ru.rzn.gmyasoedov.gmaven"
-        name = "gmaven"
+        name = "Easy Maven"
         version = providers.gradleProperty("pluginVersion").get()
 
         ideaVersion {
