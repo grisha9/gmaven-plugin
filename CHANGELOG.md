@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [242.7] - 2025-02-13
+
+### Fix
+
+- Rename to Easy Maven ([issue](https://github.com/grisha9/gmaven-plugin/issues/10))
+
 ## [242.6] - 2025-02-08
 
 ### Added
