@@ -4,7 +4,6 @@ import com.intellij.compiler.CompilerConfiguration
 import com.intellij.compiler.CompilerConfigurationImpl
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.pom.java.LanguageLevel
-import junit.framework.TestCase
 import ru.rzn.gmyasoedov.gmaven.MavenImportingTestCase
 
 class MavenCompilerPluginTest : MavenImportingTestCase() {
@@ -44,7 +43,7 @@ class MavenCompilerPluginTest : MavenImportingTestCase() {
             compilerConfiguration.getAdditionalOptions(getModule("project")),
             "--enable-preview"
         )
-        TestCase.assertTrue(getLanguageLevel().isPreview)
+        assertTrue(getLanguageLevel().isPreview)
     }
 
     fun testCompilerArgs() {
@@ -85,7 +84,7 @@ class MavenCompilerPluginTest : MavenImportingTestCase() {
             compilerConfiguration.getAdditionalOptions(getModule("project")),
             "--enable-preview", "-Xlint:unchecked"
         )
-        TestCase.assertTrue(getLanguageLevel().isPreview)
+        assertTrue(getLanguageLevel().isPreview)
     }
 
     fun testCompilerPluginConfigurationCompilerArguments() {
@@ -308,7 +307,7 @@ class MavenCompilerPluginTest : MavenImportingTestCase() {
         """
         )
         assertModules("project")
-        TestCase.assertEquals(LanguageLevel.JDK_11, getLanguageLevel())
+        assertEquals(LanguageLevel.JDK_11, getLanguageLevel())
     }
 
     fun testCompilerReleasePriorityProperty() {
@@ -340,7 +339,7 @@ class MavenCompilerPluginTest : MavenImportingTestCase() {
         """
         )
         assertModules("project")
-        TestCase.assertEquals(LanguageLevel.JDK_1_8, getLanguageLevel())
+        assertEquals(LanguageLevel.JDK_1_8, getLanguageLevel())
     }
 
     fun testCompilerSource() {
@@ -371,7 +370,7 @@ class MavenCompilerPluginTest : MavenImportingTestCase() {
         """
         )
         assertModules("project")
-        TestCase.assertEquals(LanguageLevel.JDK_12, getLanguageLevel())
+        assertEquals(LanguageLevel.JDK_12, getLanguageLevel())
     }
 
     fun testEnablePreviewOption() {
@@ -401,8 +400,8 @@ class MavenCompilerPluginTest : MavenImportingTestCase() {
         )
         assertModules("project")
         val compilerData = getCompilerData()
-        TestCase.assertTrue(compilerData.isNotEmpty())
-        TestCase.assertEquals(listOf(JavaParameters.JAVA_ENABLE_PREVIEW_PROPERTY), compilerData[0].arguments)
+        assertTrue(compilerData.isNotEmpty())
+        assertEquals(listOf(JavaParameters.JAVA_ENABLE_PREVIEW_PROPERTY), compilerData[0].arguments)
     }
 
     fun testEnablePreviewOptionFalse() {
@@ -432,8 +431,8 @@ class MavenCompilerPluginTest : MavenImportingTestCase() {
         )
         assertModules("project")
         val compilerData = getCompilerData()
-        TestCase.assertTrue(compilerData.isNotEmpty())
-        TestCase.assertTrue(compilerData[0].arguments.isEmpty())
+        assertTrue(compilerData.isNotEmpty())
+        assertTrue(compilerData[0].arguments.isEmpty())
     }
 
     fun testEnablePreviewOptionTrueProperty() {
@@ -451,7 +450,50 @@ class MavenCompilerPluginTest : MavenImportingTestCase() {
         )
         assertModules("project")
         val compilerData = getCompilerData()
-        TestCase.assertTrue(compilerData.isNotEmpty())
-        TestCase.assertEquals(listOf(JavaParameters.JAVA_ENABLE_PREVIEW_PROPERTY), compilerData[0].arguments)
+        assertTrue(compilerData.isNotEmpty())
+        assertEquals(listOf(JavaParameters.JAVA_ENABLE_PREVIEW_PROPERTY), compilerData[0].arguments)
+    }
+
+    fun testMavenCompilerAnnotationProcessorVersionFromdependencyManagement() {
+        val lombokVersion = "1.18.18"
+        val pomXml = """
+        <groupId>org.example</groupId>
+        <artifactId>project</artifactId>
+        <version>1.0-SNAPSHOT</version> 
+        
+        <dependencyManagement>
+            <dependencies>
+                <dependency>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok</artifactId>
+                    <version>${lombokVersion}</version>
+                </dependency>
+            </dependencies>
+        </dependencyManagement>
+    
+        <build>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.12.1</version>
+                    <configuration>
+                        <release>17</release>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId> 
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+            </plugins>
+            
+        </build>
+        """
+        import(pomXml)
+        val compilerData = getCompilerData()
+        assertTrue(compilerData.isNotEmpty())
+        assertTrue(compilerData[0].path.isNotEmpty())
+        assertTrue(compilerData[0].path.joinToString().contains(lombokVersion))
     }
 }
