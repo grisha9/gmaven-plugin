@@ -5,14 +5,13 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.roots.OrderEnumerationHandler
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 
-class MavenOrderEnumerationHandler : OrderEnumerationHandler() {
+object MavenOrderEnumerationHandler : OrderEnumerationHandler() {
 
-    class MavenOrderEnumerationFactory : Factory() {
-        override fun isApplicable(module: Module): Boolean {
-            return ExternalSystemApiUtil.isExternalSystemAwareModule(GMavenConstants.SYSTEM_ID, module)
-        }
+    open class Factory : OrderEnumerationHandler.Factory() {
+        override fun isApplicable(module: Module) = ExternalSystemApiUtil
+            .isExternalSystemAwareModule(GMavenConstants.SYSTEM_ID, module)
 
-        override fun createHandler(p0: Module) = MavenOrderEnumerationHandler()
+        override fun createHandler(module: Module) = MavenOrderEnumerationHandler
     }
 
     override fun shouldAddRuntimeDependenciesToTestCompilationClasspath() = true
