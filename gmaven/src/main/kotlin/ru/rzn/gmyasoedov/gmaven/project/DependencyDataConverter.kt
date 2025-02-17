@@ -105,12 +105,6 @@ private fun addLibrary(
     libraryDependencyData.scope = getScope(artifact)
     libraryDependencyData.order = 20 + getScopeOrder(libraryDependencyData.scope)
     parentNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyData)
-    if (libraryDependencyData.scope == DependencyScope.RUNTIME) {
-        val libraryDependencyDataTest = LibraryDependencyData(parentNode.data, createdLibrary, level)
-        libraryDependencyDataTest.scope = DependencyScope.TEST
-        libraryDependencyDataTest.order = 20 + getScopeOrder(libraryDependencyDataTest.scope)
-        parentNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDependencyDataTest)
-    }
 }
 
 private fun addLibrary(
