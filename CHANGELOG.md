@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [233.34.1] - 2025-02-17
+
+### Fixed
+
+- ignores dependency version override with provided scope [issue](https://github.com/grisha9/gmaven-plugin/issues/27)
+
 ## [233.34] - 2025-02-08
 
 ### Added
