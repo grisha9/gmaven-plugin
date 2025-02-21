@@ -41,8 +41,10 @@ class PomXmlCompletionTagListenerContributor : CompletionContributor() {
 
             val decorator: LookupElement = LookupElementDecorator.withInsertHandler(lookupElement) { context, _ ->
                 lookupElement.handleInsert(context)
-                val lookupObject = lookupElement.getObject()
-                if (lookupObject is XmlTag && "maven-4.0.0.xsd" == lookupObject.containingFile.name) {
+                val lookupObject = lookupElement.getObject() as? XmlTag ?: return@withInsertHandler
+                if (lookupObject.containingFile.name.contains("maven-4.")
+                    && lookupObject.containingFile.name.contains(".xsd")
+                ) {
                     context.commitDocument()
                     val caretModel = context.editor.caretModel
                     val psiElement =
