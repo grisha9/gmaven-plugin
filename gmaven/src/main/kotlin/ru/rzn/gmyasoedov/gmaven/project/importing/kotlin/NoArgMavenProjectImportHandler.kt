@@ -11,7 +11,10 @@ object NoArgMavenProjectImportHandler : AbstractMavenImportHandler() {
         "jpa" to listOf(
             "javax.persistence.Entity",
             "javax.persistence.Embeddable",
-            "javax.persistence.MappedSuperclass"
+            "javax.persistence.MappedSuperclass",
+            "jakarta.persistence.Entity",
+            "jakarta.persistence.Embeddable",
+            "jakarta.persistence.MappedSuperclass",
         )
     )
 
