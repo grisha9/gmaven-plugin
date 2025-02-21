@@ -166,7 +166,8 @@
                                   implementation="ru.rzn.gmyasoedov.gmaven.dom.MavenArtifactIdXmlPsiReferenceContributor"/>
         <psi.referenceContributor language="XML"
                                   implementation="ru.rzn.gmyasoedov.gmaven.dom.MavenPropertiesXmlPsiReferenceContributor"/>
-
+        <orderEnumerationHandlerFactory
+                implementation="ru.rzn.gmyasoedov.gmaven.execution.MavenOrderEnumerationHandler$Factory"/>
         <!--        <annotator language="XML" implementationClass="ru.rzn.gmyasoedov.gmaven.dom.annotator.MavenDomGutterAnnotator"/>
         <backspaceHandlerDelegate implementation="ru.rzn.gmyasoedov.gmaven.dom.code.MavenBackspaceHandlerDelegate"/>
         <typedHandler implementation="ru.rzn.gmyasoedov.gmaven.dom.code.MavenTypedHandlerDelegate"/>-->
