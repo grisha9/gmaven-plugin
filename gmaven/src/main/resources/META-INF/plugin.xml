@@ -122,10 +122,9 @@
         <registryKey key="gmaven.mvnd.path" defaultValue="mvnd"
                      description="Maven daemon integration. Path to mvnd. Default use symlink - mvnd"/>
         <registryKey key="gmaven.lifecycles"
-                     defaultValue="clean,validate,compile,test,package,install,dependency:tree"
+                     defaultValue="clean,validate,compile,test,package,install,compile dependency:tree"
                      description="Maven lifecycles(comma delimiter)"/>
-        <registryKey key="gmaven.subtask.args"
-                     defaultValue="-am,-amd"
+        <registryKey key="gmaven.subtask.args" defaultValue="-am"
                      description="Additional Maven args for sub-task(not root pom) execution(comma delimiter)"/>
         <registryKey key="gmaven.gutter.annotation" defaultValue="true"
                      description="Disable/Enable gutter icon for navigation"/>

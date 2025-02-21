@@ -1,6 +1,7 @@
 package ru.rzn.gmyasoedov.gmaven.execution
 
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.roots.OrderEnumerationHandler
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants
 
