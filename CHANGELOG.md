@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [223.33] - 2025-02-21
+
+### Fixes
+
+- Kotlin noarg support jakarta.* [Issue](https://github.com/grisha9/gmaven-plugin/issues/29)
+- Module dependency visibility [Issue](https://github.com/grisha9/gmaven-plugin/issues/27)
+
 ## [223.32] - 2025-02-08
 
 ### Added
