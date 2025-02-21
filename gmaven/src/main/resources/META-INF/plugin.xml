@@ -15,8 +15,8 @@
         <![CDATA[
         <h3>Fixed</h3>
         <ul>
-            <li>Split module - test scope</li>
-            <li>Gmaven run config setting (visible in Gradle)</li>
+            <li>Kotlin noarg support jakarta.* (<a href="https://github.com/grisha9/gmaven-plugin/issues/29" target="_blank" rel="nofollow">Issue</a>)</li>
+            <li>Module dependency visibility (<a href="https://github.com/grisha9/gmaven-plugin/issues/27" target="_blank" rel="nofollow">Issue</a>)</li>
         </ul>
     ]]>
     </change-notes>
