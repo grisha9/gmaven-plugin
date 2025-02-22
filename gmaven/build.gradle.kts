@@ -2,9 +2,9 @@ import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "1.9.24"
-    id("org.jetbrains.intellij.platform") version "2.0.1"
-    id("org.jetbrains.intellij.platform.migration") version "2.0.1"
+    id("org.jetbrains.kotlin.jvm") version "2.0.21"
+    id("org.jetbrains.intellij.platform") version "2.2.1"
+    id("org.jetbrains.intellij.platform.migration") version "2.2.1"
     id("org.jetbrains.changelog") version "2.1.0"
 }
 

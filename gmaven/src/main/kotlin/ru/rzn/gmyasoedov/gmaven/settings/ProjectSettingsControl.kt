@@ -22,7 +22,7 @@ import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.openapi.ui.emptyText
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.registry.Registry
-import com.intellij.openapi.util.registry.Registry.stringValue
+import com.intellij.openapi.util.registry.Registry.Companion.stringValue
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.ui.CollectionComboBoxModel
 import com.intellij.ui.ScrollPaneFactory
@@ -39,6 +39,7 @@ import ru.rzn.gmyasoedov.gmaven.utils.MavenUtils
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.Callable
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 
 class ProjectSettingsControl(private val project: Project, private val currentSettings: MavenProjectSettings) :
@@ -185,7 +186,7 @@ class ProjectSettingsControl(private val project: Project, private val currentSe
 
                 row {
                     textFieldWithBrowseButton(
-                        message("gmaven.settings.project.maven.dialog.title"), project, createSingleFolderDescriptor()
+                        createSingleFolderDescriptor(), project, { it.toNioPath().absolutePathString() }
                     )
                         .bindText(mavenCustomPathBind)
                         .align(AlignX.FILL)

@@ -36,7 +36,7 @@ internal class LinkMavenProjectImportBuilder : ProjectImportBuilder<Any>() {
 
     override fun setFileToImport(path: String) = super.setFileToImport(getPathToBeImported(path))
 
-    override fun createProject(name: String?, path: String): Project? {
+    override fun createProject(name: String, path: String): Project? {
         return setupCreatedProject(super.createProject(name, path))?.also {
             it.putUserData(ExternalSystemDataKeys.NEWLY_IMPORTED_PROJECT, true)
         }
