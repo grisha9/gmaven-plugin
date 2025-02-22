@@ -2,11 +2,12 @@
 
 ## [Unreleased]
 
-## [233.34.1] - 2025-02-17
+## [242.8] - 2025-02-21
 
-### Fixed
+### Fixes
 
-- ignores dependency version override with provided scope [issue](https://github.com/grisha9/gmaven-plugin/issues/27)
+- Kotlin noarg support jakarta.* [Issue](https://github.com/grisha9/gmaven-plugin/issues/29)
+- Module dependency visibility [Issue](https://github.com/grisha9/gmaven-plugin/issues/27)
 
 ## [233.34] - 2025-02-08
 
