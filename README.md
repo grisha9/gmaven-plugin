@@ -13,7 +13,8 @@ This provides greater simplicity and original build tool behavior in obtaining p
 #### Articles about Easy Maven (GMaven - old name):
 
 - [dev.to](https://dev.to/grisha9/my-intellij-idea-plugin-for-maven-support-gmaven-cn9);
-- [habr.com](https://habr.com/ru/articles/753828/) (Russian);
+- [habr1.com](https://habr.com/ru/articles/753828/) (Russian);
+- [habr2.com](https://habr.com/ru/articles/882778/) (Russian);
 
 
 ### Maven Plugin for IntelliJ IDEA
