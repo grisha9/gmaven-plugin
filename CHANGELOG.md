@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [232.35] - 2025-02-26
+
+### Fixes
+
+- attach sources [Issue](https://github.com/grisha9/gmaven-plugin/issues/31)
+
 ## [232.34] - 2025-02-21
 
 ### Fixes
