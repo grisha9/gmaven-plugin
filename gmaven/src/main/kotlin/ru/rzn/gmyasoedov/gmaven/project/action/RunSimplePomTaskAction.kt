@@ -59,7 +59,8 @@ class RunSimplePomTaskAction :
         externalData: AbstractExternalEntityData,
         e: AnActionEvent
     ) {
-        delegateAction?.actionPerformed(e)
+        delegateAction ?: return
+        delegateAction::class.members.firstOrNull { it.name == "actionPerformed" }?.call(delegateAction, e)
     }
 
     private fun getModuleName(taskNode: ExternalSystemNode<*>): String? {
