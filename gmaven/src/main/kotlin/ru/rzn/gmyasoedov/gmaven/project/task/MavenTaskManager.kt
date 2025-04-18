@@ -22,16 +22,12 @@ class MavenTaskManager : ExternalSystemTaskManager<MavenExecutionSettings> {
     private val cancellationMap = ConcurrentHashMap<ExternalSystemTaskId, OSProcessHandler>()
 
     override fun executeTasks(
-        id: ExternalSystemTaskId,
-        taskNames: MutableList<String>,
         projectPath: String,
-        settings: MavenExecutionSettings?,
-        jvmParametersSetup: String?,
+        id: ExternalSystemTaskId,
+        settings: MavenExecutionSettings,
         listener: ExternalSystemTaskNotificationListener
     ) {
-        settings ?: throw ExternalSystemException("settings is empty")
-
-        val tasks = getTasks(taskNames)
+        val tasks = getTasks(settings.tasks)
         val workspace = settings.executionWorkspace
         val projectBuildFile = workspace.projectBuildFile
             ?: throw ExternalSystemException("project build file is empty")
