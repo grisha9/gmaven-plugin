@@ -16,6 +16,6 @@ public class MavenTaskNode extends TaskNode {
     }
 
     @Override
-    protected void sort(List<? extends ExternalSystemNode<?>> list) {
+    protected void sort(List<ExternalSystemNode<?>> list) {
     }
 }

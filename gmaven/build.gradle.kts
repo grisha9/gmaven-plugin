@@ -2,9 +2,8 @@ import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "2.0.21"
-    id("org.jetbrains.intellij.platform") version "2.2.1"
-    id("org.jetbrains.intellij.platform.migration") version "2.2.1"
+    id("org.jetbrains.kotlin.jvm") version "2.1.10"
+    id("org.jetbrains.intellij.platform") version "2.5.0"
     id("org.jetbrains.changelog") version "2.1.0"
 }
 
@@ -21,14 +20,13 @@ repositories {
 dependencies {
     intellijPlatform {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
-        instrumentationTools()
+        jetbrainsRuntime()
 
         bundledPlugin("com.intellij.java")
         bundledPlugin("com.intellij.properties")
         bundledPlugin("org.intellij.groovy")
         bundledPlugin("org.jetbrains.kotlin")
 
-        testImplementation("junit:junit:4.12")
         testFramework(TestFrameworkType.Platform)
         testFramework(TestFrameworkType.Plugin.Java)
 
@@ -40,6 +38,7 @@ dependencies {
     runtimeOnly("io.github.grisha9:maven-model-reader-plugin:0.4") {
         exclude("com.google.code.gson", "gson")
     }
+    testImplementation("junit:junit:4.13.2")
 }
 
 intellijPlatform {
@@ -83,14 +82,12 @@ intellijPlatform {
     }
 }
 
-tasks {
-    // Set the JVM compatibility versions
-    withType<JavaCompile> {
-        sourceCompatibility = "17"
-        targetCompatibility = "17"
-    }
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
-    }
+kotlin {
+    jvmToolchain(JavaVersion.VERSION_21.majorVersion.toInt())
 }
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+}
+
 

@@ -69,7 +69,7 @@ public class MavenTasksNode extends TasksNode {
 
 
                     @Override
-                    protected void sort(List<? extends ExternalSystemNode<?>> list) {
+                    protected void sort(List<ExternalSystemNode<?>> list) {
                     }
                 };
                 tasksGroupNode.addAll(collectionEntry.getValue());
@@ -88,6 +88,6 @@ public class MavenTasksNode extends TasksNode {
     }
 
     @Override
-    protected void sort(List<? extends ExternalSystemNode<?>> list) {
+    protected void sort(List<ExternalSystemNode<?>> list) {
     }
 }

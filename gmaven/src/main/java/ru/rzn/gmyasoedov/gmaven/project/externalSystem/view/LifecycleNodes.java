@@ -63,5 +63,6 @@ public class LifecycleNodes extends ExternalSystemNode<Object> {
   }
 
   @Override
-  protected void sort(List<? extends ExternalSystemNode<?>> list) {  }
+  protected void sort(List<ExternalSystemNode<?>> list) {
+  }
 }
