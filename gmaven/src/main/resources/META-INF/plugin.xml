@@ -246,4 +246,8 @@
             <add-to-group group-id="ExternalSystemView.BaseProjectMenu" anchor="last"/>
         </action>
     </actions>
+
+    <extensions defaultExtensionNs="org.jetbrains.kotlin">
+        <supportsKotlinPluginMode supportsK2="true"/>
+    </extensions>
 </idea-plugin>
