@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [242.10] - 2025-04-18
+
+### Fixes
+
+- Support Kotlin K2 mode
+
 ## [242.9] - 2025-02-26
 
 ### Fixes
