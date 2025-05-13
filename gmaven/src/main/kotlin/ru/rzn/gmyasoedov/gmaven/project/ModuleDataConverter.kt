@@ -72,7 +72,7 @@ fun createModuleData(
 
     val targetBytecodeVersion = targetBytecodeLevel.toFeatureString()
     moduleDataNode.createChild(
-        JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, sourceLanguageLevel, targetBytecodeVersion)
+        JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, sourceLanguageLevel, targetBytecodeVersion, emptyList())
     )
 
     if (project.resolvedArtifacts.isNotEmpty()) {
@@ -184,7 +184,9 @@ private fun createSourceSetModule(
     val targetLevel = (if (isTest) compilerData.testTargetLevel else compilerData.targetLevel)
 
     val level = getSourceLevel(sourceLevel, compilerData)
-    moduleNode.createChild(JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, level, targetLevel.toFeatureString()))
+    val targetBytecodeVersion = targetLevel.toFeatureString()
+    //todo fix compiler args
+    moduleNode.createChild(JavaModuleData.KEY, JavaModuleData(SYSTEM_ID, level, targetBytecodeVersion, emptyList()))
     moduleNode.createChild(ModuleSdkData.KEY, ModuleSdkData(null))
     return moduleNode
 }
