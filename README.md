@@ -6,7 +6,7 @@ Easy Maven
 The lightweight Maven plugin that gets the project model through maven task execution.
 This provides greater simplicity and original build tool behavior in obtaining project data.
 
-### IntelliJ Plugin [page](https://plugins.jetbrains.com/plugin/22370-gmaven)
+### IntelliJ Plugin [page](https://plugins.jetbrains.com/plugin/22370-easy-maven)
 
 ### Plugin [wiki](https://github.com/grisha9/gmaven-plugin/wiki)
 
@@ -38,9 +38,10 @@ The plugin adds support for the Maven for Java language projects:
 
 
 ### Issues
-If you found a bug, please report it on https://github.com/grisha9/gmaven-plugin/issues
 
-Wiki about issues: https://github.com/grisha9/gmaven-plugin/wiki/Issues
+If you found a bug, please report it on https://github.com/grisha9/easy-maven-plugin/issues
+
+Wiki about issues: https://github.com/grisha9/easy-maven-plugin/wiki/Issues
 
 
 
