@@ -7,7 +7,7 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.wsl.WSLDistribution
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
-import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.util.io.NioFiles
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.util.text.StringUtil
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.*
@@ -203,9 +203,9 @@ private fun runMavenImportInner(
         GServerUtils.toResult(e)
     } finally {
         if (processSupport.exitCode != 0) {
-            FileUtil.delete(resultFilePath)
+            NioFiles.deleteRecursively(resultFilePath)
         } else if (!request.settings.isIncrementalSync && Registry.`is`("gmaven.process.remove.result.file")) {
-            if (!resultFilePath.parent.name.equals("target", true)) FileUtil.delete(resultFilePath)
+            if (!resultFilePath.parent.name.equals("target", true)) NioFiles.deleteRecursively(resultFilePath)
         }
     }
 }

@@ -2,7 +2,7 @@ package ru.rzn.gmyasoedov.gmaven.project
 
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.compiler.CompilerConfigurationImpl
-import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.util.io.NioFiles
 import com.intellij.pom.java.LanguageLevel
 import junit.framework.TestCase
 import org.jetbrains.jps.model.java.JavaSourceRootType
@@ -252,7 +252,7 @@ class AspectJMavenPluginTest : MavenImportingTestCase() {
         val localRepoPath = MavenSettings.getInstance(project).linkedProjectsSettings
             .firstNotNullOf { it.localRepositoryPath }
         val path = Path(localRepoPath, "org", "aspectj", "aspectjtools")
-        FileUtil.delete(path)
+        NioFiles.deleteRecursively(path)
         TestCase.assertFalse(path.resolve(aspectJToolVersion).exists())
 
         reimport()

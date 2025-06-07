@@ -1,6 +1,7 @@
 package ru.rzn.gmyasoedov.gmaven.project
 
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.util.io.NioFiles
 import org.junit.Assert
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.PLUGIN_ARTIFACT_ID
 import ru.rzn.gmyasoedov.gmaven.GMavenConstants.PLUGIN_GROUP_ID
@@ -53,7 +54,7 @@ class FirstRunTest : MavenImportingTestCase() {
         assertModules("project", "project.m1")
 
         val localRepositoryPath = getLocalRepositoryMavenPluginPath()
-        FileUtil.delete(localRepositoryPath)
+        NioFiles.deleteRecursively(localRepositoryPath)
         Assert.assertFalse(localRepositoryPath.exists())
 
         reimport()
@@ -106,7 +107,7 @@ class FirstRunTest : MavenImportingTestCase() {
         Assert.assertTrue(eventSpyJarCopyPath.exists())
         MavenPathUtil.testEventSpyJarPath = eventSpyJarCopyPath.pathString
 
-        FileUtil.delete(localRepositoryPath)
+        NioFiles.deleteRecursively(localRepositoryPath)
         Assert.assertFalse(localRepositoryPath.exists())
         reimport()
         assertModules("project", "project.m1")

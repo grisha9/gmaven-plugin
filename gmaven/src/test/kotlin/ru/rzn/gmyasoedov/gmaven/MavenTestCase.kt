@@ -1,6 +1,9 @@
 package ru.rzn.gmyasoedov.gmaven
 
-import com.intellij.openapi.application.*
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.EDT
+import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.application.writeAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager.Companion.getInstance
@@ -30,7 +33,6 @@ import java.awt.HeadlessException
 import java.io.File
 import java.io.IOException
 import java.nio.charset.StandardCharsets
-import java.util.*
 
 abstract class MavenTestCase : UsefulTestCase() {
     private var ourTempDir: File? = null

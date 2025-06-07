@@ -83,8 +83,9 @@ class GDependencyAnalyzerContributor(private val project: Project) : DependencyA
         val settings = ExternalSystemTaskExecutionSettings()
 
         val wsl = MavenPathUtil.getWsl(resultPath.absolutePathString())
+        val windowsPath = getExtClassesJarPathString()
         val extClassesJarPathString = wsl
-            ?.let { wsl.getWslPath(getExtClassesJarPathString()) } ?: getExtClassesJarPathString()
+            ?.let { wsl.getWslPath(Path(windowsPath)) } ?: getExtClassesJarPathString()
         val resultFilePath = MavenPathUtil.checkOnWsl(resultPath.absolutePathString())
         settings.scriptParameters = escape("-Dmaven.ext.class.path=$extClassesJarPathString")
         settings.scriptParameters += " -Daether.conflictResolver.verbose=true"
