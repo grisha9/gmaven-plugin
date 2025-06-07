@@ -144,6 +144,9 @@ private fun setupBaseParamsFromSettings(request: GServerRequest, commandLine: Ge
     if (request.settings.outputLevel == ProjectSettingsControlBuilder.OutputLevelType.DEBUG) {
         commandLine.addParameter("-X")
     }
+    if (request.settings.outputLevel == ProjectSettingsControlBuilder.OutputLevelType.ERROR) {
+        commandLine.addParameter("-e")
+    }
     val profiles = request.settings.executionWorkspace.profilesData.map { it.toRawName() }
     if (profiles.isNotEmpty()) {
         commandLine.addParameters("-P", profiles.joinToString(separator = ","))

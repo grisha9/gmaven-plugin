@@ -54,7 +54,7 @@ public class ProjectSettingsControlBuilder {
     }
 
     public enum OutputLevelType {
-        DEFAULT, QUITE, DEBUG
+        DEFAULT, QUITE, DEBUG, ERROR
     }
 
     public enum SnapshotUpdateType {
