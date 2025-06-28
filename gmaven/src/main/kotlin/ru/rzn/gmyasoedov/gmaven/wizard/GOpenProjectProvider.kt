@@ -48,7 +48,7 @@ class GOpenProjectProvider : AbstractOpenProjectProvider() {
                 .usePreviewMode()
                 .use(ProgressExecutionMode.MODAL_SYNC)
         )
-        if (Registry.`is`("external.system.auto.import.disabled")) return
+
         if (Registry.`is`("gmaven.import.readonly")) {
             runWhenInitialized(project) {
                 ExternalSystemUtil.refreshProject(
