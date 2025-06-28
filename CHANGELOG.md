@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [242.10.1] - 2025-06-28
+
+### Fixes
+
+- Android Studio Meerkat support ([issue](https://github.com/grisha9/gmaven-plugin/issues/34))
+
+### Added
+
+- maven -e(errors) param to output level settings
+
 ## [242.10] - 2025-04-18
 
 ### Fixes
