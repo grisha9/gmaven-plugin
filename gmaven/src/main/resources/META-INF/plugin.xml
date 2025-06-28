@@ -205,19 +205,24 @@
                 class="ru.rzn.gmyasoedov.gmaven.project.action.ResetProfileStateToDefaultAction">
             <add-to-group group-id="ExternalSystemView.BaseProjectMenu" anchor="last"/>
         </action>
+        <action id="GMaven.ExternalSystem.AndroidRefreshAll" icon="AllIcons.Actions.Refresh"
+                class="ru.rzn.gmyasoedov.gmaven.project.action.AndroidRefreshAllExternalProjectsAction">
+            <add-to-group group-id="ExternalSystemView.ActionsToolbar.LeftPanel" anchor="first"/>
+        </action>
 
         <group id="ExternalSystemView.GMaven.ProfileMenu">
-            <reference id="GMaven.ExternalSystem.ResetProfileState"/>
+            <reference ref="GMaven.ExternalSystem.ResetProfileState"/>
         </group>
 
         <group id="GMaven.View.ActionsToolbar.CenterPanel">
             <separator/>
-            <reference id="GMaven.Toolbar.RunTasksAction"/>
-            <reference id="GMaven.ToolbarDependencyAnalyzer"/>
-            <reference id="GMaven.Toolbar.Offline"/>
-            <reference id="GMaven.Toolbar.SkipTests"/>
-            <reference id="GMaven.Toolbar.Snapshot"/>
-            <reference id="GMaven.Toolbar.ReadonlyAction"/>
+            <reference ref="GMaven.ExternalSystem.AndroidRefreshAll"/>
+            <reference ref="GMaven.Toolbar.RunTasksAction"/>
+            <reference ref="GMaven.ToolbarDependencyAnalyzer"/>
+            <reference ref="GMaven.Toolbar.Offline"/>
+            <reference ref="GMaven.Toolbar.SkipTests"/>
+            <reference ref="GMaven.Toolbar.Snapshot"/>
+            <reference ref="GMaven.Toolbar.ReadonlyAction"/>
             <separator/>
             <add-to-group group-id="ExternalSystemView.ActionsToolbar.CenterPanel" anchor="last"/>
         </group>
